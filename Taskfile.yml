@@ -41,6 +41,7 @@ tasks:
         ignore_error: true
         cmds:
         - rm -v packages/*/*.zip
+        - rm -rf util/deploy/__pycache__
 
     setup: 
         desc: setup Nuvolaris MastroGPT

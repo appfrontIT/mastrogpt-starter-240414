@@ -78,6 +78,7 @@ def main(args):
         }
     else:
         output = ask(input)
+        print("output " + output)
         res = extract(output)
         res['output'] = output
 

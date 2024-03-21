@@ -2,9 +2,9 @@
 let invoker = undefined
 
 // Constants
-const BOT_IMG = "/img/robot-mini.png";
+const BOT_IMG = "/img/hari.png";
 const PERSON_IMG = "/img/human-mini.png";
-const BOT_NAME = "BOT";
+const BOT_NAME = "Hari Seldon";
 const PERSON_NAME = "YOU";
 
 // Page compoents
@@ -34,12 +34,14 @@ class Invoker {
       return "Welcome, please select the chat application you want to use by clicking a  button on top.";
     // prepare a request
     let json = {
-      input: msg
+      input: msg,
+      // history: history
     }
     if (this.state != null) {
       json['state'] = this.state
     }
     // send the request
+    console.log(this.url)
     return fetch(this.url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -48,7 +50,7 @@ class Invoker {
       .then(r => r.json())
       .then(r => {
         // got answer from the backend
-        console.log(r)
+        // console.log("answer " + r)
         this.state = r.state
         let data = r
         let output = data.output
@@ -118,7 +120,6 @@ msgerForm.addEventListener("submit", event => {
     bot("Please select a chat, clicking on one button on the top area.")
   }
 });
-
 
 window.addEventListener('message', async function (ev) {
   console.log(ev);
