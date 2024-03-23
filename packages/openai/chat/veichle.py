@@ -5,6 +5,7 @@ import re
 import os
 import config
 import json
+import bot_func
 
 VEICHLE_PREV_ROLE="""
 Always answer in the user language.
@@ -115,7 +116,6 @@ def is_veichle(AI = AzureOpenAI, input = dict[str, any]) -> ChatCompletion:
     global form_validation
     messages.append(input)
     if form_validation:
-        print("input " + input['content'])
         response = AI.chat.completions.create(model=MODEL, messages=[
             {"role": "system", "content": "you answer 0 for negative and 1 for affirmative. You can't use any other character"},
             {"role": "user", "content": f"is the following text affirmative? {input['content']}"}])
@@ -127,28 +127,11 @@ def is_veichle(AI = AzureOpenAI, input = dict[str, any]) -> ChatCompletion:
             comp = AI.chat.completions.create(model=MODEL, messages=messages)
             messages = [{"role": "system", "content": VEICHLE_PREV_ROLE}]
             return comp
-    fun = [
-        {
-            "type": "function",
-            "function": {
-                "name": "extract_data_from_chat",
-                "description": "Extract veichle plate and user date of birth. Store the data in DD-MM-YY",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "plate" : {"type": "string", "description": "plate of veichle"},
-                        "ssc" : {"type": "string", "description": "social security certificate of user"},
-                        "date of birth": { "type": "string", "description": "user date of birth"},
-                        },
-                        "required": ["plate", "date_of_birth"],
-                        "required": ["ssc", "date_of_birth"]
-                    },
-                }
-            }
-        ]
+    fun = bot_func.extract_data_from_chat
     comp = AI.chat.completions.create(model=MODEL, messages=messages, tools=fun, tool_choice="auto")
-    tool_calls = comp.choices[0].message.tool_calls
-    if tool_calls:
+
+    if comp.choices[0].finish_reason == "function_call":
+        tool_calls = comp.choices[0].message.tool_calls
         available_functions = {
             "extract_data_from_chat": extract_data_from_chat,
             }

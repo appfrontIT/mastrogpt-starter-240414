@@ -8,10 +8,6 @@ def main(arg):
                 "name": "Lookinglass",
                 "url": "openai/chat"
             },
-            {
-                "name": "OpenAI",
-                "url": "openai/gpt"
-            }
         ]
     }
     return {"body": data}

@@ -1,10 +1,10 @@
 #--web true
 #--kind python:default
-#--param OPENAI_API_KEY $OPENAI_API_KEY
-#--param OPENAI_API_HOST $OPENAI_API_HOST
 
 from openai import AzureOpenAI
-from openai.types.chat import ChatCompletion
+from openai import OpenAI
+from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
+from typing import List
 import requests
 import re
 import os
@@ -14,47 +14,62 @@ import ast
 import pandas as pd
 import tiktoken
 from scipy import spatial
-import utility
+import bot_func
+import json
 
-LOOKINGLASS_ASSISTANT="""
-You are a Lookinglass assistan for company employers.
-You only answer ensurance, financial questions, quotations.
-Always answer in the user language.
-Never suggest to call any company outside Lookinglass. Avoid suggesting an expert.
-If you can't answer, just answer "Sorry, I can't answer this question".
-"""
+MODEL = "gpt-3.5-turbo"
 
-EMBEDDING_MODEL = "text-embedding-ada-002"
-MODEL = "gpt-35-turbo"
-AI = None
+AI = OpenAI(api_key=api_key)
+# file = AI.files.create(
+#         file=open("fine_tuning.jsonl", "rb"),
+#         purpose="fine-tune"
+#     )
+# fine_tunig = AI.fine_tuning.jobs.create(
+#         training_file=file.id,
+#         model=MODEL
+#     )
+# job_list = AI.fine_tuning.jobs.list()
+# print("job list: ")
+# for x in job_list:
+#     print(x.id)
+#     print(x.fine_tuned_model)
+#     print(x.status)
 
-messages=[{"role": "system", "content": LOOKINGLASS_ASSISTANT}]
+messages=[{"role": "system", "content": config.LOOKINGLASS_ASSISTANT}]
 
 bot_index = 0
 
 BATCH_SIZE = 1000  # you can submit up to 2048 embedding inputs per request
 embeddings = []
-# df = pd.DataFrame()
+
+emb_cpy = config.EMB
+EMBEDDING_MODEL = "text-embedding-3-small"
+
 def embedding():
-    for batch_start in range(0, len(config.EMB), BATCH_SIZE):
+    batch_list = []
+    for batch_start in range(0, len(emb_cpy), BATCH_SIZE):
         batch_end = batch_start + BATCH_SIZE
-        batch = config.EMB[batch_start:batch_end]
+        batch = emb_cpy[batch_start:batch_end]
+        batch_list.append(batch)
         response = AI.embeddings.create(model=EMBEDDING_MODEL, input=batch)
         for i, be in enumerate(response.data):
             assert i == be.index  # double check embeddings are in same order as input
         batch_embeddings = [e.embedding for e in response.data]
         embeddings.extend(batch_embeddings)
 
-    store = pd.DataFrame({"text": config.EMB, "embedding": embeddings})
-
+    store = pd.DataFrame({"text": batch_list, "embedding": embeddings})
     # save document chunks and embeddings
     SAVE_PATH = "man.csv"
     store.to_csv(SAVE_PATH, index=False)
     df = pd.read_csv("man.csv")
+    # from IPython.display import display
+    # display(df)
     # convert embeddings from CSV str type back to list type
     df['embedding'] = df['embedding'].apply(ast.literal_eval)
     # the dataframe has two columns: "text" and "embedding"
     return df
+
+df = embedding()
 
 def strings_ranked_by_relatedness(
     query: str,
@@ -104,7 +119,28 @@ def query_message(
             message += next_article
     return message + question
 
-
+def exec_func(
+        tool_calls: List[ChatCompletionMessageToolCall],
+        messages: list[dict[str, str]],
+        response: ChatCompletion
+        ):
+    available_functions = {
+        "find_link": bot_func.find_link,
+        }
+    messages.append(response.choices[0].message)
+    for tool_call in tool_calls:
+        function_name = tool_call.function.name
+        function_to_call = available_functions[function_name]
+        function_args = json.loads(tool_call.function.arguments)
+        function_response = function_to_call(link=function_args.get("url"))
+        messages.append({
+            "tool_call_id":tool_call.id,
+            "role": "tool",
+            "name": function_name,
+            "content": function_response
+        })
+        response = AI.chat.completions.create(model=MODEL, messages=messages)
+        return response.choices[0].message.content
 def ask(
     query: str,
     df: pd.DataFrame,
@@ -117,60 +153,48 @@ def ask(
     if print_message:
         print(message)
     messages = [
-        {"role": "system", "content": LOOKINGLASS_ASSISTANT},
+        {"role": "system", "content": config.LOOKINGLASS_ASSISTANT},
         {"role": "user", "content": message},
     ]
     response = AI.chat.completions.create(
         model=model,
         messages=messages,
-        temperature=0
     )
+    # if response.choices[0].finish_reason == "function_call":
+    #     tool_calls = response.choices[0].message.tool_calls
+    #     return exec_func(tool_calls=tool_calls, messages=messages, response=response)
     response_message = response.choices[0].message.content
+    bot_func.find_man(response_message, AI=AI)
     return response_message
 
-# def ask(input):
-#     # if not config.is_veichle_pr and not config.is_man:
-#     #     find_context(input)
-#     query = f"""
-#     Use the following information to answer the subsequent question. if the answer cannot be found, write "I don't know".
-
-#     information:
-#     {config.EMB}
-
-#     Question: {input}
-#     """
-#     input_mex = {"role": "user", "content": query}
-#     if config.is_man:
-#         comp: ChatCompletion = veichle.is_man(AI, input_mex)
-#     elif config.is_veichle_pr:
-#         comp: ChatCompletion = veichle.is_veichle(AI, input_mex)
-#     else:
-#         messages.append(input_mex)
-#         comp = AI.chat.completions.create(model=MODEL, messages=messages)
-#         messages.append({"role": "assistant", "content": comp.choices[0].message.content})
-#     if len(comp.choices) > 0:
-#         content = comp.choices[0].message.content
-#         return content
-#     return "ERROR"
+TUNED_MODEL = None
 
 def main(args):
     global AI
-    config.html = ""
-    (key, host) = (args["OPENAI_API_KEY"], args["OPENAI_API_HOST"])
-    AI = AzureOpenAI(api_version="2023-12-01-preview", api_key=key, azure_endpoint=host)
-    
-    df = embedding()
+    global TUNED_MODEL
+    global api_key
+    global df
+    config.html = "<iframe src='https://appfront.cloud' width='100%' height='800'></iframe>"
 
+    # if fine_tunig.status == "succeeded":
+    #     TUNED_MODEL = fine_tunig.fine_tuned_model
+    # else:
+    #     TUNED_MODEL = MODEL
+    # print("model " + TUNED_MODEL)
+    TUNED_MODEL = MODEL
+    
     input = args.get("input", "")
     if input == "":
         res = {
-            "output": "Welcome to Lookinglass, how can I help you today? You can make a quotation or ask help in execute a task",
+            "output": "Benvenuti in Walkiria, la piattaforma AI di Appfront.",
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
         }
+    elif input[len(input) -1] == ' ':
+        return {"body": {"output": ""}}
     else:
-        print(input)
-        output = ask(query=input, df=df)
+        output = ask(query=input, df=df, print_message=False, model=TUNED_MODEL)
+        # output = ask(input)
         res = {
             "output": output
         }

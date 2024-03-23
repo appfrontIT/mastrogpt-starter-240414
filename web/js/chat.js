@@ -4,7 +4,7 @@ let invoker = undefined
 // Constants
 const BOT_IMG = "/img/hari.png";
 const PERSON_IMG = "/img/human-mini.png";
-const BOT_NAME = "Hari Seldon";
+const BOT_NAME = "Hari";
 const PERSON_NAME = "YOU";
 
 // Page compoents
@@ -49,13 +49,14 @@ class Invoker {
     })
       .then(r => r.json())
       .then(r => {
-        // got answer from the backend
-        // console.log("answer " + r)
         this.state = r.state
         let data = r
         let output = data.output
         delete data['output']
         delete data['state']
+        if (output == "skip") {
+          return "";
+        }
         displayWindow.postMessage(data)
         return output
       })
@@ -97,6 +98,9 @@ function appendMessage(name, img, side, text) {
 }
 
 function bot(msg) {
+  if (msg == "") {
+    return ;
+  }
   appendMessage(BOT_NAME, BOT_IMG, "left", msg);
 }
 
@@ -128,3 +132,12 @@ window.addEventListener('message', async function (ev) {
   areaChat.innerHTML = ""
   bot(await invoker.invoke(""))
 })
+
+async function main() {
+  return "hello world!"
+  let input = args.text || ""
+  console.log("input " + input)
+  if (input != "") {
+      bot(input)
+  }
+}

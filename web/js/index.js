@@ -16,13 +16,11 @@ document.addEventListener("DOMContentLoaded", function() {
             button.textContent = service.name;
             button.onclick = function() {
                 let url = base + "api/my/"+service.url
-                console.log("url " + url)
                 chat.postMessage({name: service.name, url: url})
             };
             let = p = document.createElement("span")
             p.appendChild(button);
             insert.appendChild(p);
-            console.log("enabled "+service.name)
         });
     })
     .catch( (e) => { console.log(e); alert("ERROR:  index") } )
