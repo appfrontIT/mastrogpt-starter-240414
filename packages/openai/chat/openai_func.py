@@ -1,32 +1,38 @@
 import config
 from openai.types.chat import ChatCompletion
 
-extract_data_from_chat = [
+quotation_by_birth_func = [
     {
         "type": "function",
         "function": {
-            "name": "extract_data_from_chat",
+            "name": "quotation_by_birth",
             "description": "Extract veichle plate and user date of birth. Store the data in DD-MM-YY",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "plate" : {"type": "string", "description": "plate of veichle"},
-                    "ssc" : {"type": "string", "description": "social security certificate of user"},
-                    "date of birth": { "type": "string", "description": "user date of birth"},
+                    "date_of_birth": { "type": "string", "description": "user date of birth"},
                     },
                     "required": ["plate", "date_of_birth"],
-                    "required": ["ssc", "date_of_birth"]
+                },
+            }
+        },
+        {
+        "type": "function",
+        "function": {
+            "name": "quotation_by_cf",
+            "description": "Extract veichle plate and user Tax ID code ",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "plate" : {"type": "string", "description": "plate of veichle"},
+                    "cf": { "type": "string", "description": "user Tax ID code"},
+                    },
+                    "required": ["plate", "cf"],
                 },
             }
         }
     ]
-
-
-def find_link(link):
-    print("find link")
-    if link.find("appfront-operations.gitbook.io/lookinglass-manuale-utente") != -1:
-        config.html = "<iframe src='https://appfront-operations.gitbook.io/lookinglass-manuale-utente' width='100%' height='800'></iframe>"
-    return "ok"
 
 find_link_tool = [
     {

@@ -14,8 +14,9 @@ import ast
 import pandas as pd
 import tiktoken
 from scipy import spatial
-import bot_func
+import openai_func
 import json
+
 
 MODEL = "gpt-3.5-turbo"
 
@@ -119,28 +120,6 @@ def query_message(
             message += next_article
     return message + question
 
-def exec_func(
-        tool_calls: List[ChatCompletionMessageToolCall],
-        messages: list[dict[str, str]],
-        response: ChatCompletion
-        ):
-    available_functions = {
-        "find_link": bot_func.find_link,
-        }
-    messages.append(response.choices[0].message)
-    for tool_call in tool_calls:
-        function_name = tool_call.function.name
-        function_to_call = available_functions[function_name]
-        function_args = json.loads(tool_call.function.arguments)
-        function_response = function_to_call(link=function_args.get("url"))
-        messages.append({
-            "tool_call_id":tool_call.id,
-            "role": "tool",
-            "name": function_name,
-            "content": function_response
-        })
-        response = AI.chat.completions.create(model=MODEL, messages=messages)
-        return response.choices[0].message.content
 def ask(
     query: str,
     df: pd.DataFrame,
@@ -148,6 +127,18 @@ def ask(
     token_budget: int = 4096 - 500,
     print_message: bool = False,
 ) -> str:
+    messages = [{"role": "system", "content": veichle.VEICHLE_PREV_ROLE},
+                {"role": "user", "content": query}]
+    response = AI.chat.completions.create(
+        model=model,
+        messages=messages,
+        tools=openai_func.quotation_by_birth_func,
+        tool_choice="auto"
+    )
+    if response.choices[0].finish_reason == "tool_calls":
+        tool_calls = response.choices[0].message.tool_calls
+        # return exec_func(tool_calls=tool_calls, messages=messages, response=response)
+        return veichle.quotation_func_birth(AI, tool_calls, messages, response)
     """Answers a query using GPT and a dataframe of relevant texts and embeddings."""
     message = query_message(query, df, model=model, token_budget=token_budget)
     if print_message:
@@ -160,11 +151,8 @@ def ask(
         model=model,
         messages=messages,
     )
-    # if response.choices[0].finish_reason == "function_call":
-    #     tool_calls = response.choices[0].message.tool_calls
-    #     return exec_func(tool_calls=tool_calls, messages=messages, response=response)
     response_message = response.choices[0].message.content
-    bot_func.find_man(response_message, AI=AI)
+    # bot_func.find_man(response_message, AI=AI)
     return response_message
 
 TUNED_MODEL = None
@@ -194,7 +182,6 @@ def main(args):
         return {"body": {"output": ""}}
     else:
         output = ask(query=input, df=df, print_message=False, model=TUNED_MODEL)
-        # output = ask(input)
         res = {
             "output": output
         }

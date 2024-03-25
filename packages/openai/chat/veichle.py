@@ -1,26 +1,27 @@
 from openai import AzureOpenAI
-from openai.types.chat import ChatCompletion
+from openai import OpenAI
+from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
 import requests
+from typing import List
 import re
 import os
 import config
 import json
-import bot_func
+import openai_func
 
 VEICHLE_PREV_ROLE="""
 Always answer in the user language.
-Never suggest to call any company outside Lookinglass. Avoid suggesting an expert.
 you're specialized into veichles ensurance quotations.
-Ask for the plate and the one of date of birth or of the user.
+If the message has a plate and a date, call function
 """
-MODEL="gpt-35-turbo"
+MODEL="gpt-3.5-turbo"
 messages=[{"role": "system", "content": VEICHLE_PREV_ROLE}]
 
 form_validation = False
 AccessToken = None
 quotation_doc = None
 
-def make_quotation(plate, date_of_birth):
+def make_quotation_birth(data):
     global AccessToken
     resp = requests.post("https://cognito-idp.eu-west-1.amazonaws.com/", headers={
         'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
@@ -45,16 +46,13 @@ def make_quotation(plate, date_of_birth):
         'ExternalAuthorization': AccessToken,
         "Authorization": "Bearer kKYdPYn3AwEO3eYMvR1pzPjXWTw4QBafuzy23hy5H4tmgxz8x1mLDHQZpmcz",
         },
-        json={
-        "targhe": {
-            "targa_polizza_numero": plate,
-            "data_nascita": date_of_birth
-        }
-    })
+        json=data
+    )
     if resp.status_code != 200:
         print("Error getting veichle information")
         return False
-    veichle_obj = json.loads(get_info.text)
+    print(get_info.text)
+    veichle_obj = get_info.json()
     extract_obj = veichle_obj['data']
     extract_obj['targa_attestato_rca_numero'] = ""
     extract_obj['opzione_proprieta'] = '00'
@@ -81,91 +79,120 @@ def make_quotation(plate, date_of_birth):
     if quot_req.status_code != 200:
         print("Error getting quotation")
         return False
-    # quot_obj = json.loads(quot_req.text)
-    # pdf = requests.get(f"https://api.appfront.cloud/lookinglass/dev/dllbg/mtr/external/api/v2/quotations/{quot_obj['data']['id']}/download-pdf", headers={
-    #     "Accept": "application/json",
-    #     'ExternalAuthorization': AccessToken,
-    #     "Authorization": "Bearer kKYdPYn3AwEO3eYMvR1pzPjXWTw4QBafuzy23hy5H4tmgxz8x1mLDHQZpmcz",
-    # })
-    
-    # f = open('temp.pdf', 'wb')
-    # f.write(pdf.content)
-    # path = os.getcwd()
-    # print("path " + path)
-    # print(os.listdir())
-    # path = path + "/temp.pdf"
-    # config.html =f"""
-    # <iframe src="https://api.appfront.cloud/lookinglass/dev/dllbg/mtr/external/api/v2/quotations/{quot_obj['data']['id']}/download-pdf" width="100%" height="100%"></iframe>
-    # """
-    # print(config.html)
+    quot_obj = json.loads(quot_req.text)
+    file = requests.get(f"https://api.appfront.cloud/lookinglass/dev/dllbg/mtr/external/api/v2/quotations/{quot_obj['data']['id']}/download-pdf", headers={
+        "Accept": "application/json",
+        'ExternalAuthorization': AccessToken,
+        "Authorization": "Bearer kKYdPYn3AwEO3eYMvR1pzPjXWTw4QBafuzy23hy5H4tmgxz8x1mLDHQZpmcz",
+    })
+    pdf_api_key = "matcip@hotmail.com_TPQ0f19qKjQD5K03k7K9v7RR64JVlWkcjhmeCP72x1M68B06WZCFO3wnI1D7Ni0L"
+    get_upload_link = requests.get("https://api.pdf.co/v1/file/upload/get-presigned-url", headers={"x-api-key": pdf_api_key}).json()
+    # print(get_upload_link.text)
+    upload_file = requests.put(get_upload_link['presignedUrl'], headers={"x-api-key": pdf_api_key}, data=file.content)
+    print(upload_file.status_code)
+    get_html = requests.post("https://api.pdf.co/v1/pdf/convert/to/html", headers={"x-api-key": pdf_api_key}, json={"url": get_upload_link['url']})
+    print(get_html.text)
+    html_obj = json.loads(get_html.text)
+    config.html = f"""<iframe src="{html_obj['url']}" width='100%' height='800'></iframe>"""
     global quotation_doc
     quotation_doc = quot_req.text
-    # print(quot_req.text)
     return True
 
-
-def extract_data_from_chat(plate, date_of_birth):
+def quotation_by_cf(plate, cf):
     global form_validation
     print("Data collected, retrieving informantions")
-    if make_quotation(plate, date_of_birth):
+    if make_quotation_birth({"targhe": {"targa_polizza_numero": plate, "codice_fiscale_atr": cf}}):
         form_validation = True
         return "quotation obtained"
     return "couldn't get the quotation"
 
-def is_veichle(AI = AzureOpenAI, input = dict[str, any]) -> ChatCompletion:
+def quotation_by_birth(plate, date_of_birth):
     global form_validation
-    messages.append(input)
-    if form_validation:
-        response = AI.chat.completions.create(model=MODEL, messages=[
-            {"role": "system", "content": "you answer 0 for negative and 1 for affirmative. You can't use any other character"},
-            {"role": "user", "content": f"is the following text affirmative? {input['content']}"}])
-        print(response.choices[0].message.content)
-        form_validation = False
-        if (response.choices[0].message.content == "1"):
-            config.is_veichle_pr = False
-            messages.append({"role": "assistant", "content": input['content']})
-            comp = AI.chat.completions.create(model=MODEL, messages=messages)
-            messages = [{"role": "system", "content": VEICHLE_PREV_ROLE}]
-            return comp
-    fun = bot_func.extract_data_from_chat
-    comp = AI.chat.completions.create(model=MODEL, messages=messages, tools=fun, tool_choice="auto")
+    print("Data collected, retrieving informantions")
+    if make_quotation_birth({"targhe": {"targa_polizza_numero": plate, "data_nascita": date_of_birth}}):
+        form_validation = True
+        return "quotation obtained"
+    return "couldn't get the quotation"
 
-    if comp.choices[0].finish_reason == "function_call":
-        tool_calls = comp.choices[0].message.tool_calls
-        available_functions = {
-            "extract_data_from_chat": extract_data_from_chat,
-            }
-        messages.append(comp.choices[0].message)
-        for tool_call in tool_calls:
-            function_name = tool_call.function.name
-            function_to_call = available_functions[function_name]
-            function_args = json.loads(tool_call.function.arguments)
-            function_response = function_to_call(
-                plate=function_args.get("plate"),
-                date_of_birth=function_args.get("date of birth"),
-                )
-            messages.append({
-                "tool_call_id":tool_call.id,
-                "role": "tool",
-                "name": function_name,
-                "content": function_response
-            })
-            if function_response == "quotation obtained":
-                global quotation_doc
-                response = AI.chat.completions.create(model=MODEL, messages=messages)
-                messages.append({"role": "assistant", "content": response.choices[0].message.content})
-                response = AI.chat.completions.create(model=MODEL, messages=[
-                    {"role": "system", "content": "you syntetize the pass text into an insurance quotation and format it in html. Any link must be opened in a new tab. Answer in the user language"},
-                    {"role": "user", "content": quotation_doc}
-                ])
-                config.html = response.choices[0].message.content
-                response = AI.chat.completions.create(model=MODEL, messages=messages)
-                return response
-        response = AI.chat.completions.create(model=MODEL, messages=messages)
-        messages.append({"role": "assistant", "content": response.choices[0].message.content})
-        return response
+def quotation_func_birth(
+        AI: OpenAI,
+        tool_calls: List[ChatCompletionMessageToolCall],
+        messages: list[dict[str, str]],
+        response: ChatCompletion
+):
+    available_functions = {
+        "quotation_by_birth": quotation_by_birth,
+        "quotation_by_cf": quotation_by_cf
+        }
+    messages.append(response.choices[0].message)
+    for tool_call in tool_calls:
+        function_name = tool_call.function.name
+        function_to_call = available_functions[function_name]
+        function_args = json.loads(tool_call.function.arguments)
+        function_response = function_to_call(
+            **function_args
+            )
+        messages.append({
+            "tool_call_id":tool_call.id,
+            "role": "tool",
+            "name": function_name,
+            "content": function_response
+        })
+        # if function_response == "quotation obtained":
+        #     global quotation_doc
+        #     response = AI.chat.completions.create(model=MODEL, messages=messages)
+        #     messages.append({"role": "assistant", "content": response.choices[0].message.content})
+        #     response = AI.chat.completions.create(model=MODEL, messages=[
+        #         {"role": "system", "content": "you syntetize the text into an insurance quotation and format it in html. Any link must be opened in a new tab. Answer in the user language"},
+        #         {"role": "user", "content": quotation_doc}
+        #     ])
+            # config.html = response.choices[0].message.content
+        # response = AI.chat.completions.create(model=MODEL, messages=messages)
+        # return response.choices[0].message.content
+    response = AI.chat.completions.create(model=MODEL, messages=messages)
+    return response.choices[0].message.content
 
-    messages.append({"role": "assistant", "content": comp.choices[0].message.content})
-    return comp
-
-# ET233BW 04-07-1944
+"""
+"documents": [
+        {
+            "targa": "FV823LN",
+            "cf": "RCCTSM92P47F799B"
+        },
+        {
+            "targa": "ES775TH",
+            "cf": "VCOLSN76S25G487T"
+        },
+        {
+            "targa": "FK185YD",
+            "cf": "LNELCU86P29F839F"
+        },
+        {
+            "targa": "ZA075MV",
+            "cf": "02846201214"
+        },
+        {
+            "targa": "DN346RB",
+            "cf": "MNNGPP49A02F839R"
+        },
+        {
+            "targa": "GD475JL",
+            "cf": "CNTGNN82A64A341P"
+        },
+        {
+            "targa": "DV027VA",
+            "cf": "SCPSVT68R01F839N"
+        },
+        {
+            "targa": "EX051ER",
+            "cf": "PRSMSM76B14H931C"
+        },
+        {
+            "targa": "GB875WD",
+            "cf": "VNCFNC64T26E532A"
+        },
+        {
+            "targa": "CZ333XZ",
+            "cf": "BLHLAI66T31Z352Y"
+        }
+    ]
+"""
