@@ -114,7 +114,7 @@ def quotation_by_birth(plate, date_of_birth):
         return "quotation obtained"
     return "couldn't get the quotation"
 
-def quotation_func_birth(
+def quotation_func(
         AI: OpenAI,
         tool_calls: List[ChatCompletionMessageToolCall],
         messages: list[dict[str, str]],
@@ -138,17 +138,6 @@ def quotation_func_birth(
             "name": function_name,
             "content": function_response
         })
-        # if function_response == "quotation obtained":
-        #     global quotation_doc
-        #     response = AI.chat.completions.create(model=MODEL, messages=messages)
-        #     messages.append({"role": "assistant", "content": response.choices[0].message.content})
-        #     response = AI.chat.completions.create(model=MODEL, messages=[
-        #         {"role": "system", "content": "you syntetize the text into an insurance quotation and format it in html. Any link must be opened in a new tab. Answer in the user language"},
-        #         {"role": "user", "content": quotation_doc}
-        #     ])
-            # config.html = response.choices[0].message.content
-        # response = AI.chat.completions.create(model=MODEL, messages=messages)
-        # return response.choices[0].message.content
     response = AI.chat.completions.create(model=MODEL, messages=messages)
     return response.choices[0].message.content
 

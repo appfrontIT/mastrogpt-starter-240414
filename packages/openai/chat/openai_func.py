@@ -1,7 +1,7 @@
 import config
 from openai.types.chat import ChatCompletion
 
-quotation_by_birth_func = [
+quotation_functions = [
     {
         "type": "function",
         "function": {
@@ -34,32 +34,19 @@ quotation_by_birth_func = [
         }
     ]
 
-find_link_tool = [
+find_man_page = [
     {
         "type": "function",
         "function": {
-            "name": "find_link",
-            "description": "extract links",
+            "name": "find_man_page",
+            "description": "Find the right manual page",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "url": {"type": "string", "description": "url in text"},
+                    "page": {"type": "string", "description": "manual page section"},
                 },
             },
-            "required": ["url"],
+            "required": ["page"],
         }
     }
 ]
-
-def find_man(
-        data: str,
-        AI: ChatCompletion
-        ):
-    if data.find("appfront-operations.gitbook.io/lookinglass-manuale-utente") != -1:
-        # response = AI.chat.completions.create(
-        #     model="gpt-3.5-turbo",
-        #     messages= [
-        #         {"role": "system", "content": "Return the number associated with the topic:"}
-        #     ],
-        # )
-        config.html = "<iframe src='https://appfront-operations.gitbook.io/lookinglass-manuale-utente' width='100%' height='800'></iframe>"
