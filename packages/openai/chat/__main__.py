@@ -179,7 +179,6 @@ TUNED_MODEL = None
 def main(args):
     global AI
     global TUNED_MODEL
-    global api_key
     # global df
     config.html = "<iframe src='https://appfront.cloud' width='100%' height='800'></iframe>"
 

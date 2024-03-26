@@ -54,9 +54,6 @@ class Invoker {
         let output = data.output
         delete data['output']
         delete data['state']
-        if (output == "skip") {
-          return "";
-        }
         displayWindow.postMessage(data)
         return output
       })

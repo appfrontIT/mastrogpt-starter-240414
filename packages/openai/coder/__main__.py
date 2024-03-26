@@ -9,24 +9,37 @@ from typing import List
 import config
 import os
 import re
+import json
 import requests
 from requests.auth import HTTPBasicAuth
-
-def create_function(function_name, function_arguments, function_code):
-    function_string = f"def {function_name}({function_arguments}): {function_code}"
-    exec(function_string)
-    return_value = eval(function_name)
-    return return_value
+import utils
 
 AI = None
 MODEL = "gpt-3.5-turbo"
 
 messages=[{"role": "system", "content": config.EMB}]
 
+def create_action(
+        name: str,
+        function
+        ):
+    ow_key = os.getenv('__OW_API_KEY')
+    split = ow_key.split(':')
+    body = {
+        "namespace": "gporchia",
+        "name": name,
+        "exec":{"kind":"python:default", "code":function},
+        "annotations":[{"key":"web-export", "value":True}, {"key":"raw-http","value":False}, {"key": "final", "value": True}]
+        }
+    resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
+    if resp.status_code != 200:
+        return False
+    return f"\nhttps://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}"
+
 def ask(
     query: str,
     model: str = MODEL,
-    token_budget: int = 4096 - 500,
+    token_budget: int = 8192 - 500,
     print_message: bool = False,
 ) -> str:
     """Answers a query using GPT and a dataframe of relevant texts and embeddings."""
@@ -38,35 +51,52 @@ def ask(
         model=model,
         messages=messages,
     )
-    response_message = response.choices[0].message.content
-    return response_message
+    content = response.choices[0].message.content
+    content = content.replace('```', '')
+    content = content.replace('python', '')
+    content = content.replace('Python', '')
+    action_list = utils.get_actions()
+    find_name = [
+        {"role": "system", "content": f"find an unique name for the passed program. Answer with only 1 word. You can't any use the following words:\n{action_list}"},
+        {"role": "user", "content": content}
+    ]
+    name = AI.chat.completions.create(
+        model=model,
+        messages=find_name,
+    ).choices[0].message.content
+    action_url = create_action(name, content)
+    if action_url:
+        # action_info = utils.action_info(name)
+        config.html = f"""
+        <head>
+        <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+            <script>hljs.initHighlightingOnLoad();</script>
+        </head>
+        <body>
+            <pre><code class="python"><xmp>{content}</xmp></code></pre>
+        </body>
+        """
+        messages = [
+            {"role": "system", "content": "Explain the passed code"},
+            {"role": "system", "content": response.choices[0].message.content}
+        ]
+        response = AI.chat.completions.create(
+            model=model,
+            messages=messages,
+        )
+        return f"{response.choices[0].message.content}\n\n**Action URL**:\nhttps://nuvolaris.dev/api/v1/web/gporchia/default/{name}"
+    return "Error, something went wrong in creating your action"
 
 TUNED_MODEL = None
 
 def main(args):
     global AI
     global TUNED_MODEL
-    global api_key
     config.html = "<iframe src='https://appfront.cloud' width='100%' height='800'></iframe>"
+    config.code = ""
 
     AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
-
-    ow_key = os.getenv('__OW_API_KEY')
-    split = ow_key.split(':')
-    # print(ow_key)
-    dele = requests.delete("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/test", auth=HTTPBasicAuth(split[0], split[1]))
-    # print(dele.text)
-    body = {
-        "namespace": "gporchia",
-        "name": "hello",
-        "exec":{"kind":"python:default", "code":"def main(params):\n\treturn {'body':'Hello ' + str(params.get('name'))}"},
-        "annotations":[{"key":"web-export", "value":True}, {"key": "final", "value": False}]
-        }
-    resp = requests.put("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/test", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
-    print(resp.text)
-
-    test = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/test", auth=HTTPBasicAuth(split[0], split[1]), json={"name": "Matteo"})
-    print(test.text)
 
     TUNED_MODEL = MODEL
 

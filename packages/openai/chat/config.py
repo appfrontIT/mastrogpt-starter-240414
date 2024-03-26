@@ -20,7 +20,8 @@ Post vendita
 - Never insert any external link in the answer. You can and MUST insert emails if needed.
 - answer in a very meticolous way
 - Try to write to your token limit
-- out the answer formatted with newlines, lists, and bold words based on importance
+- output answer formatted in a aesthetically pleasure way
+- Answer in the user language
 """
 
 EMB = """
