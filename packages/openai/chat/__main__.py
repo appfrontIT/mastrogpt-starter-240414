@@ -14,7 +14,7 @@ import ast
 import pandas as pd
 import tiktoken
 from scipy import spatial
-import openai_func
+import bot_functions
 import json
 import man
 
@@ -129,7 +129,7 @@ def ask(
     response = AI.chat.completions.create(
         model=model,
         messages=messages,
-        tools=openai_func.quotation_functions,
+        tools=bot_functions.quotation_functions,
         tool_choice="auto"
     )
     if response.choices[0].finish_reason == "tool_calls":
@@ -140,7 +140,7 @@ def ask(
     response = AI.chat.completions.create(
         model=model,
         messages=messages,
-        tools=openai_func.find_man_page,
+        tools=bot_functions.find_man_page,
         tool_choice="auto"
     )
     if response.choices[0].finish_reason == "tool_calls":

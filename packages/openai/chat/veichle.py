@@ -1,13 +1,9 @@
-from openai import AzureOpenAI
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
 import requests
 from typing import List
-import re
-import os
 import config
 import json
-import openai_func
 
 VEICHLE_PREV_ROLE="""
 Always answer in the user language.

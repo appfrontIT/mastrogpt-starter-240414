@@ -16,15 +16,17 @@ nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/develo
 nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/parameters.html"))
 nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/annotations.html"))
 
+
+action_url = ""
 MODEL = "gpt-3.5-turbo"
 EMB = f"""
-From now on you are a programming language. You only know Python.
-Your job is to create functions to be deployed to Nuvolaris.
-- the function you generate MUST have at least the "main", and needs to return a dictionary or aray with key "body". Any other return type is forbidden
-- the "main" always accept "(args)"
+- From now on you are a programming language. You only code in Python
+- If the user ask to write a program or a function you answer with a function you created based on user requests
+- all the function you write always start with "def main(args):", and needs to return a dictionary or array with key "body". Any other return type is forbidden
+- display action such as: "/'namespace'/'package'/'action'"
 - NEVER use async
-- import any library you use
 - if you need to accept parameters you will get those such as: args.get("url") to get "url", args.get("name") to get "name" and so on
+- Explain information about an action in a very meticolous way, including the parameters of the function and a python and curl example
 - you can use only the follow libraries:
 aiohttp v1.3.3
 appdirs v1.4.3
@@ -42,7 +44,6 @@ greenlet v0.4.12
 httplib2 v0.9.2
 idna v2.5
 itsdangerous v0.24
-Jinja2 v2.9.5
 kafka-python v1.3.1
 lxml v3.6.4
 MarkupSafe v1.0
@@ -74,92 +75,26 @@ you analyze the text and extract the name of the action and the function
 if both are no present, don't call the function and answer with the element missing
 """
 
-def exec_find_func(
-        name: str,
-        language: str,
-        function
-        ):
-    ow_key = os.getenv('__OW_API_KEY')
-    split = ow_key.split(':')
-    print("name " + name)
-    print("langue " + language)
-    print(function[:20])
-    kind = ""
-    if language.lower() == 'python':
-        kind = "python:default"
-    if language.lower() == 'nodejs':
-        kind = "nodejs:20"
-    body = {
-        "namespace": "gporchia",
-        "name": name,
-        "exec":{"kind":kind, "code":function},
-        "annotations":[{"key":"web-export", "value":True}, {"key":"raw-http","value":False}, {"key": "final", "value": True}]
-        }
-    resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
-    if resp.status_code != 200:
-        return "Couldn't create the action"
-    config.html += f"\nhttps://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}"
-    return "action deployed"
-
-
-def find_func(
-        AI: OpenAI,
-        tool_calls: List[ChatCompletionMessageToolCall],
-        messages: list[dict[str, str]],
-        response: ChatCompletion
-) -> str:
-    available_functions = {
-        "exec_find_func": exec_find_func,
-        }
-    messages.append(response.choices[0].message)
-    for tool_call in tool_calls:
-        function_name = tool_call.function.name
-        function_to_call = available_functions[function_name]
-        function_args = json.loads(tool_call.function.arguments)
-        function_response = function_to_call(
-            **function_args
-            )
-        messages.append({
-            "tool_call_id":tool_call.id,
-            "role": "tool",
-            "name": function_name,
-            "content": function_response
-        })
-    response = AI.chat.completions.create(model=MODEL, messages=messages)
-    return response.choices[0].message.content
-
-func_finder = [
-    {
-        "type": "function",
-        "function": {
-            "name": "exec_find_func",
-            "description": "find the function, the programming language inside the text, and name of the action",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "name" : {"type": "string", "description": "single word that identify the action"},
-                    "language" : {"type": "string", "description": "programming language of the function"},
-                    "body": { "type": "string", "description": "the full message"},
-                    },
-                    "required": ["name", "language", "function"],
-                },
-            }
-        },
-]
-
-find_action = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_action",
-            "description": "Find 'action' name inside text ",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "name" : {"type": "string", "description": "single word that identify the action"},
-                    },
-                    "required": ["name"],
-                },
-            }
-        },
-]
+HTML_INFO ="""
+<!DOCTYPE html>
+<html>
+<body>
+<h1>Bot functionalities</h1>
+<h2>The bot is able to interact directly with your nuvolaris environment.<br>
+    You can ask him to perform operations over actions, such as:</h2><br>
+<ul>
+  <li>Create functions ad deploy the action to call it.<br>
+  The bot will generate a name accordingly to the type of action.<br>
+  Actions generated by the bot already have a description about the function as annotation.<br>
+  They also have an annotations with 'key' parameters where there are the key and type of the function parameters</li>
+  <li>Give you the actions list. The actions list will be given as: /{namespace}/{packagename}/{action}.</li>
+  <li>Delete one action. Simply make the request like "delete {action}".<br>
+  If the action is part of a package specify the package({package}/{action}).<br>
+  It's possible to delete multiple action at a time, doing like "delete {action} {action} {action} {action}"</li>
+  <li>Show additional information about one action.<br>
+  Just ask "{action} info" and you will get the action data and an explanation of the action.<br>
+  The bot can't produce information about a packed action, unless a description of the action is provided as annotation.</li>
+</ul>
+</body>
+</html>
+"""
