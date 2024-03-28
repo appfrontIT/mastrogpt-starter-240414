@@ -12,8 +12,12 @@ window.addEventListener('message', async function(ev) {
     .then(t => {
         // console.log(t)
         if(t !=  "") {
-            let content =  document.getElementById("_display_container_");
+            let content = this. document.getElementById("_display_container_");
             content.innerHTML = t;
+            // const blob = new Blob([t], { type: "text/html" });
+            // const blobUrl = URL.createObjectURL(blob);
+            // let content = this. document.getElementById("_display_container_");
+            // content.innerHTML = `<embed src="${blobUrl}" width="100%" height="800" ></embed>`;
         }
     })
     .catch(e => {

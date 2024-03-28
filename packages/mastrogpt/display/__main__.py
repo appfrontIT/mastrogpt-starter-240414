@@ -28,6 +28,8 @@ def main(args):
 
     if "html" in args:
         out = render("html.html", args)
+        out = out.split("\n", 1)[1]
+        out = out.rsplit('\n', 2)[0]
     elif "code" in args:
         data = {
             "code": args['code'],

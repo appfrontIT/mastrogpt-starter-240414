@@ -198,8 +198,6 @@ def main(args):
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
         }
-    elif input[len(input) -1] == ' ':
-        return {"body": {"output": ""}}
     else:
         output = ask(query=input, print_message=False, model=TUNED_MODEL)
         res = {

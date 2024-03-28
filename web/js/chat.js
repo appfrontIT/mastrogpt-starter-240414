@@ -129,12 +129,3 @@ window.addEventListener('message', async function (ev) {
   areaChat.innerHTML = ""
   bot(await invoker.invoke(""))
 })
-
-async function main() {
-  return "hello world!"
-  let input = args.text || ""
-  console.log("input " + input)
-  if (input != "") {
-      bot(input)
-  }
-}

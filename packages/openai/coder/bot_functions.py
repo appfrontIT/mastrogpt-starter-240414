@@ -14,7 +14,7 @@ MODEL="gpt-3.5-turbo"
 CLIENT = None
 
 def create_action(name, function, description, parameters):
-    # print(name)
+    print(name)
     # print(function)
     # print(description)
     # print(parameters)
@@ -23,17 +23,16 @@ def create_action(name, function, description, parameters):
     name_arr = []
     for x in obj:
         name_arr.append(x['name'])
-    print(name_arr)
     if name in name_arr:
         print("name already exists")
-    messages = [
-        {"role": "system", "content": f"Generate an unique name base on the description passed. Only 1 word is allowed. You can't use the following words to generate a name:\n\n{name_arr}"},
-        {"role": "user", "content": description}
-    ]
-    name = CLIENT.chat.completions.create(
-        model=MODEL,
-        messages=messages
-    ).choices[0].message.content
+        messages = [
+            {"role": "system", "content": f"Generate an unique name base on the description passed. Only 1 word is allowed. You can't use the following words to generate a name:\n\n{name_arr}"},
+            {"role": "user", "content": description}
+        ]
+        name = CLIENT.chat.completions.create(
+            model=MODEL,
+            messages=messages
+        ).choices[0].message.content
     function = function.replace('```', '')
     function = function.replace('python', '')
     function = function.replace('Python', '')
@@ -66,6 +65,11 @@ def create_action(name, function, description, parameters):
             <pre><code class="python"><xmp>{function}</xmp></code></pre>
         </body>
         """
+    html = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/openai/html_gen", json={
+        "input": f"url: https://nuvolaris.dev/api/v1/web/gporchia/default/{name} action: {(resp.text)}",
+        })
+    print(html.text)
+    config.html = f"""<iframe srcdoc="{html.json()['output']}" width="100%" height="800"></iframe>"""
     return "Action generated successfully"
 
 def action_info(name):
@@ -122,7 +126,7 @@ def show_all_actions():
 def tools_func(
         AI: OpenAI,
         tool_calls: List[ChatCompletionMessageToolCall],
-        messages: list[dict[str, str]],
+        messages: list,
         response: ChatCompletion
         ):
     global CLIENT
@@ -142,7 +146,8 @@ def tools_func(
             "content": function_response
         })
     response = AI.chat.completions.create(model=MODEL, messages=messages)
-    return response.choices[0].message.content 
+    messages.append(response.choices[0].message)
+    return [response.choices[0].message.content, messages]
 
 available_functions = {
     "show_all_actions": show_all_actions,

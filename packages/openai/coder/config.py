@@ -10,6 +10,7 @@ import os
 
 html = ""
 nuvolaris = []
+test_link = ""
 
 nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/actions.html"))
 nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/webactions.html"))
@@ -19,10 +20,10 @@ nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/develo
 
 action_url = ""
 MODEL = "gpt-3.5-turbo"
-EMB = f"""
+EMB = """
 - From now on you are a programming language. You only code in Python
 - If the user ask to write a program or a function you answer with a function you created based on user requests
-- all the function you write always start with "def main(args):", and needs to return a dictionary or array with key "body". Any other return type is forbidden
+- all the function you write always start with "def main(args):", and return a dictionary or array such as:{"body": {"output": "output"}}. Any other return type is forbidden
 - display action such as: "/'namespace'/'package'/'action'"
 - NEVER use async
 - if you need to accept parameters you will get those such as: args.get("url") to get "url", args.get("name") to get "name" and so on
@@ -78,6 +79,7 @@ if both are no present, don't call the function and answer with the element miss
 HTML_INFO ="""
 <!DOCTYPE html>
 <html>
+<head></head>
 <body>
 <h1>Bot functionalities</h1>
 <h2>The bot is able to interact directly with your nuvolaris environment.<br>
@@ -95,6 +97,48 @@ HTML_INFO ="""
   Just ask "{action} info" and you will get the action data and an explanation of the action.<br>
   The bot can't produce information about a packed action, unless a description of the action is provided as annotation.</li>
 </ul>
+</body>
+</html>
+"""
+
+TEST = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nuvolaris Action Test</title>
+</head>
+<body>
+    <h2>Action URL: <a href="https://nuvolaris.dev/api/v1/web/gporchia/default/multiply_by_three" target="_blank">https://nuvolaris.dev/api/v1/web/gporchia/default/multiply_by_three</a></h2>
+    
+    <p>This function takes a number as input and returns the result of multiplying the number by 3.</p>
+
+    <input type="number" id="inputNumber" placeholder="Enter a number">
+    <button onclick="callAction()">Multiply by 3</button>
+    
+    <p id="result"></p>
+    
+    <script>
+        function callAction() {
+            const number = document.getElementById("inputNumber").value;
+            
+            fetch('https://nuvolaris.dev/api/v1/web/gporchia/default/multiply_by_three', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    number: parseInt(number)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerText = "Result: " + data.result;
+            })
+            .catch(error => {
+                document.getElementById("result").innerText = "An error occurred. Please try again.";
+            });
+        }
+    </script>
 </body>
 </html>
 """
