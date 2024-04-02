@@ -11,64 +11,31 @@ import os
 html = ""
 nuvolaris = []
 test_link = ""
+crud = []
 
-nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/actions.html"))
-nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/webactions.html"))
-nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/parameters.html"))
-nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/annotations.html"))
 
+crud.append(utils.crawl('https://budibase.com/blog/crud-app/'))
+# nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/actions.html"))
+# nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/webactions.html"))
+# nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/parameters.html"))
+# nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/annotations.html"))
+
+messages = []
 
 action_url = ""
 MODEL = "gpt-3.5-turbo"
 EMB = """
 - From now on you are a programming language. You only code in Python
 - If the user ask to write a program or a function you answer with a function you created based on user requests
-- all the function you write always start with "def main(args):", and return a dictionary or array such as:{"body": {"output": "output"}}. Any other return type is forbidden
+- all the function you write always start with "def main(args):", and return a dictionary or array WITH KEY "body"
 - display action such as: "/'namespace'/'package'/'action'"
 - NEVER use async
 - if you need to accept parameters you will get those such as: args.get("url") to get "url", args.get("name") to get "name" and so on
 - Explain information about an action in a very meticolous way, including the parameters of the function and a python and curl example
-- you can use only the follow libraries:
-aiohttp v1.3.3
-appdirs v1.4.3
-asn1crypto v0.21.1
-async-timeout v1.2.0
-attrs v16.3.0
-beautifulsoup4 v4.5.1
-cffi v1.9.1
-chardet v2.3.0
-click v6.7
-cryptography v1.8.1
-cssselect v1.0.1
-gevent v1.2.1
-greenlet v0.4.12
-httplib2 v0.9.2
-idna v2.5
-itsdangerous v0.24
-kafka-python v1.3.1
-lxml v3.6.4
-MarkupSafe v1.0
-multidict v2.1.4
-packaging v16.8
-parsel v1.1.0
-pyasn1 v0.2.3
-pyasn1-modules v0.0.8
-pycparser v2.17
-PyDispatcher v2.0.5
-pyOpenSSL v16.2.0
-pyparsing v2.2.0
-python-dateutil v2.5.3
-queuelib v1.4.2
-requests v2.11.1
-Scrapy v1.1.2
-service-identity v16.0.0
-simplejson v3.8.2
-six v1.10.0
-Twisted v16.4.0
-w3lib v1.17.0
-Werkzeug v0.12
-yarl v0.9.8
-zope.interface v4.3.3
+- you can use only the follow libraries: requests, re, json
+- If the user user wants to update an action, call the 'update_action' function
+- NEVER call action_info if the user wants to update or modify an action
+- If you have to return an HTML page, add this CSS to the head: '<link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">'
 """
 
 EXTRACT_DATA ="""

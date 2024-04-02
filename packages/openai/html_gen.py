@@ -12,7 +12,7 @@ MODEL = "gpt-3.5-turbo"
 ROLE="""
 You're specialize in creating HTML page to test Nuvolaris action.
 - You take an action as input and answer ONLY with the html page.
-- The html page MUST use javascript to test the API call. If the action needs parameters, display a prompt to input them
+- The html page MUST use javascript to test the API call. If the action needs parameters, create the tabs to input them
 - The endpoint will be provided with the action.
 - If you don't get both information, you'll answer "I need the action uri and the action info to create the HTML"
 - The action always returns: {"output": result}

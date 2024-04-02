@@ -7,80 +7,80 @@ from openai import OpenAI
 import config
 import bot_functions
 from secrets import token_urlsafe
+import utils
+import json
 
 AI = None
 MODEL = "gpt-3.5-turbo"
 
+action_list = utils.get_actions()
+obj = json.loads(action_list)
+action_info_training = ""
+for x in obj:
+    namespace = x['namespace']
+    if namespace == "gporchia/openai" or namespace == "gporchia/mastrogpt":
+        continue
+    split = namespace.split('/')
+    if len(split) > 1:
+        _name = f"{split[1]}/{x['name']}"
+        data = utils.action_info(_name)
+        obj = json.loads(data)
+        action_info_training += f"{utils.action_info(_name)}\n"
+    else:
+        data = utils.action_info(x['name'])
+        obj = json.loads(data)
+        action = f"name={obj['name']}\nurl={obj['annotations'][1]['value']}\ndescription={obj['annotations'][2]['value']}\nparameters={obj['annotations'][7]['value']}\ncode={obj['exec']['code']}"
+        action_info_training += f"{action}\n"
+
+
+config.messages = [{"role": "system", "content": f"{config.EMB}"}, {"role": "user", "content": f"Complete list of the actions:\n{action_info_training}"}]
+
 def ask(
-    query: list,
+    query: str,
     model: str = MODEL,
     token_budget: int = 8192 - 500,
     print_message: bool = False,
-) -> list:
-    """Answers a query using GPT and a dataframe of relevant texts and embeddings."""
-    messages = [
-        {"role": "system", "content": config.EMB},
-        {"role": "user", "content": query},
-    ]
+) -> str:
+    config.messages.append({"role": "user", "content": query})
     response = AI.chat.completions.create(
         model=model,
-        messages=query,
+        messages=config.messages,
         tools=bot_functions.tools,
         tool_choice="auto"
     )
     # We start checking if the tools activated. If not we answer generic question about Nuvolaris
     if response.choices[0].finish_reason == "tool_calls":
         tool_calls = response.choices[0].message.tool_calls
-        return bot_functions.tools_func(AI, tool_calls, query, response)
+        return bot_functions.tools_func(AI, tool_calls, config.messages, response)
     print("no tools")
-    return "Error, something went wrong in creating your action"
+    return response.choices[0].message.content
 
 TUNED_MODEL = None
 
-cookies = {'': []}
 def main(args):
     global AI
     global TUNED_MODEL
-    global cookies
     config.html = config.HTML_INFO
 
     AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
     
     TUNED_MODEL = MODEL
-    headers = args['__ow_headers']
-    cookie: str = headers.get("cookie", "")
-    print(cookie)
-    headers = ""
+
     input = args.get("input", "")
-    if cookie == "":
-        token = token_urlsafe(64)
-        print(token)
-        headers = {'Set-Cookie': f'UserID={token}; Max-Age=3600; Version=',}
-        cookies[token] = [
-            {"role": "system", "content": config.EMB},
-            {"role": "user", "content": input},
-            ]
-        print(cookies[token])
-    else:
-        headers = {'Cookie': cookie}
-        cookie = cookie.split('=')[1]
-        cookies[cookie].append({"role": "user", "content": input})
     if input == "":
+        config.messages = [{"role": "system", "content": f"{config.EMB}"}]
+        print(config.messages)
         res = {
             "output": "Benvenuti in Walkiria, la piattaforma AI di Appfront.",
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
         }
     else:
-        output = ask(query=cookies[cookie], print_message=False, model=TUNED_MODEL)
-        cookies[cookie] = output[1]
-        print(cookies[cookie])
-        print(output[0])
+        output = ask(query=input, print_message=False, model=TUNED_MODEL)
         res = {
-            "output": output[0],
+            "output": output,
         }
+        print(config.messages)
     if config.html != "":
         res['html'] = config.html
-    return {"body": res,
-            "headers": headers
-            }
+    return {"body": res,}
