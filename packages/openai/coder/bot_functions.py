@@ -13,6 +13,76 @@ import config
 MODEL="gpt-3.5-turbo"
 CLIENT = None
 
+def html_gen(args):
+    actions_info = args.get('actions_info', '')
+    description: str = args.get('description', '')
+    name: str = args.get('name', '')
+    action_array = ""
+    for action in actions_info:
+        status = utils.action_info(action)
+        obj = json.loads(status)
+        error = obj.get('error', '')
+        if error != '':
+            return f"the following action does not exists: {action}\n"
+        action_array += f"{status}\n"
+    if action_array != "":
+        query = f"{description}\nHere the informations about the actions you have to call inside it: {action_array}"
+    else:
+        query = description
+    html = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/openai/html_gen", json={"input": query})
+    html_obj = html.json()
+    ret = {"body": f"""{html_obj['output']}"""}
+    function = f"""def main(args):\n\treturn {ret}"""
+    print(function)
+    action_list = utils.get_actions()
+    obj = json.loads(action_list)
+    name_arr = []
+    for x in obj:
+        name_arr.append(x['name'])
+    if name in name_arr:
+        print("name already exists")
+        messages = [
+            {"role": "system", "content": f"Generate an unique name base on the description passed. Only 1 word is allowed. You can't use the following words to generate a name:\n\n{name_arr}"},
+            {"role": "user", "content": description}
+        ]
+        name = CLIENT.chat.completions.create(
+            model=MODEL,
+            messages=messages
+        ).choices[0].message.content
+    url = f'https://nuvolaris.dev/api/v1/web/gporchia/default/{name}'
+    ow_key = os.getenv('__OW_API_KEY')
+    split = ow_key.split(':')
+    body = {
+        "namespace": "gporchia",
+        "name": name,
+        "exec":{"kind":"python:default", "code":function},
+        "annotations":[
+            {"key":"web-export", "value":True},
+            {"key":"raw-http","value":False},
+            {"key": "final", "value": True},
+            {"key": "description", "value": description},
+            {"key": "parameters", "value": ''},
+            {"key": "url", "value": url}
+            ]
+        }
+    resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
+    print(resp.text[:200])
+    if resp.status_code != 200:
+        print(resp.text)
+    config.html = f"""
+            <head>
+            <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+                <script>hljs.initHighlightingOnLoad();</script>
+                <h3>ACTION URL:<br><a href="https://nuvolaris.dev/api/v1/web/gporchia/default/{name}" target="_blank">https://nuvolaris.dev/api/v1/web/gporchia/default/{name}</a></h3>
+            </head>
+            <body>
+                <pre><code class="python"><xmp>{function}</xmp></code></pre>
+            </body>
+            \n\n
+            """
+    return resp.text
+
 def update_action(name, modifications):
     name = name.replace('gporchia/', '')
     action_list = utils.get_actions()
@@ -90,9 +160,8 @@ def do_update(name, new_name, function, description, parameters):
 def create_action(action_array):
     config.html = ""
     ret = ""
-    print( action_array)
     for x in action_array:
-        description = x['info']
+        description = x['description']
         name = x['name']
         function = x['function']
         parameters = x.get('parameters', '')
@@ -246,6 +315,7 @@ available_functions = {
     "action_info": action_info,
     "create_action": create_action,
     "update_action": update_action,
+    "html_gen": html_gen
 }
 
 tools = [
@@ -265,7 +335,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "create_action",
-            "description": "the user explicity asks to create an action such as: 'Create an action', 'make an action' and so on",
+            "description": "the user asks to create an action NOT returning HTML. If the action returns html use html_gen instead",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -276,7 +346,7 @@ tools = [
                             "properties": {
                                 "name": {"type": "string", "description": "action name"},
                                 "function": {"type": "string", "description": "the generated function. It must starts with 'def main(args):'"},
-                                "info": {"type": "string", "description": "a description of the action"},
+                                "description": {"type": "string", "description": "a description of the action you made"},
                                 "parameters": {
                                     "type": "array",
                                     "description": "input paramaters type such as '{key: type}, {key: type}, {key: type}' and so on",
@@ -285,7 +355,7 @@ tools = [
                                         }
                                     },
                                 },
-                                "required": ["name", "function", "info"]
+                                "required": ["name", "function", "description"]
                             },
                         }
                     },
@@ -340,6 +410,33 @@ tools = [
                 },
                     "required": ["name"],
                 },
+            }
+        },
+        {
+        "type": "function",
+        "function": {
+            "name": "html_gen",
+            "description": "the user asks to create an action returning HTML",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "args": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string", "description": "action name"},
+                            "description": {"type": "string", "description": "detailed description of the action to create"},
+                            "actions_info": {
+                                "type": "array",
+                                "description": "Array of the actions name to be called inside the HTML. If no actions provided, return an empty array",
+                                "items": {
+                                    "type": "string",
+                                    }
+                                },
+                            }
+                        }
+                    },
+                    "required": ["args"]
+                }
             }
         },
 ]

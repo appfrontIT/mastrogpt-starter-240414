@@ -18,7 +18,7 @@ obj = json.loads(action_list)
 action_info_training = ""
 for x in obj:
     namespace = x['namespace']
-    if namespace == "gporchia/openai" or namespace == "gporchia/mastrogpt":
+    if namespace == "gporchia/openai" or namespace == "gporchia/mastrogpt" or namespace == "gporchia/db":
         continue
     split = namespace.split('/')
     if len(split) > 1:
@@ -29,7 +29,7 @@ for x in obj:
     else:
         data = utils.action_info(x['name'])
         obj = json.loads(data)
-        action = f"name={obj['name']}\nurl={obj['annotations'][1]['value']}\ndescription={obj['annotations'][2]['value']}\nparameters={obj['annotations'][7]['value']}\ncode={obj['exec']['code']}"
+        action = f"name={obj['name']}\nurl={obj['annotations'][1]['value']}\ndescription={obj['annotations'][2]['value']}\nparameters={obj['annotations'][7]['value']}"
         action_info_training += f"{action}\n"
 
 
@@ -38,15 +38,35 @@ config.messages = [{"role": "system", "content": f"{config.EMB}"}, {"role": "use
 def ask(
     query: str,
     model: str = MODEL,
-    token_budget: int = 8192 - 500,
     print_message: bool = False,
 ) -> str:
+    # find_actions = AI.chat.completions.create(
+    #     model=model,
+    #     messages=[
+    #         {"role": "system", "content": """Return an array of action names user is asking to use. Example: {"actions": []}"""},
+    #         {"role": "user", "content": query}
+    #     ]
+    # ).choices[0].message.content
+    # obj = json.loads(str(find_actions))
+    # array = obj.get('actions', '')
+    # print(array)
+    # if len(array) > 0:
+    #     query_actions = ""
+    #     for x in array:
+    #         data = utils.action_info(x)
+    #         obj = json.loads(data)
+    #         if len(obj.get('error')) > 0:
+    #             return f"the following action does not exists: {x}\n"
+    #         action = f"name={obj['name']}\nurl={obj['annotations'][1]['value']}\ndescription={obj['annotations'][2]['value']}\nparameters={obj['annotations'][7]['value']}"
+    #         query_actions += f"{action}\n"
+    #     query = f"use the following informations to answer:\n{query_actions}Question:{query}"
     config.messages.append({"role": "user", "content": query})
     response = AI.chat.completions.create(
         model=model,
         messages=config.messages,
         tools=bot_functions.tools,
-        tool_choice="auto"
+        tool_choice="auto",
+        max_tokens=(4096 - 500)
     )
     # We start checking if the tools activated. If not we answer generic question about Nuvolaris
     if response.choices[0].finish_reason == "tool_calls":
@@ -69,7 +89,6 @@ def main(args):
     input = args.get("input", "")
     if input == "":
         config.messages = [{"role": "system", "content": f"{config.EMB}"}]
-        print(config.messages)
         res = {
             "output": "Benvenuti in Walkiria, la piattaforma AI di Appfront.",
             "title": "OpenAI Chat",
