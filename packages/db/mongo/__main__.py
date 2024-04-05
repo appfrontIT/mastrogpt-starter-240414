@@ -1,21 +1,36 @@
 #--web true
 #--kind python:default
-#--param CONNECTION_STRING $CONNECTION_STRING
 
 from pymongo import MongoClient
 import json
 from bson.objectid import ObjectId
+
+def format_el(element):
+    ret = {}
+    for key in element:
+        if key == '_id':
+            id = element[key]
+            ret['ID'] = str(id)
+        else:
+            ret[key] = element[key]
+    print(ret)
+    return json.dumps(ret)
 
 def update(collection, filter, update_data):
     to_update = {}
     for key in update_data:
         if update_data[key] != "":
             to_update[key] = update_data[key]
-    data = collection.update_one({'_id':ObjectId(filter['_id'])}, {"$set": to_update})
-    return {"body": str(data)}
+    data = collection.update_one({'_id':ObjectId(filter['id'])}, {"$set": to_update})
+    el = collection.find_one({'_id': ObjectId(filter['id'])})
+    return {"body": format_el(el)}
 
 def delete(collection, filter):
-    return {"body": str(collection.delete_one({'_id':ObjectId(filter['_id'])}))}
+    print(filter)
+    el = collection.find_one({'_id': ObjectId(filter['id'])})
+    deleted_el = format_el(el)
+    data = collection.delete_one({'_id':ObjectId(filter['id'])})
+    return {"body": deleted_el}
 
 def find(collection, filter):
     to_filter = {}
@@ -23,10 +38,10 @@ def find(collection, filter):
         if filter[key] != "":
             to_filter[key] = filter[key]
     data = collection.find(to_filter)
-    ret = ""
+    ret = []
     for x in data:
-        ret += f"{str(x)}\n"
-    return {"body": ret}
+        ret.append(format_el(x))
+    return {"body": json.dumps(ret)}
 
 def main(args):
     # print(args)
@@ -55,4 +70,5 @@ def main(args):
     if data.get('update') == True:
         return update(db_coll, data.get('filter', ''), data.get('updateData', ''))
     ins = db_coll.insert_one(data).inserted_id
-    return {"body": str(db_coll.find_one({'_id': ins}))}
+    el = db_coll.find_one({'_id': ins})
+    return {"body": format_el(el)}

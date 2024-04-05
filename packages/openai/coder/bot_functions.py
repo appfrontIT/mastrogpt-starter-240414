@@ -24,14 +24,22 @@ def html_gen(args):
         error = obj.get('error', '')
         if error != '':
             return f"the following action does not exists: {action}\n"
-        action_array += f"{status}\n"
+        action_array += f"name: {obj['name']}\n"
+        annotations = obj['annotations']
+        for pair in annotations:
+            if pair['key'] == 'url' or pair['key'] == 'description' or pair['key'] == 'parameters':
+                action_array += f"{pair['key']}: {pair['value']}\n"
+        action_array += f"code: {obj['exec']['code']}\n"
     if action_array != "":
         query = f"{description}\nHere the informations about the actions you have to call inside it: {action_array}"
     else:
         query = description
     html = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/openai/html_gen", json={"input": query})
     html_obj = html.json()
-    ret = {"body": f"""{html_obj['output']}"""}
+    output = html_obj.get('output', '')
+    if output == '':
+        return "failed to generate the HTML"
+    ret = {"body": output}
     function = f"""def main(args):\n\treturn {ret}"""
     print(function)
     action_list = utils.get_actions()
@@ -66,7 +74,6 @@ def html_gen(args):
             ]
         }
     resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
-    print(resp.text[:200])
     if resp.status_code != 200:
         print(resp.text)
     config.html = f"""

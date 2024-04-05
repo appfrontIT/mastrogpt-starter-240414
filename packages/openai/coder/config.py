@@ -48,7 +48,7 @@ update:
 def main(args):
     import requests
     import json
-    data = {"update": True, "filter": { args.get('filter') },
+    data = {"update": True, "filter": args.get('filter'),
         "updateData": {
             "title": args.get("title"),
             "author": args.get("author"),
@@ -63,7 +63,7 @@ delete:
 def main(args):
     import requests
     import json
-    data = { "delete": True, "filter": { args.get('filter') }}
+    data = { "delete": True, "filter": args.get('filter')}
     response = requests.delete("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"collection": "books", "data": data})
     return {"body": response.text}
 
@@ -114,49 +114,8 @@ HTML_INFO ="""
   <li>Show additional information about one action.<br>
   Just ask "{action} info" and you will get the action data and an explanation of the action.<br>
   The bot can't produce information about a packed action, unless a description of the action is provided as annotation.</li>
+  <li>You can ask the bot make an HTML page incorporating others actions. This is still in delevopment. Example:<br>"Make an action returning an html page calling the following actions: {action1}, {action2}, {...}
 </ul>
-</body>
-</html>
-"""
-
-TEST = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Nuvolaris Action Test</title>
-</head>
-<body>
-    <h2>Action URL: <a href="https://nuvolaris.dev/api/v1/web/gporchia/default/multiply_by_three" target="_blank">https://nuvolaris.dev/api/v1/web/gporchia/default/multiply_by_three</a></h2>
-    
-    <p>This function takes a number as input and returns the result of multiplying the number by 3.</p>
-
-    <input type="number" id="inputNumber" placeholder="Enter a number">
-    <button onclick="callAction()">Multiply by 3</button>
-    
-    <p id="result"></p>
-    
-    <script>
-        function callAction() {
-            const number = document.getElementById("inputNumber").value;
-            
-            fetch('https://nuvolaris.dev/api/v1/web/gporchia/default/multiply_by_three', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    number: parseInt(number)
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("result").innerText = "Result: " + data.result;
-            })
-            .catch(error => {
-                document.getElementById("result").innerText = "An error occurred. Please try again.";
-            });
-        }
-    </script>
 </body>
 </html>
 """
