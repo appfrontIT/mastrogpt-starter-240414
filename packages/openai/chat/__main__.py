@@ -1,6 +1,8 @@
 #--web true
 #--kind python:default
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--param LOGIN $LOGIN
+#--param PASSWORD $PASSWORD
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
@@ -195,23 +197,26 @@ def ask(
     return response_message
 
 TUNED_MODEL = None
+is_login = False
+is_password = False
 
 def main(args):
     global AI
     global TUNED_MODEL
     global df
+    global is_login
+    global is_password
     config.html = "<iframe src='https://appfront.cloud' width='100%' height='800'></iframe>"
 
     AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
     
-    response = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/embedding', json={"name": "test", "data": config.EMB})
-    obj = response.json()
-    # print(obj)
-    data = []
-    for el in obj:
-        data.append({"text": el['text'], "embedding": el['embedding']})
-    # print(data)
-    df = pd.DataFrame(data)
+    # Retrieving embeddings from database
+    # response = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/embedding', json={"name": "test", "data": config.EMB})
+    # obj = response.json()
+    # data = []
+    # for el in obj:
+    #     data.append({"text": el['text'], "embedding": el['embedding']})
+    # df = pd.DataFrame(data)
     # if fine_tunig.status == "succeeded":
     #     TUNED_MODEL = fine_tunig.fine_tuned_model
     # else:
@@ -221,16 +226,31 @@ def main(args):
     
     input = args.get("input", "")
     if input == "":
+        is_login = False
+        is_password = False
         res = {
-            "output": "Benvenuti in Walkiria, la piattaforma AI di Appfront.",
+            "output": "Benvenuti in Walkiria, la piattaforma AI di Appfront. Per favore, inserire il proprio nome utente",
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
         }
     else:
-        output = ask(query=input, print_message=False, model=TUNED_MODEL)
-        res = {
-            "output": output
-        }
+        if is_login == False:
+            if input == args.get("LOGIN"):
+                is_login = True
+                res = {"output": f"per favore inserire la password per l'utente {input}"}
+            else:
+                res = {"output": "errore, l'utente non esiste, riprovare nuovamente"}
+        elif is_login == True and is_password == False:
+            if input == args.get("PASSWORD"):
+                is_password = True
+                user = args.get("LOGIN")
+                res = {"output": f"Bentornato {user}! Come posso aiutarti?"}
+            else:
+                is_login = False
+                res = {"output": "Errore, password non valida. Per favore inserire nome utente"}
+        else:
+            output = ask(query=input, print_message=False, model=TUNED_MODEL)
+            res = { "output": output}
     if config.html != "":
         res['html'] = config.html
     return {"body": res }
