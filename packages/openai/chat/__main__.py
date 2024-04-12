@@ -199,6 +199,8 @@ def ask(
 TUNED_MODEL = None
 is_login = False
 is_password = False
+stored_user = ""
+session_user = None
 
 def main(args):
     global AI
@@ -235,19 +237,25 @@ def main(args):
         }
     else:
         if is_login == False:
-            if input == args.get("LOGIN"):
+            user = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/user/find_user", headers={"Content-Type": "application/json"}, json={"name": input}).json()
+            if user != None:
+                global stored_user
                 is_login = True
-                res = {"output": f"per favore inserire la password per l'utente {input}"}
+                stored_user = user['name']
+                res = {"output": f"per favore inserire la password per l'utente {input}", "login": True}
             else:
                 res = {"output": "errore, l'utente non esiste, riprovare nuovamente"}
         elif is_login == True and is_password == False:
-            if input == args.get("PASSWORD"):
+            user = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/user/find_user", headers={"Content-Type": "application/json"}, json={"name": stored_user, "password": input}).json()
+            if user != None:
                 is_password = True
-                user = args.get("LOGIN")
-                res = {"output": f"Bentornato {user}! Come posso aiutarti?"}
+                global session_user
+                session_user = user
+                res = {"output": f"Bentornato {user['name']}! Come posso aiutarti?", "password": True}
             else:
                 is_login = False
-                res = {"output": "Errore, password non valida. Per favore inserire nome utente"}
+                stored_user = ""
+                res = {"output": "Errore, password non valida. Per favore inserire nome utente", "password": True}
         else:
             output = ask(query=input, print_message=False, model=TUNED_MODEL)
             res = { "output": output}

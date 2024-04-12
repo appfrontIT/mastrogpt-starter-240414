@@ -51,6 +51,16 @@ class Invoker {
       .then(r => {
         this.state = r.state
         let data = r
+        let login = data.login
+        if (login) {
+          console.log("login")
+          document.getElementById("hybrid").type = "password"
+          delete data['login']
+        }
+        if (data.password) {
+          document.getElementById("hybrid").type = "text"
+          delete data['password']
+        }
         let output = data.output
         delete data['output']
         delete data['state']

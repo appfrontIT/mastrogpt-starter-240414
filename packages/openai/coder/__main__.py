@@ -103,23 +103,23 @@ def main(args):
             "message": "You can chat with OpenAI.",
         }
     else:
-        if is_login == False:
-            if input == args.get("LOGIN"):
-                is_login = True
-                res = {"output": f"per favore inserire la password per l'utente {input}"}
-            else:
-                res = {"output": "errore, l'utente non esiste, riprovare nuovamente"}
-        elif is_login == True and is_password == False:
-            if input == args.get("PASSWORD"):
-                is_password = True
-                user = args.get("LOGIN")
-                res = {"output": f"Bentornato {user}! Come posso aiutarti?"}
-            else:
-                is_login = False
-                res = {"output": "Errore, password non valida. Per favore inserire nome utente"}
-        else:
-            output = ask(query=input, print_message=False, model=TUNED_MODEL)
-            res = { "output": output}
+        # if is_login == False:
+        #     if input == args.get("LOGIN"):
+        #         is_login = True
+        #         res = {"output": f"per favore inserire la password per l'utente {input}"}
+        #     else:
+        #         res = {"output": "errore, l'utente non esiste, riprovare nuovamente"}
+        # elif is_login == True and is_password == False:
+        #     if input == args.get("PASSWORD"):
+        #         is_password = True
+        #         user = args.get("LOGIN")
+        #         res = {"output": f"Bentornato {user}! Come posso aiutarti?"}
+        #     else:
+        #         is_login = False
+        #         res = {"output": "Errore, password non valida. Per favore inserire nome utente"}
+        # else:
+        output = ask(query=input, print_message=False, model=TUNED_MODEL)
+        res = { "output": output}
     if config.html != "":
         res['html'] = config.html
     return {"body": res,}

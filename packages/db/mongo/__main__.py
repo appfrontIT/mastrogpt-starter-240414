@@ -13,7 +13,6 @@ def format_el(element):
             ret['ID'] = str(id)
         else:
             ret[key] = element[key]
-    print(ret)
     return json.dumps(ret)
 
 def update(collection, filter, update_data):
@@ -43,6 +42,16 @@ def find(collection, filter):
         ret.append(format_el(x))
     return {"body": json.dumps(ret)}
 
+def find_one(collection, filter):
+    to_filter = {}
+    for key in filter:
+        if filter[key] != "":
+            to_filter[key] = filter[key]
+    data = collection.find_one(to_filter)
+    if data:
+        return {"body": format_el(data)}
+    return {"body": json.dumps(data)}
+
 def main(args):
     # print(args)
     # connection_string = args.get('CONNECTION_STRING')
@@ -63,6 +72,8 @@ def main(args):
     else:
         db_coll = dbname.create_collection(collection)
         
+    if data.get('find_one') == True:
+        return find_one(db_coll, data.get('filter', ''))
     if data.get('find') == True:
         return find(db_coll, data.get('filter', ''))
     if data.get('delete') == True:
