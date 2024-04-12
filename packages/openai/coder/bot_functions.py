@@ -227,7 +227,7 @@ def create_action(action_array):
     #     "input": f"url: https://nuvolaris.dev/api/v1/web/gporchia/default/{name} action: {(resp.text)}",
     #     })
     # config.html = f"""<iframe srcdoc="{html.json()['output']}" width="100%" height="800"></iframe>"""
-    return ret
+    return f"give also a curl example to call the action, if the requests is POST or PUT use 'Content-Type: application/json':{ret}"
 
 def action_info(name):
     action_list = utils.get_actions()
@@ -282,7 +282,7 @@ def show_all_actions():
                 name_arr += f"\nDescription:{description}\n"
                 break
     config.html = f"<html><body><pre><code><xmp>{json.dumps(obj, indent=2)}</xmp></code></pre></code></html>"
-    return f"""display the following actions and the description. Example:
+    return f"""display ALL the following actions and the description. Example:
     - with description: **/namespace/package/action/** <br />Description: action description
     - without description: **/namespace/package/action**
     Format the answer as markdown
@@ -356,7 +356,7 @@ tools = [
                                 "description": {"type": "string", "description": "a description of the action you made"},
                                 "parameters": {
                                     "type": "array",
-                                    "description": "input paramaters type such as '{key: type}, {key: type}, {key: type}' and so on",
+                                    "description": """input paramaters format as: {key: type}, {key: type}, {key: type} and so on""",
                                     "items": {
                                         "type": "string"
                                         }

@@ -2,8 +2,6 @@
 #--kind python:default
 #--annotation provide-api-key true
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
-#--param LOGIN $LOGIN
-#--param PASSWORD $PASSWORD
 
 from openai import OpenAI
 import config
@@ -11,57 +9,31 @@ import bot_functions
 from secrets import token_urlsafe
 import utils
 import json
+import requests
 
 AI = None
 MODEL = "gpt-3.5-turbo"
-
-action_list = utils.get_actions()
-obj = json.loads(action_list)
-action_info_training = ""
-for x in obj:
-    namespace = x['namespace']
-    if namespace == "gporchia/openai" or namespace == "gporchia/mastrogpt" or namespace == "gporchia/db":
-        continue
-    split = namespace.split('/')
-    if len(split) > 1:
-        _name = f"{split[1]}/{x['name']}"
-        data = utils.action_info(_name)
-        obj = json.loads(data)
-        action_info_training += f"{utils.action_info(_name)}\n"
-    else:
-        data = utils.action_info(x['name'])
-        obj = json.loads(data)
-        action = f"name={obj['name']}\nurl={obj['annotations'][1]['value']}\ndescription={obj['annotations'][2]['value']}\nparameters={obj['annotations'][7]['value']}"
-        action_info_training += f"{action}\n"
-
-
-config.messages = [{"role": "system", "content": f"{config.EMB}"}, {"role": "user", "content": f"Complete list of the actions:\n{action_info_training}"}]
 
 def ask(
     query: str,
     model: str = MODEL,
     print_message: bool = False,
 ) -> str:
-    # find_actions = AI.chat.completions.create(
+    # TEST
+    # from zipfile import ZipFile 
+    # with ZipFile("webapp.zip", 'r') as myzip:
+    #     file_list = myzip.namelist()
+    #     for file in file_list:
+    #         content = str(myzip.read(file))
+    #         config.messages.append({"role": "user", "content": content})
+
+    # config.messages.append({"role": "user", "content": query})
+    # response = AI.chat.completions.create(
     #     model=model,
-    #     messages=[
-    #         {"role": "system", "content": """Return an array of action names user is asking to use. Example: {"actions": []}"""},
-    #         {"role": "user", "content": query}
-    #     ]
-    # ).choices[0].message.content
-    # obj = json.loads(str(find_actions))
-    # array = obj.get('actions', '')
-    # print(array)
-    # if len(array) > 0:
-    #     query_actions = ""
-    #     for x in array:
-    #         data = utils.action_info(x)
-    #         obj = json.loads(data)
-    #         if len(obj.get('error')) > 0:
-    #             return f"the following action does not exists: {x}\n"
-    #         action = f"name={obj['name']}\nurl={obj['annotations'][1]['value']}\ndescription={obj['annotations'][2]['value']}\nparameters={obj['annotations'][7]['value']}"
-    #         query_actions += f"{action}\n"
-    #     query = f"use the following informations to answer:\n{query_actions}Question:{query}"
+    #     messages=config.messages,
+    # )
+    # return response.choices[0].message.content
+    # END TEST
     config.messages.append({"role": "user", "content": query})
     response = AI.chat.completions.create(
         model=model,
@@ -97,29 +69,36 @@ def main(args):
         config.messages = [{"role": "system", "content": f"{config.EMB}"}]
         is_login = False
         is_password = False
+        # utils.load_zip('webapp.zip')
         res = {
             "output": "Benvenuti in Walkiria, la piattaforma AI di Appfront. Per favore, inserire il proprio nome utente",
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
         }
     else:
-        # if is_login == False:
-        #     if input == args.get("LOGIN"):
-        #         is_login = True
-        #         res = {"output": f"per favore inserire la password per l'utente {input}"}
-        #     else:
-        #         res = {"output": "errore, l'utente non esiste, riprovare nuovamente"}
-        # elif is_login == True and is_password == False:
-        #     if input == args.get("PASSWORD"):
-        #         is_password = True
-        #         user = args.get("LOGIN")
-        #         res = {"output": f"Bentornato {user}! Come posso aiutarti?"}
-        #     else:
-        #         is_login = False
-        #         res = {"output": "Errore, password non valida. Per favore inserire nome utente"}
-        # else:
-        output = ask(query=input, print_message=False, model=TUNED_MODEL)
-        res = { "output": output}
+        if is_login == False:
+            user = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/user/find_user", headers={"Content-Type": "application/json"}, json={"name": input}).json()
+            if user != None:
+                global stored_user
+                is_login = True
+                stored_user = user['name']
+                res = {"output": f"per favore inserire la password per l'utente {input}", "login": True}
+            else:
+                res = {"output": "errore, l'utente non esiste, riprovare nuovamente"}
+        elif is_login == True and is_password == False:
+            user = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/user/find_user", headers={"Content-Type": "application/json"}, json={"name": stored_user, "password": input}).json()
+            if user != None:
+                is_password = True
+                global session_user
+                session_user = user
+                res = {"output": f"Bentornato {user['name']}! Come posso aiutarti?", "password": True}
+            else:
+                is_login = False
+                stored_user = ""
+                res = {"output": "Errore, password non valida. Per favore inserire nome utente", "password": True}
+        else:
+            output = ask(query=input, print_message=False, model=TUNED_MODEL)
+            res = { "output": output}
     if config.html != "":
         res['html'] = config.html
     return {"body": res,}

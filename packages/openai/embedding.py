@@ -57,10 +57,10 @@ def main(args):
     db_coll = ""
     if name in collection_list:
         db_coll = dbname[name]
-        cursor = db_coll.find({}, {'_id': False})
-        list_cur = list(cursor)
-        json_data = dumps(list_cur)
-        return {"body": json_data}
+        # cursor = db_coll.find({}, {'_id': False})
+        # list_cur = list(cursor)
+        # json_data = dumps(list_cur)
+        # return {"body": json_data}
     else:
         db_coll = dbname.create_collection(name)
     data = args.get('data', '')

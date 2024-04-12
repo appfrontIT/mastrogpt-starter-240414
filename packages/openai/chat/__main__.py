@@ -1,8 +1,6 @@
 #--web true
 #--kind python:default
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
-#--param LOGIN $LOGIN
-#--param PASSWORD $PASSWORD
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
