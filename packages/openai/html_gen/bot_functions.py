@@ -13,10 +13,18 @@ def html_crud(args):
     if description == '':
         return "Error, no description provided"
     query = f"""{description}\n
-    use the following example to generate the html:\n{config.html_crud}\nChange only the model informations. Model: {model}s
+    use the following example to generate the html:\n{config.html_crud}\nChange only the model informations. Model: {model}
 """
     return query
 
+def html_general(description, actions = []):
+    print(description)
+    print(actions)
+    return f"""Generate an HTML page representing the following description: {description}
+    the html page should call the following actions if provided: {actions}
+    Take your time to generate the html. If you need to perform any http request use javascript.
+    try to format the page in a well and aesthetical way. Use a css style to make everything look better.
+    Use cols and rows if needed to format the page better."""
 
 def tools_func(
         AI: OpenAI,
@@ -47,6 +55,7 @@ def tools_func(
 
 available_functions = {
     "html_crud": html_crud,
+    "html_general": html_general,
 }
 
 tools = [
@@ -68,6 +77,27 @@ tools = [
                     },
                 },
                 "required": ["args"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "html_general",
+            "description": "the user wants to build a non specific HTML page",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "description": {"type": "string", "description": "description of the user requests"},
+                    "actions": {
+                        "type": "array",
+                        "description": "array of actions to be called inside the html",
+                        "items": {
+                            "type": "string"
+                        },
+                    },
+                },
+                "required": ["description"],
             },
         },
     },

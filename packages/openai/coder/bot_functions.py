@@ -40,55 +40,10 @@ def html_gen(args):
     if output == '':
         return "failed to generate the HTML"
     ret = {"body": output}
+    actions = []
     function = f"""def main(args):\n\treturn {ret}"""
-    print(function)
-    action_list = utils.get_actions()
-    obj = json.loads(action_list)
-    name_arr = []
-    for x in obj:
-        name_arr.append(x['name'])
-    if name in name_arr:
-        print("name already exists")
-        messages = [
-            {"role": "system", "content": f"Generate an unique name base on the description passed. Only 1 word is allowed. You can't use the following words to generate a name:\n\n{name_arr}"},
-            {"role": "user", "content": description}
-        ]
-        name = CLIENT.chat.completions.create(
-            model=MODEL,
-            messages=messages
-        ).choices[0].message.content
-    url = f'https://nuvolaris.dev/api/v1/web/gporchia/default/{name}'
-    ow_key = os.getenv('__OW_API_KEY')
-    split = ow_key.split(':')
-    body = {
-        "namespace": "gporchia",
-        "name": name,
-        "exec":{"kind":"python:default", "code":function},
-        "annotations":[
-            {"key":"web-export", "value":True},
-            {"key":"raw-http","value":False},
-            {"key": "final", "value": True},
-            {"key": "description", "value": description},
-            {"key": "parameters", "value": ''},
-            {"key": "url", "value": url}
-            ]
-        }
-    resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
-    if resp.status_code != 200:
-        print(resp.text)
-    config.html = f"""
-            <head>
-            <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
-                <script>hljs.initHighlightingOnLoad();</script>
-                <h3>ACTION URL:<br><a href="https://nuvolaris.dev/api/v1/web/gporchia/default/{name}" target="_blank">https://nuvolaris.dev/api/v1/web/gporchia/default/{name}</a></h3>
-            </head>
-            <body>
-                <pre><code class="python"><xmp>{function}</xmp></code></pre>
-            </body>
-            \n\n
-            """
-    return resp.text
+    actions.append({"description": description, "name": name, "function": function})
+    return create_action(actions)
 
 def update_action(name, modifications):
     name = name.replace('gporchia/', '')
@@ -165,13 +120,13 @@ def do_update(name, new_name, function, description, parameters):
     return "Action updated"
 
 def create_action(action_array):
+    print(action_array)
     config.html = ""
     ret = ""
     for x in action_array:
         description = x['description']
         name = x['name']
         function = x['function']
-        url = f'https://nuvolaris.dev/api/v1/web/gporchia/default/{name}'
         action_list = utils.get_actions()
         obj = json.loads(action_list)
         name_arr = []
@@ -197,7 +152,12 @@ def create_action(action_array):
             namespace = f"gporchia/{config.session_user['name']}"
         else:
             namespace = "gporchia"
-        print(namespace)
+        package = ''
+        if config.session_user['name'] != 'admin':
+            package = config.session_user['name']
+        else:
+            package = 'default'
+        url = f'https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}'
         body = {
             "namespace": namespace,
             "name": name,
@@ -210,11 +170,6 @@ def create_action(action_array):
                 {"key": "url", "value": url}
                 ]
             }
-        package = ''
-        if config.session_user['name'] != 'admin':
-            package = config.session_user['name']
-        else:
-            package = 'default'
         print(package)
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
         print(resp.text[:200])
@@ -428,7 +383,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "html_gen",
-            "description": "the user asks to create an action returning HTML",
+            "description": "the user asks to create an action returning HTML, or the user wants an HTML page. Example: 'create an action returning an html page...', 'create an html ...', and so on",
             "parameters": {
                 "type": "object",
                 "properties": {

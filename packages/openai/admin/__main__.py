@@ -2,7 +2,7 @@
 #--kind python:default
 #--annotation provide-api-key true
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
-#--annotation description "an action which interact with a custom bot that generate actions"
+#--annotation description "an action which interact with a custom bot to invoke administration tasks"
 
 from openai import OpenAI
 import config
@@ -20,27 +20,13 @@ def ask(
     model: str = MODEL,
     print_message: bool = False,
 ) -> str:
-    # TEST
-    # from zipfile import ZipFile 
-    # with ZipFile("webapp.zip", 'r') as myzip:
-    #     file_list = myzip.namelist()
-    #     for file in file_list:
-    #         content = str(myzip.read(file))
-    #         config.messages.append({"role": "user", "content": content})
-
-    # config.messages.append({"role": "user", "content": query})
-    # response = AI.chat.completions.create(
-    #     model=model,
-    #     messages=config.messages,
-    # )
-    # return response.choices[0].message.content
-    # END TEST
     config.messages.append({"role": "user", "content": query})
     response = AI.chat.completions.create(
         model=model,
         messages=config.messages,
         tools=bot_functions.tools,
         tool_choice="auto",
+        max_tokens=(4096 - 500)
     )
     # We start checking if the tools activated. If not we answer generic question about Nuvolaris
     if response.choices[0].finish_reason == "tool_calls":
@@ -89,23 +75,13 @@ def main(args):
         elif is_login == True and is_password == False:
             user = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/user/find_user", headers={"Content-Type": "application/json"}, json={"name": stored_user, "password": input}).json()
             if user != None:
+                if user['role'] != 'admin':
+                    is_login = False
+                    stored_user = ""
+                    return {"body": {"output": "Errore, l'utente non ha i privilegi per accedere a questa sessione. Inserire un utente con privilegi da amministratore"}}
                 is_password = True
                 config.session_user = user
                 res = {"output": f"Bentornato {user['name']}! Come posso aiutarti?", "password": True}
-                packages = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/action/get_package", json={"name": user['name']})
-                obj = json.loads(packages.text)
-                if obj.get('error') != None:
-                    print("no package found")
-                else:
-                    obj = obj['actions']
-                    for el in obj:
-                        el.pop('version')
-                        annotations = []
-                        for ann in el['annotations']:
-                            if ann['key'] != 'raw-http' and ann['key'] != 'final' and ann['key'] != 'provide-api-key' and ann['key'] != 'exec':
-                                annotations.append(ann)
-                        el['annotations'] = annotations
-                    config.html = f"<html><body><h1>Here's a list of your actions:</h1><br><pre><code><xmp>{json.dumps(obj, indent=2)}</xmp></code></pre></code></html>"
             else:
                 is_login = False
                 stored_user = ""

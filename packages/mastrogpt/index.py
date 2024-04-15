@@ -11,6 +11,10 @@ def main(arg):
             {
                 "name": "Coder",
                 "url": "openai/coder"
+            },
+            {
+                "name": "Admin",
+                "url": "openai/admin"
             }
         ]
     }
