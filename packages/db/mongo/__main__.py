@@ -1,5 +1,6 @@
 #--web true
 #--kind python:default
+#--annotation description "an action which perform operations to the database, suche as: add, update, delete, find. Required parameters: {'db': db name, 'collection': collection name, 'type of operation(add, find_one, find, delete, update)': True, 'data': required data as json. Example: 'name': name, 'role': role, 'password': password, ...}"
 
 from pymongo import MongoClient
 import json
@@ -53,8 +54,10 @@ def find_one(collection, filter):
     return {"body": json.dumps(data)}
 
 def main(args):
-    # print(args)
     # connection_string = args.get('CONNECTION_STRING')
+    db = args.get('db', '')
+    if db == '':
+        db = 'mastrogpt'
     collection = args.get('collection', '')
     data = args.get('data', '')
     if collection == '':
@@ -63,7 +66,7 @@ def main(args):
         return {"body": "error, data is missing"}
     
     client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
-    dbname = client['mastrogpt']
+    dbname = client[db]
     
     collection_list = dbname.list_collection_names()
     db_coll = ""
@@ -71,15 +74,17 @@ def main(args):
         db_coll = dbname[collection]
     else:
         db_coll = dbname.create_collection(collection)
-        
-    if data.get('find_one') == True:
+    
+    if args.get('add'):
+        ins = db_coll.insert_one(data).inserted_id
+        el = db_coll.find_one({'_id': ins})
+        return {"body": format_el(el)}
+    elif args.get('find_one') == True:
         return find_one(db_coll, data.get('filter', ''))
-    if data.get('find') == True:
+    elif args.get('find') == True:
         return find(db_coll, data.get('filter', ''))
-    if data.get('delete') == True:
+    elif args.get('delete') == True:
         return delete(db_coll, data.get('filter', ''))
-    if data.get('update') == True:
+    elif args.get('update') == True:
         return update(db_coll, data.get('filter', ''), data.get('updateData', ''))
-    ins = db_coll.insert_one(data).inserted_id
-    el = db_coll.find_one({'_id': ins})
-    return {"body": format_el(el)}
+    return {"body": "error couldn't find any method(add, find_one, find, delete, update)"}

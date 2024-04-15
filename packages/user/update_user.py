@@ -1,5 +1,6 @@
 #--web true
 #--kind python:default
+#--annotation description 'an action which update an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}'
 
 import requests
 import json
@@ -16,5 +17,5 @@ def main(args):
                 "role": args.get("role")
             }
     }
-    response = requests.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"collection": "users", "data": data})
+    response = requests.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"update": True, "collection": "users", "data": data})
     return {"body": response.text}

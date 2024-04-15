@@ -55,6 +55,7 @@ class Invoker {
         if (login) {
           console.log("login")
           document.getElementById("hybrid").type = "password"
+
           delete data['login']
         }
         if (data.password) {
@@ -122,8 +123,12 @@ msgerForm.addEventListener("submit", event => {
 
   const input = msgerInput.value;
   if (!input) return;
-
-  human(input);
+  if (document.getElementById("hybrid").type == "password") {
+    var pwd = "******";
+    human(pwd)
+  } else {
+    human(input);
+  }
 
   if (invoker) {
     invoker.invoke(input).then(reply => bot(reply))

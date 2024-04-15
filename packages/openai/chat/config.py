@@ -1,6 +1,7 @@
 debug = ""
 html = ""
 man_page = ""
+session_user = None
 
 LOOKINGLASS_ASSISTANT="""
 Explain to the user how Lookinglass works. Any topic has a reference to the manual. Possible topics are:

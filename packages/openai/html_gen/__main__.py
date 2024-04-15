@@ -2,6 +2,7 @@
 #--kind python:default
 #--annotation provide-api-key true
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--annotation description "an action which generate an action returning an HTML page"
 
 from openai import OpenAI
 import bot_functions

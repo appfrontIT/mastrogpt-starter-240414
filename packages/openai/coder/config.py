@@ -12,7 +12,7 @@ html = ""
 nuvolaris = []
 test_link = ""
 crud = []
-
+session_user = None
 
 crud.append(utils.crawl('https://budibase.com/blog/crud-app/'))
 # nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/actions.html"))
@@ -41,14 +41,14 @@ def main(args):
         "pages": args.get("pages"),
         "year": args.get("year")
     }
-    response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"collection": "books", "data": data})
+    response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "collection": "books", "data": data})
     return {"body": response.text}
 
 update:
 def main(args):
     import requests
     import json
-    data = {"update": True, "filter": args.get('filter'),
+    data = {"filter": args.get('filter'),
         "updateData": {
             "title": args.get("title"),
             "author": args.get("author"),
@@ -56,23 +56,23 @@ def main(args):
             "year": args.get("year")
         }
     }
-    response = requests.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"collection": "books", "data": data})
+    response = requests.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"update": True, "collection": "books", "data": data})
     return {"body": response.text}
 
 delete:
 def main(args):
     import requests
     import json
-    data = { "delete": True, "filter": args.get('filter')}
-    response = requests.delete("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"collection": "books", "data": data})
+    data = {"filter": args.get('filter')}
+    response = requests.delete("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"delete": True, "collection": "books", "data": data})
     return {"body": response.text}
 
 find:
 def main(args):
     import requests
     import json
-    data = {"find": True,"filter": args.get('filter')}
-    response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"collection": "books", "data": data})
+    data = {"filter": args.get('filter')}
+    response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find": True, "collection": "books", "data": data})
     return {"body": response.text}
 
 to update an element provide: "collection": {"type": "string", "description": "name of collection"}, "data": {"type": "object", "description": "an object containing 'update': true, 'filter': {'_id': 'value'}, 'updateData': {'key': 'value'}};

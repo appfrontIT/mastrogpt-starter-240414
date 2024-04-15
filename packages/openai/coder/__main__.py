@@ -2,6 +2,7 @@
 #--kind python:default
 #--annotation provide-api-key true
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--annotation description "an action which interact with a custom bot that generate actions"
 
 from openai import OpenAI
 import config
@@ -52,6 +53,7 @@ def ask(
 TUNED_MODEL = None
 is_login = False
 is_password = False
+stored_user = ""
 
 def main(args):
     global AI
@@ -89,9 +91,19 @@ def main(args):
             user = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/user/find_user", headers={"Content-Type": "application/json"}, json={"name": stored_user, "password": input}).json()
             if user != None:
                 is_password = True
-                global session_user
-                session_user = user
+                config.session_user = user
                 res = {"output": f"Bentornato {user['name']}! Come posso aiutarti?", "password": True}
+                packages = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/action/get_package", json={"name": user['name']}).text
+                obj = json.loads(packages)
+                obj = obj['actions']
+                for el in obj:
+                    el.pop('version')
+                    annotations = []
+                    for ann in el['annotations']:
+                        if ann['key'] != 'raw-http' and ann['key'] != 'final' and ann['key'] != 'provide-api-key' and ann['key'] != 'exec':
+                            annotations.append(ann)
+                    el['annotations'] = annotations
+                config.html = f"<html><body><h1>Here's a list of your actions:</h1><br><pre><code><xmp>{json.dumps(obj, indent=2)}</xmp></code></pre></code></html>"
             else:
                 is_login = False
                 stored_user = ""

@@ -10,7 +10,6 @@ CLIENT = None
 def html_crud(args):
     description = args.get('description', '')
     model = args.get('model', '')
-    print(model)
     if description == '':
         return "Error, no description provided"
     query = f"""{description}\n

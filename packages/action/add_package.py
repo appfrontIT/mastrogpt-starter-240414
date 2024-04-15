@@ -1,13 +1,13 @@
 #--web true
 #--kind python:default
 #--annotation provide-api-key true
+#--annotation description "an action which add a package to nuvolaris. Required parameters: {'name': package name}"
 
 import os
 import requests
 from requests.auth import HTTPBasicAuth
 
 def main(args):
-   print(args)
    ow_key = os.getenv('__OW_API_KEY')
    split = ow_key.split(':')
    body = {

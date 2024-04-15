@@ -1,6 +1,7 @@
 #--web true
 #--kind python:default
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--annotation description 'an action which let you interact with a custom assistant helping you in Lookinglass operations'
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
@@ -198,7 +199,6 @@ TUNED_MODEL = None
 is_login = False
 is_password = False
 stored_user = ""
-session_user = None
 
 def main(args):
     global AI
@@ -247,8 +247,7 @@ def main(args):
             user = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/user/find_user", headers={"Content-Type": "application/json"}, json={"name": stored_user, "password": input}).json()
             if user != None:
                 is_password = True
-                global session_user
-                session_user = user
+                config.session_user = user
                 res = {"output": f"Bentornato {user['name']}! Come posso aiutarti?", "password": True}
             else:
                 is_login = False

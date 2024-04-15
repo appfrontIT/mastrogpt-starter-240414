@@ -27,7 +27,7 @@ def html_gen(args):
         action_array += f"name: {obj['name']}\n"
         annotations = obj['annotations']
         for pair in annotations:
-            if pair['key'] == 'url' or pair['key'] == 'description' or pair['key'] == 'parameters':
+            if pair['key'] == 'url' or pair['key'] == 'description':
                 action_array += f"{pair['key']}: {pair['value']}\n"
         action_array += f"code: {obj['exec']['code']}\n"
     if action_array != "":
@@ -171,7 +171,6 @@ def create_action(action_array):
         description = x['description']
         name = x['name']
         function = x['function']
-        parameters = x.get('parameters', '')
         url = f'https://nuvolaris.dev/api/v1/web/gporchia/default/{name}'
         action_list = utils.get_actions()
         obj = json.loads(action_list)
@@ -193,8 +192,14 @@ def create_action(action_array):
         function = function.replace('Python', '')
         ow_key = os.getenv('__OW_API_KEY')
         split = ow_key.split(':')
+        namespace = ''
+        if config.session_user['name'] != 'admin':
+            namespace = f"gporchia/{config.session_user['name']}"
+        else:
+            namespace = "gporchia"
+        print(namespace)
         body = {
-            "namespace": "gporchia",
+            "namespace": namespace,
             "name": name,
             "exec":{"kind":"python:default", "code":function},
             "annotations":[
@@ -202,21 +207,28 @@ def create_action(action_array):
                 {"key":"raw-http","value":False},
                 {"key": "final", "value": True},
                 {"key": "description", "value": description},
-                {"key": "parameters", "value": parameters},
                 {"key": "url", "value": url}
                 ]
             }
-        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
+        package = ''
+        if config.session_user['name'] != 'admin':
+            package = config.session_user['name']
+        else:
+            package = 'default'
+        print(package)
+        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
         print(resp.text[:200])
         if resp.status_code != 200:
             print(resp.text)
+        response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "walkiria", "collection": package, "data": resp.json()})
+        print(response.text)
         ret += f"{resp.text}\n\n"
         config.html += f"""
             <head>
             <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
                 <script>hljs.initHighlightingOnLoad();</script>
-                <h3>ACTION URL:<br><a href="https://nuvolaris.dev/api/v1/web/gporchia/default/{name}" target="_blank">https://nuvolaris.dev/api/v1/web/gporchia/default/{name}</a></h3>
+                <h3>ACTION URL:<br><a href="https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}" target="_blank">https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}</a></h3>
             </head>
             <body>
                 <pre><code class="python"><xmp>{function}</xmp></code></pre>
@@ -353,14 +365,7 @@ tools = [
                             "properties": {
                                 "name": {"type": "string", "description": "action name"},
                                 "function": {"type": "string", "description": "the generated function. It must starts with 'def main(args):'"},
-                                "description": {"type": "string", "description": "a description of the action you made"},
-                                "parameters": {
-                                    "type": "array",
-                                    "description": """input paramaters format as: {key: type}, {key: type}, {key: type} and so on""",
-                                    "items": {
-                                        "type": "string"
-                                        }
-                                    },
+                                "description": {"type": "string", "description": "a description of the action you made. The description MUST includes the parameters the action needs such as: {key: type, key: type, ...}. Example: 'an action which add an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}'"},
                                 },
                                 "required": ["name", "function", "description"]
                             },
