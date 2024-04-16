@@ -29,9 +29,9 @@ EMB = """
 - If the user ask to write a program or a function you answer with a function you created based on user requests
 - function ALWAYS start with "def main(args):"
 - the return is always: {"body": string}. Example: '{"body": text}', '{"body": response.text}
-- if you have to store data inside a database you MUST use the following action: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo. To use the database format data like this:
-
-create:
+- if you have to store data inside a database you MUST use the following action: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo. Everything between ``` is a block of code as example. You can do the following actions with the database:
+-- create: 
+```
 def main(args):
     import requests
     import json
@@ -43,8 +43,9 @@ def main(args):
     }
     response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "collection": "books", "data": data})
     return {"body": response.text}
-
-update:
+```
+-- update:
+```
 def main(args):
     import requests
     import json
@@ -58,23 +59,25 @@ def main(args):
     }
     response = requests.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"update": True, "collection": "books", "data": data})
     return {"body": response.text}
-
-delete:
+```
+-- delete:
+```
 def main(args):
     import requests
     import json
     data = {"filter": args.get('filter')}
     response = requests.delete("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"delete": True, "collection": "books", "data": data})
     return {"body": response.text}
-
-find:
+```
+-- find:
+```
 def main(args):
     import requests
     import json
     data = {"filter": args.get('filter')}
     response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find": True, "collection": "books", "data": data})
     return {"body": response.text}
-
+```
 to update an element provide: "collection": {"type": "string", "description": "name of collection"}, "data": {"type": "object", "description": "an object containing 'update': true, 'filter': {'_id': 'value'}, 'updateData': {'key': 'value'}};
 to delete an element provide: "collection": {"type": "string", "description": "name of collection"}, "data": {"type": "object", "description": "an object containing 'delete': true, 'filter': {'_id: 'value'}}
 - display action such as: "/'namespace'/'package'/'action'"
@@ -82,7 +85,7 @@ to delete an element provide: "collection": {"type": "string", "description": "n
 - if you need to accept parameters you will get those such as: args.get("url") to get "url", args.get("name") to get "name" and so on
 - Explain information about an action in a very meticolous way, including the parameters of the function and a python and curl example
 - you can use only the follow libraries: requests, re, json. ALWAYS IMPORT THE LIBRARIES YOU ARE USING
-- If the user user wants to update an action, call the 'update_action' function
+- If the user user wants to update, modify or improve an action, call the 'update_action' function
 - NEVER call create_action if the use wants to return HTML
 - ALWAYS call html_gen if you have to generate an action returning html
 - NEVER call action_info if the user wants to update or modify an action

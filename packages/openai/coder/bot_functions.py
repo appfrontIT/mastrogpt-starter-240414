@@ -45,8 +45,7 @@ def html_gen(args):
     actions.append({"description": description, "name": name, "function": function})
     return create_action(actions)
 
-def update_action(name, modifications):
-    name = name.replace('gporchia/', '')
+def update_action(name, modifications, package: str = "default"):
     action_list = utils.get_actions()
     obj = json.loads(action_list)
     name_arr = []
@@ -55,13 +54,12 @@ def update_action(name, modifications):
     if name in name_arr:
         status = utils.action_info(name)
         messages = [
-            {"role": "system", "content": f"""Apply the user description to the action provided. YOU MUST RETURN A JSON with the following keys:
+            {"role": "system", "content": f"""Apply the user modifications to the action provided. YOU MUST RETURN A JSON with the following keys:
             'new_name': 'a new name generate if the action name become meaningless. Example: the user ask to modify action multiply_by_2 to multiply by 3. Default=''',
             'function': 'the new generated function accordingly to user requests',
-            'description': 'the description of the new generated function',
-            'parameters': 'the parameters accepted by the new generated function'.
-            Action:\n{status}"""},
-            {"role": "user", "content": f"{modifications}"}
+            'description': 'the description of the new generated function and its parameter'
+            """},
+            {"role": "user", "content": f"{modifications}, Action to modify:\n{status}"}
             ]
         response = CLIENT.chat.completions.create(
                 model=MODEL,
@@ -70,11 +68,10 @@ def update_action(name, modifications):
         comp = response.choices[0].message.content
         print(comp)
         obj = json.loads(comp)
-        return do_update(name, obj.get('new_name', ''), obj['function'], obj['description'], obj['parameters'])
+        return do_update(name, obj.get('new_name', ''), obj['function'], obj['description'], package)
     return f"No action with that name exists, here a list of existing actions:\n{show_all_actions()}"
 
-def do_update(name, new_name, function, description, parameters):
-    print(new_name)
+def do_update(name, new_name, function, description, parameters, package):
     config.html = ""
     function = function.replace('```', '')
     function = function.replace('python', '')
@@ -85,7 +82,7 @@ def do_update(name, new_name, function, description, parameters):
         utils.delete_action(name)
         name = new_name
     body = {
-        "namespace": "gporchia/default",
+        "namespace": f"gporchia/{package}",
         "name": name,
         "exec":{"kind":"python:default", "code":function},
         "annotations":[
@@ -94,10 +91,10 @@ def do_update(name, new_name, function, description, parameters):
             {"key": "final", "value": True},
             {"key": "description", "value": description},
             {"key": "parameters", "value": parameters},
-            {"key": "url", "value": f'https://nuvolaris.dev/api/v1/web/gporchia/default/{name}'}
+            {"key": "url", "value": f'https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}'}
             ]
         }
-    resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}?overwrite=true", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
+    resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}?overwrite=true", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
     print(resp.text)
     if resp.status_code != 200:
         return resp.text
@@ -106,21 +103,16 @@ def do_update(name, new_name, function, description, parameters):
         <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
             <script>hljs.initHighlightingOnLoad();</script>
-            <h3>ACTION URL:<br><a href="https://nuvolaris.dev/api/v1/web/gporchia/default/{name}" target="_blank">https://nuvolaris.dev/api/v1/web/gporchia/default/{name}</a></h3>
+            <h3>ACTION URL:<br><a href="https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}" target="_blank">https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}</a></h3>
         </head>
         <body>
             <pre><code class="python"><xmp>{function}</xmp></code></pre>
         </body>
         \n\n
         """
-    # html = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/openai/html_gen", json={
-    #     "input": f"url: https://nuvolaris.dev/api/v1/web/gporchia/default/{name} action: {(resp.text)}",
-    #     })
-    # config.html = f"""<iframe srcdoc="{html.json()['output']}" width="100%" height="800"></iframe>"""
     return "Action updated"
 
 def create_action(action_array):
-    print(action_array)
     config.html = ""
     ret = ""
     for x in action_array:
@@ -170,13 +162,14 @@ def create_action(action_array):
                 {"key": "url", "value": url}
                 ]
             }
-        print(package)
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
         print(resp.text[:200])
         if resp.status_code != 200:
             print(resp.text)
-        response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "walkiria", "collection": package, "data": resp.json()})
-        print(response.text)
+        input = f"url:https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}, description:{description}"
+        test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": input})
+        print(test.text)
+        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "walkiria", "collection": package, "data": resp.json()})
         ret += f"{resp.text}\n\n"
         config.html += f"""
             <head>
@@ -190,11 +183,7 @@ def create_action(action_array):
             </body>
             \n\n
             """
-    # html = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/openai/html_gen", json={
-    #     "input": f"url: https://nuvolaris.dev/api/v1/web/gporchia/default/{name} action: {(resp.text)}",
-    #     })
-    # config.html = f"""<iframe srcdoc="{html.json()['output']}" width="100%" height="800"></iframe>"""
-    return f"give also a curl example to call the action, if the requests is POST or PUT use 'Content-Type: application/json':{ret}"
+    return test.text
 
 def action_info(name):
     action_list = utils.get_actions()
@@ -263,8 +252,7 @@ def tools_func(
         ):
     global CLIENT
     CLIENT = AI
-    temp = messages.copy()
-    temp.append(response.choices[0].message)
+    messages.append(response.choices[0].message)
     for tool_call in tool_calls:
         print(tool_call.function.name)
         function_name = tool_call.function.name
@@ -273,15 +261,13 @@ def tools_func(
         function_response = function_to_call(
             **function_args
             )
-        temp.append({
+        messages.append({
             "tool_call_id": tool_call.id,
             "role": "tool",
             "name": function_name,
             "content": function_response
         })
-    response = AI.chat.completions.create(model=MODEL, messages=temp)
-    config.messages.append(response.choices[0].message)
-    return response.choices[0].message.content
+    return messages
 
 available_functions = {
     "show_all_actions": show_all_actions,
@@ -334,7 +320,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "update_action",
-            "description": "update or modify an action. Example: update 'action name' to 'modifications'",
+            "description": "improve, update or modify an action",
             "parameters": {
                 "type": "object",
                 "properties": {
