@@ -8,18 +8,14 @@ from zipfile import ZipFile
 
 OW_KEY = os.getenv('__OW_API_KEY')
 
-def delete_action(name):
+def delete_action(package, name):
     split = OW_KEY.split(':')
-    if name[0] == '/':
-        name = name[:1]
-    resp = requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}", auth=HTTPBasicAuth(split[0], split[1]))
+    resp = requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(split[0], split[1]))
     return resp.text
 
-def action_info(name):
+def action_info(package, name):
     split = OW_KEY.split(':')
-    if name[0] == '/':
-        name = name[:1]
-    resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}", auth=HTTPBasicAuth(split[0], split[1]))
+    resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(split[0], split[1]))
     return resp.text
 
 def get_actions():

@@ -3,6 +3,7 @@
 #--annotation provide-api-key true
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
 #--annotation description "an action which interact with a custom bot that generate actions"
+#--timeout 600000
 
 from openai import OpenAI
 import config
@@ -40,25 +41,18 @@ def ask(
         {"role": "user", "content": query}
     ]
     # config.messages.append({"role": "user", "content": query})
-    for i in range(5):
-        print(messages)
-        response = AI.chat.completions.create(
-            model=model,
-            messages=messages,
-            tools=bot_functions.tools,
-            tool_choice="auto",
-        )
-        # We start checking if the tools activated. If not we answer generic question about Nuvolaris
-        if response.choices[0].finish_reason == "tool_calls":
-            tool_calls = response.choices[0].message.tool_calls
-            messages = bot_functions.tools_func(AI, tool_calls, messages, response)
-            messages.append({"role": "user", "content": "continue"})
-        else:
-            print("no tools")
-            messages.append({"role": "user", "content": "Based on this conversation, provide a description of the action generated and an example using python code and curl with exact endpoint to call"})
-            response = AI.chat.completions.create(model=model, messages=messages)
-            return response.choices[0].message.content
-    return "Couldn't find an answer"
+    response = AI.chat.completions.create(
+        model=model,
+        messages=messages,
+        tools=bot_functions.tools,
+        tool_choice="auto",
+    )
+    # We start checking if the tools activated. If not we answer generic question about Nuvolaris
+    if response.choices[0].finish_reason == "tool_calls":
+        tool_calls = response.choices[0].message.tool_calls
+        return bot_functions.tools_func(AI, tool_calls, messages, response)
+    print("no tools")
+    return response.choices[0].message.content
 
 TUNED_MODEL = None
 is_login = False
@@ -92,8 +86,8 @@ def main(args):
             user = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/user/find_user", headers={"Content-Type": "application/json"}, json={"name": input}).json()
             if user != None:
                 global stored_user
-                is_login = True
                 stored_user = user['name']
+                is_login = True
                 res = {"output": f"per favore inserire la password per l'utente {input}", "login": True}
             else:
                 res = {"output": "errore, l'utente non esiste, riprovare nuovamente"}
@@ -108,6 +102,12 @@ def main(args):
                 if obj.get('error') != None:
                     print("no package found")
                 else:
+                    if user['name'] != 'admin':
+                        config.namespace = f"gporchia/{user['name']}"
+                        config.package = user['name']
+                    else:
+                        config.namespace = "gporchia"
+                        config.package = 'default'
                     obj = obj['actions']
                     for el in obj:
                         el.pop('version')
@@ -126,4 +126,5 @@ def main(args):
             res = { "output": output}
     if config.html != "":
         res['html'] = config.html
-    return {"body": res,}
+    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": res})
+    return {"body": {"status": True}}

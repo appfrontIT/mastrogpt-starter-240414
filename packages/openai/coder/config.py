@@ -13,6 +13,8 @@ nuvolaris = []
 test_link = ""
 crud = []
 session_user = None
+namespace = ""
+package = ""
 
 crud.append(utils.crawl('https://budibase.com/blog/crud-app/'))
 # nuvolaris.append(utils.crawl("https://nuvolaris.github.io/nuvolaris/3.1.0/development/actions.html"))

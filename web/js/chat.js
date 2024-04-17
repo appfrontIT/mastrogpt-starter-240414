@@ -16,13 +16,17 @@ const areaChat = document.getElementById("chat-area");
 const displayWindow = window.parent.document.getElementById("display").contentWindow
 
 // Classes
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 class Invoker {
 
   constructor(name, url) {
     this.name = name
     this.url = url
-    this.state = null
   }
+
 
   async invoke(msg) {
     // welcome message no input
@@ -37,41 +41,21 @@ class Invoker {
       input: msg,
       // history: history
     }
-    if (this.state != null) {
-      json['state'] = this.state
-    }
     // send the request
-    console.log(this.url)
-    return fetch(this.url, {
+    await fetch(this.url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(json)
     })
-      .then(r => r.json())
-      .then(r => {
-        this.state = r.state
-        let data = r
-        let login = data.login
-        if (login) {
-          console.log("login")
-          document.getElementById("hybrid").type = "password"
-
-          delete data['login']
-        }
-        if (data.password) {
-          document.getElementById("hybrid").type = "text"
-          delete data['password']
-        }
-        let output = data.output
-        delete data['output']
-        delete data['state']
-        displayWindow.postMessage(data)
-        return output
-      })
-      .catch(e => {
-        console.log(e)
-        return `ERROR interacting with ${this.url}`
-      })
+    .then(r => r.json())
+    .then(r => {
+      console.log(r)
+      return r.text
+    })
+    .catch(e => {
+      console.log(e)
+      return `ERROR interacting with ${this.url}`
+    })
   }
 }
 
@@ -84,7 +68,6 @@ function formatDate(date) {
 
 function appendMessage(name, img, side, text) {
   //   Simple solution for small apps
-  console.log(text)
   let html = marked.parse(text)
   const msgHTML = `
     <div class="msg ${side}-msg">
@@ -105,11 +88,35 @@ function appendMessage(name, img, side, text) {
   msgerChat.scrollTop += 500;
 }
 
-function bot(msg) {
-  if (msg == "") {
-    return ;
+async function bot() {
+  while (1) {
+    sleep(4000)
+    await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/chat', {method: 'GET', headers: { "Content-Type": "application/json"}})
+    .then(r => r.json())
+    .then(r => {
+      let data = r
+      let login = data.login
+      if (login) {
+        console.log("login")
+        document.getElementById("hybrid").type = "password"
+        delete data['login']
+      }
+      if (data.password) {
+        document.getElementById("hybrid").type = "text"
+        delete data['password']
+      }
+      let output = data.output
+      delete data['output']
+      displayWindow.postMessage(data)
+      if (output != "") {
+        appendMessage(BOT_NAME, BOT_IMG, "left", output);
+      }
+    })
+    .catch(e => {
+      console.log(e)
+      return `ERROR interacting with ${this.url}`
+    })
   }
-  appendMessage(BOT_NAME, BOT_IMG, "left", msg);
 }
 
 function human(msg) {
@@ -142,5 +149,6 @@ window.addEventListener('message', async function (ev) {
   invoker = new Invoker(ev.data.name, ev.data.url)
   titleChat.textContent = ev.data.name
   areaChat.innerHTML = ""
-  bot(await invoker.invoke(""))
+  await invoker.invoke("")
+  bot()
 })

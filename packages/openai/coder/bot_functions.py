@@ -9,6 +9,7 @@ from requests.auth import HTTPBasicAuth
 import json
 import utils
 import config
+import bot_functions
 
 MODEL="gpt-3.5-turbo"
 CLIENT = None
@@ -45,44 +46,60 @@ def html_gen(args):
     actions.append({"description": description, "name": name, "function": function})
     return create_action(actions)
 
-def update_action(name, modifications, package: str = "default"):
+def update_action(name, modifications):
     action_list = utils.get_actions()
+    print(modifications)
     obj = json.loads(action_list)
     name_arr = []
     for x in obj:
         name_arr.append(x['name'])
     if name in name_arr:
-        status = utils.action_info(name)
+        action = utils.action_info(config.package, name)
         messages = [
-            {"role": "system", "content": f"""Apply the user modifications to the action provided. YOU MUST RETURN A JSON with the following keys:
-            'new_name': 'a new name generate if the action name become meaningless. Example: the user ask to modify action multiply_by_2 to multiply by 3. Default=''',
-            'function': 'the new generated function accordingly to user requests',
-            'description': 'the description of the new generated function and its parameter'
-            """},
-            {"role": "user", "content": f"{modifications}, Action to modify:\n{status}"}
+            {"role": "system", "content": """You only answer in JSON format. You need to provide the following keys for the user: "function", "description". Apply the user modifications to the action provided. function ALWAYS start with "def main(args):".
+            Example: '{"function": "the function you generated based on the modifications asked", "description": "a description of the functions with the parameters needed. Example: 'description of function. Parameters: {'arg1': type, 'arg2': type}'"}'"""},
+            {"role": "user", "content": f"{modifications}, Action to modify:\n{action}\nYou need to modify the function inside the action. Take your time to answer"}
             ]
         response = CLIENT.chat.completions.create(
                 model=MODEL,
                 messages=messages
             )
+        utils.delete_action(config.package, name)
         comp = response.choices[0].message.content
         print(comp)
         obj = json.loads(comp)
-        return do_update(name, obj.get('new_name', ''), obj['function'], obj['description'], package)
+        action = deploy_action(name, obj['function'], obj['description'])
+        test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": action})
+        print(test.text)
+        return test.text
     return f"No action with that name exists, here a list of existing actions:\n{show_all_actions()}"
 
-def do_update(name, new_name, function, description, parameters, package):
+def deploy_action(name, function, description):
+    action_list = utils.get_actions()
+    obj = json.loads(action_list)
+    name_arr = []
+    # Generate a new name if needed
+    for x in obj:
+        name_arr.append(x['name'])
+    if name in name_arr:
+        print("name already exists")
+        messages = [
+            {"role": "system", "content": f"Generate an unique name base on the description passed. Only 1 word is allowed. You can't use the following words to generate a name:\n\n{name_arr}"},
+            {"role": "user", "content": description}
+        ]
+        name = CLIENT.chat.completions.create(
+            model=MODEL,
+            messages=messages
+        ).choices[0].message.content
     config.html = ""
     function = function.replace('```', '')
     function = function.replace('python', '')
     function = function.replace('Python', '')
     ow_key = os.getenv('__OW_API_KEY')
     split = ow_key.split(':')
-    if new_name != "":
-        utils.delete_action(name)
-        name = new_name
+    url = f'https://nuvolaris.dev/api/v1/web/gporchia/{config.package}/{name}'
     body = {
-        "namespace": f"gporchia/{package}",
+        "namespace": config.namespace,
         "name": name,
         "exec":{"kind":"python:default", "code":function},
         "annotations":[
@@ -90,99 +107,37 @@ def do_update(name, new_name, function, description, parameters, package):
             {"key":"raw-http","value":False},
             {"key": "final", "value": True},
             {"key": "description", "value": description},
-            {"key": "parameters", "value": parameters},
-            {"key": "url", "value": f'https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}'}
+            {"key": "url", "value": url}
             ]
         }
-    resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}?overwrite=true", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
-    print(resp.text)
+    resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{config.package}/{name}?overwrite=true", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
     if resp.status_code != 200:
         return resp.text
+    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "walkiria", "collection": config.package, "data": resp.json()})
     config.html += f"""
         <head>
         <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
             <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
             <script>hljs.initHighlightingOnLoad();</script>
-            <h3>ACTION URL:<br><a href="https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}" target="_blank">https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}</a></h3>
+            <h3>ACTION URL:<br><a href="https://nuvolaris.dev/api/v1/web/gporchia/{config.package}/{name}" target="_blank">https://nuvolaris.dev/api/v1/web/gporchia/{config.package}/{name}</a></h3>
         </head>
         <body>
             <pre><code class="python"><xmp>{function}</xmp></code></pre>
         </body>
         \n\n
         """
-    return "Action updated"
+    return f"url: https://nuvolaris.dev/api/v1/web/gporchia/{config.package}/{name}\ndescription:{description}\nfunction:{function}\n\n"
 
 def create_action(action_array):
     config.html = ""
-    ret = ""
+    actions = ""
     for x in action_array:
         description = x['description']
         name = x['name']
         function = x['function']
-        action_list = utils.get_actions()
-        obj = json.loads(action_list)
-        name_arr = []
-        for x in obj:
-            name_arr.append(x['name'])
-        if name in name_arr:
-            print("name already exists")
-            messages = [
-                {"role": "system", "content": f"Generate an unique name base on the description passed. Only 1 word is allowed. You can't use the following words to generate a name:\n\n{name_arr}"},
-                {"role": "user", "content": description}
-            ]
-            name = CLIENT.chat.completions.create(
-                model=MODEL,
-                messages=messages
-            ).choices[0].message.content
-        function = function.replace('```', '')
-        function = function.replace('python', '')
-        function = function.replace('Python', '')
-        ow_key = os.getenv('__OW_API_KEY')
-        split = ow_key.split(':')
-        namespace = ''
-        if config.session_user['name'] != 'admin':
-            namespace = f"gporchia/{config.session_user['name']}"
-        else:
-            namespace = "gporchia"
-        package = ''
-        if config.session_user['name'] != 'admin':
-            package = config.session_user['name']
-        else:
-            package = 'default'
-        url = f'https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}'
-        body = {
-            "namespace": namespace,
-            "name": name,
-            "exec":{"kind":"python:default", "code":function},
-            "annotations":[
-                {"key":"web-export", "value":True},
-                {"key":"raw-http","value":False},
-                {"key": "final", "value": True},
-                {"key": "description", "value": description},
-                {"key": "url", "value": url}
-                ]
-            }
-        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
-        print(resp.text[:200])
-        if resp.status_code != 200:
-            print(resp.text)
-        input = f"url:https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}, description:{description}"
-        test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": input})
-        print(test.text)
-        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "walkiria", "collection": package, "data": resp.json()})
-        ret += f"{resp.text}\n\n"
-        config.html += f"""
-            <head>
-            <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
-                <script>hljs.initHighlightingOnLoad();</script>
-                <h3>ACTION URL:<br><a href="https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}" target="_blank">https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}</a></h3>
-            </head>
-            <body>
-                <pre><code class="python"><xmp>{function}</xmp></code></pre>
-            </body>
-            \n\n
-            """
+        actions += deploy_action(name, function, description)
+    test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": actions})
+    print(test.text)
     return test.text
 
 def action_info(name):
@@ -192,7 +147,7 @@ def action_info(name):
     for x in obj:
         name_arr.append(x['name'])
     if name in name_arr:
-        status = utils.action_info(name)
+        status = utils.action_info(config.package, name)
         obj = json.loads(status)
         config.html = f"<html><body><pre><code><xmp>{json.dumps(obj, indent=2)}</xmp></code></pre></code></html>"
         if len(status) > 8000:
@@ -205,7 +160,7 @@ def action_info(name):
                 return description
             else:
                 return status[:8000]
-        return f"""The action url is EXACTLY this: https://nuvolaris.dev/api/v1/web/gporchia/default/{name}. ALWAYS USE THE FULL URL. Fill everythin between ``. Give information about the following action following this example:
+        return f"""The action url is EXACTLY this: https://nuvolaris.dev/api/v1/web/gporchia/{config.package}/{name}. ALWAYS USE THE FULL URL. Fill everythin between ``. Give information about the following action following this example:
         - **Description**: `put description here`
         - **Parameters**: `put parameters here`
         - **Code**: `put python code example that use the action`
@@ -219,7 +174,7 @@ def action_info(name):
 def delete_action(name_array):
     to_obj = []
     for el in name_array:
-        status = utils.delete_action(el)
+        status = utils.delete_action(config.package, el)
         to_obj.append(json.loads(status))
     config.html = f"<html><body><pre><code><xmp>{json.dumps(to_obj, indent=2)}</xmp></code></pre></code></html>"
     return status
@@ -267,7 +222,20 @@ def tools_func(
             "name": function_name,
             "content": function_response
         })
-    return messages
+    messages.append({"role": "user", "content": "if you created and action it has been tested. Understand if you need to improve the action generated and in case you have call tools 'update_action'"})
+    response = AI.chat.completions.create(
+        model=MODEL,
+        messages=messages,
+        tools=tools,
+        tool_choice="auto"
+    )
+    if response.choices[0].finish_reason == "tool_calls":
+        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": "please wait until I finish all tests"}})
+        print("recursive call")
+        tool_calls = response.choices[0].message.tool_calls
+        return tools_func(AI, tool_calls, messages, response)
+    print(response.choices[0].message.content)
+    return response.choices[0].message.content
 
 available_functions = {
     "show_all_actions": show_all_actions,

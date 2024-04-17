@@ -258,4 +258,5 @@ def main(args):
             res = { "output": output}
     if config.html != "":
         res['html'] = config.html
-    return {"body": res }
+    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": res})
+    return {"body": {"status": True}}
