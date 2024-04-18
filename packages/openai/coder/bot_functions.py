@@ -231,7 +231,6 @@ def tools_func(
     )
     if response.choices[0].finish_reason == "tool_calls":
         requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": "please wait until I finish all tests"}})
-        print("recursive call")
         tool_calls = response.choices[0].message.tool_calls
         return tools_func(AI, tool_calls, messages, response)
     print(response.choices[0].message.content)

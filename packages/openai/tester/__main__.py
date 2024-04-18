@@ -11,7 +11,6 @@ import requests
 import config
 import bot_functions
 
-AI = None
 MODEL = "gpt-3.5-turbo"
 
 available_functions = {
@@ -25,20 +24,13 @@ def ask(query: str, model: str = MODEL) -> str:
         {"role": "system", "content": config.ROLE},
         {"role": "user", "content": query},
     ]
-    for i in range(5):
-        response = AI.chat.completions.create(
-            model=model,
-            messages=messages,
-            tools=bot_functions.tools,
-            tool_choice="auto",
-        )
-        if response.choices[0].finish_reason != "tool_calls":
-            messages.append({"role": "user", "content": "check if in the passed data there are failed tests and report them. Suggest some improvements if needed. Taske your time to answer"})
-            response = AI.chat.completions.create(
-                model=model,
-                messages=messages,
-            )
-            return response.choices[0].message.content
+    response = config.AI.chat.completions.create(
+        model=model,
+        messages=messages,
+        tools=bot_functions.tools,
+        tool_choice="auto",
+    )
+    if response.choices[0].finish_reason == "tool_calls":
         messages.append(response.choices[0].message)
         tool_calls = response.choices[0].message.tool_calls
         for tool_call in tool_calls:
@@ -55,13 +47,18 @@ def ask(query: str, model: str = MODEL) -> str:
                 "name": function_name,
                 "content": function_response
             })
-    return "could't complete the tests"
+        messages.append({"role": "user", "content": "check if in the passed data there are failed tests and report them. Suggest some improvements if needed. Taske your time to answer"})
+        response = config.AI.chat.completions.create(
+            model=model,
+            messages=messages,
+        )
+    return response.choices[0].message.content
+        
 TUNED_MODEL = None
 
 def main(args):
-    global AI
     global TUNED_MODEL
-    AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
+    config.AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
     
     TUNED_MODEL = MODEL
 

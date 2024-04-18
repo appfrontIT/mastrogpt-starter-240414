@@ -6,6 +6,9 @@ from pymongo import MongoClient
 import json
 from bson.objectid import ObjectId
 from bson.json_util import dumps
+import time
+
+TIMEOUT = 4
 
 def format_el(element):
     ret = {}
@@ -22,9 +25,18 @@ def main(args):
     
     db_coll = dbname['chat']
 
-    data = db_coll.find_one()
-    if data == None:
-        return {"body": {"output": ""}}
+    loop_time = 0
+    data = None
+    while True:
+        data = db_coll.find_one()
+        if data != None:
+            break
+        elif loop_time > TIMEOUT:
+            return {"body": {"output": ""}}
+        else:
+            pass
+        time.sleep(1)
+        loop_time += 1
     obj = format_el(data)
     db_coll.delete_one({'_id':ObjectId(data['_id'])})
     return {"body": obj}

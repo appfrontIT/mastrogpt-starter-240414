@@ -94,11 +94,6 @@ to delete an element provide: "collection": {"type": "string", "description": "n
 - If the user wants to build a CRUD application, ALWAYS create an action for any operation: CREATE, UPDATE, DELETE, FIND
 """
 
-EXTRACT_DATA ="""
-you analyze the text and extract the name of the action and the function
-if both are no present, don't call the function and answer with the element missing
-"""
-
 HTML_INFO ="""
 <!DOCTYPE html>
 <html>

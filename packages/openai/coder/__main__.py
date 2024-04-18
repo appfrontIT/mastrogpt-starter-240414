@@ -21,24 +21,11 @@ def ask(
     model: str = MODEL,
     print_message: bool = False,
 ) -> str:
-    # TEST
-    # from zipfile import ZipFile 
-    # with ZipFile("webapp.zip", 'r') as myzip:
-    #     file_list = myzip.namelist()
-    #     for file in file_list:
-    #         content = str(myzip.read(file))
-    #         config.messages.append({"role": "user", "content": content})
-
-    # config.messages.append({"role": "user", "content": query})
-    # response = AI.chat.completions.create(
-    #     model=model,
-    #     messages=config.messages,
-    # )
-    # return response.choices[0].message.content
-    # END TEST
+    expand = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/administrator', json={"input": query})
+    print(expand.text)
     messages = [
         {"role": "system", "content": f"{config.EMB}"},
-        {"role": "user", "content": query}
+        {"role": "user", "content": expand.text}
     ]
     # config.messages.append({"role": "user", "content": query})
     response = AI.chat.completions.create(
@@ -127,4 +114,4 @@ def main(args):
     if config.html != "":
         res['html'] = config.html
     requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": res})
-    return {"body": {"status": True}}
+    return {"body": {"status": 200}}

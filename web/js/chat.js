@@ -49,8 +49,7 @@ class Invoker {
     })
     .then(r => r.json())
     .then(r => {
-      console.log(r)
-      return r.text
+      return r.status
     })
     .catch(e => {
       console.log(e)
@@ -89,8 +88,8 @@ function appendMessage(name, img, side, text) {
 }
 
 async function bot() {
-  while (1) {
-    sleep(4000)
+  let i = 0;
+  while (i < 10) {
     await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/chat', {method: 'GET', headers: { "Content-Type": "application/json"}})
     .then(r => r.json())
     .then(r => {
@@ -110,12 +109,14 @@ async function bot() {
       displayWindow.postMessage(data)
       if (output != "") {
         appendMessage(BOT_NAME, BOT_IMG, "left", output);
+        i = -1;
       }
     })
     .catch(e => {
       console.log(e)
       return `ERROR interacting with ${this.url}`
     })
+    ++i;
   }
 }
 
