@@ -20,7 +20,7 @@ def html_gen(args):
     name: str = args.get('name', '')
     action_array = ""
     for action in actions_info:
-        status = utils.action_info(action)
+        status = utils.action_info(config.package, action)
         obj = json.loads(status)
         error = obj.get('error', '')
         if error != '':
@@ -41,19 +41,19 @@ def html_gen(args):
     if output == '':
         return "failed to generate the HTML"
     ret = {"body": output}
-    actions = []
     function = f"""def main(args):\n\treturn {ret}"""
-    actions.append({"description": description, "name": name, "function": function})
-    return create_action(actions)
+    action = deploy_action(name, function, description)
+    # test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": action})
+    return test.text
 
 def update_action(name, modifications):
     action_list = utils.get_actions()
-    print(modifications)
     obj = json.loads(action_list)
     name_arr = []
     for x in obj:
         name_arr.append(x['name'])
     if name in name_arr:
+        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": f"updating action '{name}', please wait"}})
         action = utils.action_info(config.package, name)
         messages = [
             {"role": "system", "content": """You only answer in JSON format. You need to provide the following keys for the user: "function", "description". Apply the user modifications to the action provided. function ALWAYS start with "def main(args):".
@@ -66,8 +66,8 @@ def update_action(name, modifications):
             )
         utils.delete_action(config.package, name)
         comp = response.choices[0].message.content
-        print(comp)
         obj = json.loads(comp)
+        config.html += "<h1>UPDATE:</h1><br />"
         action = deploy_action(name, obj['function'], obj['description'])
         test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": action})
         print(test.text)
@@ -91,7 +91,6 @@ def deploy_action(name, function, description):
             model=MODEL,
             messages=messages
         ).choices[0].message.content
-    config.html = ""
     function = function.replace('```', '')
     function = function.replace('python', '')
     function = function.replace('Python', '')
@@ -136,6 +135,7 @@ def create_action(action_array):
         name = x['name']
         function = x['function']
         actions += deploy_action(name, function, description)
+        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": f"action '{name}' created"}})
     test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": actions})
     print(test.text)
     return test.text
@@ -222,7 +222,6 @@ def tools_func(
             "name": function_name,
             "content": function_response
         })
-    messages.append({"role": "user", "content": "if you created and action it has been tested. Understand if you need to improve the action generated and in case you have call tools 'update_action'"})
     response = AI.chat.completions.create(
         model=MODEL,
         messages=messages,

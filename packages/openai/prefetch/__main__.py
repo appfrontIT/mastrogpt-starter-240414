@@ -17,7 +17,7 @@ AI = None
 def ask(query: str, model: str = config.MODEL) -> str:
     messages = [
         {"role": "system", "content": config.EMB},
-        {"role": "user", "content": query},
+        {"role": "user", "content": f"improve the following query adding informations on how to build the action.\nquery:\n{query}"},
     ]
     response = AI.chat.completions.create(
         model=model,

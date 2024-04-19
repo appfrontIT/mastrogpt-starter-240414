@@ -31,55 +31,45 @@ EMB = """
 - If the user ask to write a program or a function you answer with a function you created based on user requests
 - function ALWAYS start with "def main(args):"
 - the return is always: {"body": string}. Example: '{"body": text}', '{"body": response.text}
-- if you have to store data inside a database you MUST use the following action: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo. Everything between ``` is a block of code as example. You can do the following actions with the database:
--- create: 
-```
-def main(args):
-    import requests
-    import json
-    data = {
-        "title": args.get("title"),
-        "author": args.get("author"),
-        "pages": args.get("pages"),
-        "year": args.get("year")
-    }
-    response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "collection": "books", "data": data})
-    return {"body": response.text}
-```
--- update:
-```
-def main(args):
-    import requests
-    import json
-    data = {"filter": args.get('filter'),
-        "updateData": {
-            "title": args.get("title"),
-            "author": args.get("author"),
-            "pages": args.get("pages"),
-            "year": args.get("year")
-        }
-    }
-    response = requests.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"update": True, "collection": "books", "data": data})
-    return {"body": response.text}
-```
--- delete:
-```
-def main(args):
-    import requests
-    import json
-    data = {"filter": args.get('filter')}
-    response = requests.delete("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"delete": True, "collection": "books", "data": data})
-    return {"body": response.text}
-```
--- find:
-```
-def main(args):
-    import requests
-    import json
-    data = {"filter": args.get('filter')}
-    response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find": True, "collection": "books", "data": data})
-    return {"body": response.text}
-```
+- if you have to store data inside a database you MUST use the following action: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo. How to use the database:
+    -- Based on the operation, you need to set True the following keys: add, update, find, delete.
+    -- You need to specify the collection key.
+    -- you need to specify the data key.
+    -- If you need to query the database for an element, you have to specify the 'filter' key inside 'data'.
+    -- If you want to update an element you need to specify the 'updateData' key.
+    -- Example:
+        ```
+        def main(args):
+            if args.get('action') == 'create':
+                data = {
+                    "title": args.get('title'),
+                    "author": args.get('author'),
+                    "genre": args.get('genre'),
+                    "published_year": args.get('published_year')
+                }
+                response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "collection": "books", "data": data})
+                return {"body": response.status_code, "body": response.text}
+            elif args.get('action') == 'read':
+                data = {"filter": args.get('filter')}
+                response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find": True, "collection": "books", "data": data})
+                return {"body": response.status_code, "body": response.text}
+            elif args.get('action') == 'update':
+                data = {"filter": args.get('filter'),
+                    "updateData": {
+                        "title": args.get('title'),
+                        "author": args.get('author'),
+                        "genre": args.get('genre'),
+                        "published_year": args.get('published_year')
+                    }
+                }
+                response = requests.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"update": True, "collection": "books", "data": data})
+                return {"body": response.status_code, "body": response.text}
+            elif args.get('action') == 'delete':
+                data = {"filter": args.get('filter')}
+                response = requests.delete("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"delete": True, "collection": "books", "data": data})
+                return {"body": response.status_code, "body": response.text}
+        ```
+
 to update an element provide: "collection": {"type": "string", "description": "name of collection"}, "data": {"type": "object", "description": "an object containing 'update': true, 'filter': {'_id': 'value'}, 'updateData': {'key': 'value'}};
 to delete an element provide: "collection": {"type": "string", "description": "name of collection"}, "data": {"type": "object", "description": "an object containing 'delete': true, 'filter': {'_id: 'value'}}
 - display action such as: "/'namespace'/'package'/'action'"

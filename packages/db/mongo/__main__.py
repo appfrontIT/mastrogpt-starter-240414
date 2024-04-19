@@ -21,15 +21,15 @@ def update(collection, filter, update_data):
     for key in update_data:
         if update_data[key] != "":
             to_update[key] = update_data[key]
-    data = collection.update_one({'_id':ObjectId(filter['id'])}, {"$set": to_update})
-    el = collection.find_one({'_id': ObjectId(filter['id'])})
+    data = collection.update_one({'_id':ObjectId(filter['_id'])}, {"$set": to_update})
+    el = collection.find_one({'_id': ObjectId(filter['_id'])})
     return {"body": format_el(el)}
 
 def delete(collection, filter):
     print(filter)
-    el = collection.find_one({'_id': ObjectId(filter['id'])})
+    el = collection.find_one({'_id': ObjectId(filter['_id'])})
     deleted_el = format_el(el)
-    data = collection.delete_one({'_id':ObjectId(filter['id'])})
+    data = collection.delete_one({'_id':ObjectId(filter['_id'])})
     return {"body": deleted_el}
 
 def find(collection, filter):

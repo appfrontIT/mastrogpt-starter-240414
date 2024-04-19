@@ -42,19 +42,16 @@ class Invoker {
       // history: history
     }
     // send the request
-    await fetch(this.url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(json)
-    })
-    .then(r => r.json())
-    .then(r => {
-      return r.status
-    })
-    .catch(e => {
-      console.log(e)
-      return `ERROR interacting with ${this.url}`
-    })
+    try {
+      const response = fetch(this.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify(json)
+      })
+      return true
+    } catch (error) {
+      console.log(error)
+    }
   }
 }
 
@@ -150,6 +147,6 @@ window.addEventListener('message', async function (ev) {
   invoker = new Invoker(ev.data.name, ev.data.url)
   titleChat.textContent = ev.data.name
   areaChat.innerHTML = ""
-  await invoker.invoke("")
+  invoker.invoke("")
   bot()
 })

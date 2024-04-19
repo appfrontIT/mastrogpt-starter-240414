@@ -19,10 +19,8 @@ MODEL = "gpt-3.5-turbo"
 def ask(
     query: str,
     model: str = MODEL,
-    print_message: bool = False,
 ) -> str:
-    expand = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/administrator', json={"input": query})
-    print(expand.text)
+    expand = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/prefetch', json={"input": query})
     messages = [
         {"role": "system", "content": f"{config.EMB}"},
         {"role": "user", "content": expand.text}
@@ -109,7 +107,7 @@ def main(args):
                 stored_user = ""
                 res = {"output": "Errore, password non valida. Per favore inserire nome utente", "password": True}
         else:
-            output = ask(query=input, print_message=False, model=TUNED_MODEL)
+            output = ask(query=input, model=TUNED_MODEL)
             res = { "output": output}
     if config.html != "":
         res['html'] = config.html

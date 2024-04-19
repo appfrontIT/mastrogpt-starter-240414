@@ -19,7 +19,9 @@ def html_test(test_array = []):
             response = requests.delete(test['url'],headers=json.loads(test['headers']), json=json.loads(test['body'].replace("'", '"')))
         elif test['method'] == 'HEAD':
             response = requests.head(test['url'])
-        ret += f"'expected output':'{test['output']}', 'response':'{response.text}'"
+        result = f"'expected output':'{test['output']}', 'response':'{response.text}'"
+        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": f"test:\n{test}\nresult:\n{result}"}})
+        ret += result
     return ret
 
 def general_test(test_array = []):
@@ -39,7 +41,9 @@ def general_test(test_array = []):
             response = requests.delete(test['url'],headers=json.loads(test['headers']), json=json.loads(test['body'].replace("'", '"')))
         elif test['method'] == 'HEAD':
             response = requests.head(test['url'])
-        ret += f"'expected output':'{test['output']}', 'response':'{response.text}'"
+        result = f"'expected output':'{test['output']}', 'response':'{response.text}'"
+        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": f"test:\n{test}\nresult:\n{result}"}})
+        ret += result
     return ret
 
 def db_test(actions_array = []):
@@ -52,7 +56,7 @@ def db_test(actions_array = []):
     ]
     for action in actions_array:
         print(action)
-        messages.append({"role": "user", "content": action},)
+        messages.append({"role": "user", "content": str(action)},)
         response = config.AI.chat.completions.create(
             model=config.MODEL,
             messages=messages,
@@ -85,7 +89,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "html_test",
-            "description": "the API returns an html page and you have to test the inner API calls",
+            "description": "the API returns an html page and you have to test the inner fetches. Take your time, read the action and extract the information inside the '<script>' inside the html",
             "parameters": {
                 "type": "object",
                 "properties": {

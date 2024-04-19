@@ -64,7 +64,7 @@ const {model field 4} = document.getElementById('update{model field 4}').value;
 const {model field 5} = document.getElementById('update{model field 5}').value;
 fetch('https://nuvolaris.dev/api/v1/web/gporchia/default/{action to update element}', {
 method: 'PUT',
-body: JSON.stringify({ filter: {id: id}, {model field 1}: {model field 1}, {model field 2}: {model field 2}, {model field 3}: {model field 3}, {model field 4}: {model field 4}, {model field 5}: {model field 5} }),
+body: JSON.stringify({ filter: {_id: id}, {model field 1}: {model field 1}, {model field 2}: {model field 2}, {model field 3}: {model field 3}, {model field 4}: {model field 4}, {model field 5}: {model field 5} }),
 headers: { 'Content-type': 'application/json; charset=UTF-8' },
 })
 .then(response => response.json())
@@ -83,7 +83,7 @@ function delete{model}() {
 const id = document.getElementById('deleteFilter').value;
 fetch('https://nuvolaris.dev/api/v1/web/gporchia/default/{action to delete element}', {
 method: 'DELETE',
-body: JSON.stringify({ filter: {id: id}}),
+body: JSON.stringify({ filter: {_id: id}}),
 headers: { 'Content-type': 'application/json; charset=UTF-8' },
 })
 .then(response => response.json())
