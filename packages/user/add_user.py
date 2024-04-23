@@ -13,5 +13,5 @@ def main(args):
     }
     response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "collection": "users", "data": data})
     if response.status_code == 200:
-        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/action/add_package", json={"name": args.get("name")})
+        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/package/add_package", json={"name": args.get("name")})
     return {"body": response.text}

@@ -1,0 +1,13 @@
+{
+    "role": "assistant",
+    "content": None,
+    "function_call": None,
+    "tool_calls":[{
+        "id": "call_hWAytnNWlxdpPkLvAcTmvsqk",
+        "function": {
+            "name": "create_action",
+            "arguments": '{"action_array":[{"name":"multiply_by_seven","function":"def main(args):\\n number = args.get(\'number\')\\n if not number:\\n return {\'body\': \'Please provide a number as input.\'}\\n try:\\n result = float(number) * 7\\n return {\'body\': str(result)}\\n except ValueError:\\n return {\'body\': \'Invalid input. Please provide a valid number.\'}","description":"An action that takes a number as input, multiplies it by 7, and returns the result. It handles different data types for the input and provides error handling for invalid inputs."}]}',
+            "type": "function",
+        },
+    }],
+}

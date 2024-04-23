@@ -13,6 +13,28 @@ import bot_functions
 
 MODEL = "gpt-3.5-turbo"
 
+def general_test(test_array = []):
+    if len(test_array) == 0:
+        return "couldn't generate any test for the passed API"
+    ret = ""
+    for test in test_array:
+        response = ""
+        if test['method'] == 'GET':
+            response = requests.get(test['url'])
+        elif test['method'] == 'POST':
+            response = requests.post(test['url'], headers=json.loads(test['headers'].replace("'", '"')), json=json.loads(test['body'].replace("'", '"')))
+        elif test['method'] == 'PUT':
+            response = requests.put(test['url'],headers=json.loads(test['headers'].replace("'", '"')), json=json.loads(test['body'].replace("'", '"')))
+        elif test['method'] == 'DELETE':
+            response = requests.delete(test['url'],headers=json.loads(test['headers'].replace("'", '"')), json=json.loads(test['body'].replace("'", '"')))
+        elif test['method'] == 'HEAD':
+            response = requests.head(test['url'])
+        result = f"test:'{test}', 'response':'{response.text}'"
+        print(result)
+        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": result}})
+        ret += result
+    return ret
+
 available_functions = {
     "html_test": bot_functions.html_test,
     "general_test": bot_functions.general_test,
@@ -24,20 +46,49 @@ def ask(query: str, model: str = MODEL) -> str:
         {"role": "system", "content": config.ROLE},
         {"role": "user", "content": query},
     ]
-    for i in range(1):
+    for i in range(5):
+        messages.append({"role": "user", "content": f"loop counter: {i + 1}"})
         response = config.AI.chat.completions.create(
             model=model,
             messages=messages,
-            tools=bot_functions.tools,
-            tool_choice="auto",
+            tools=[{
+                "type": "function",
+                "function": {
+                    "name": "general_test",
+                    "description": "list of tests to perform on the passed API. Take your time to perform the tests and elaborate the solution by yourself",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "test_array": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "method": {"type": "string", "description": "method to use with the API. Can be: 'GET', 'POST', 'PUT', 'DELETE', 'HEAD'"},
+                                        "url": {"type": "string", "description": "endpoint to call"},
+                                        "body": {"type": "string", "description": """body to pass to the API if needed. Always read API description to understand the keys name. Example: "body": {"arg1": string}"""},
+                                        "headers": {"type": "string", "description": """headers to pass to the API. Must be a python dictionary. Example: "headers": {"Content-Type": "application/json"}"""},
+                                        "output": {"type": "string", "description": "expected output by the API call"}
+                                        },
+                                        "required": ["method", "url", "headers", "output"]
+                                    }
+                                }
+                            },
+                            "required": ["test_array"]
+                        }
+                    }
+                },
+            ],
+            tool_choice={"type": "function", "function": {"name": "general_test"}},
         )
-        if response.choices[0].finish_reason == "tool_calls":
+        if response.choices[0].message.tool_calls:
+            print("loop counter " + str(i))
             messages.append(response.choices[0].message)
             tool_calls = response.choices[0].message.tool_calls
             for tool_call in tool_calls:
                 print(tool_call.function.name)
-                function_name = tool_call.function.name
-                function_to_call = available_functions[function_name]
+                function_name = "general_test"
+                function_to_call = general_test
                 function_args = json.loads(tool_call.function.arguments)
                 function_response = function_to_call(
                     **function_args
@@ -48,19 +99,13 @@ def ask(query: str, model: str = MODEL) -> str:
                     "name": function_name,
                     "content": function_response
                 })
-            messages.append({"role": "user", "content": "improve your tests adjusting the errors and adding edge cases"})
-            response = config.AI.chat.completions.create(
-                model=model,
-                messages=messages,
-            )
         else:
-            messages.append({"role": "user", "content": "check if in the passed data there are failed tests and report them. Suggest some improvements if needed. Taske your time to answer"})
-            response = config.AI.chat.completions.create(
+            break
+    return config.AI.chat.completions.create(
                 model=model,
                 messages=messages,
-            )
-            return response.choices[0].message.content
-        
+            ).choices[0].message.content
+
 TUNED_MODEL = None
 
 def main(args):
@@ -70,6 +115,5 @@ def main(args):
     TUNED_MODEL = MODEL
 
     input = args.get("input", "")
-    print(input)
     output = ask(query=input, model=TUNED_MODEL)
     return {"body": {"output": output}}

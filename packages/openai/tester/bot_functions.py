@@ -29,20 +29,20 @@ def general_test(test_array = []):
         return "couldn't generate any test for the passed API"
     ret = ""
     for test in test_array:
-        print(test)
         response = ""
         if test['method'] == 'GET':
             response = requests.get(test['url'])
         elif test['method'] == 'POST':
-            response = requests.post(test['url'], headers=json.loads(test['headers']), json=json.loads(test['body'].replace("'", '"')))
+            response = requests.post(test['url'], headers=json.loads(test['headers'].replace("'", '"')), json=json.loads(test['body'].replace("'", '"')))
         elif test['method'] == 'PUT':
-            response = requests.put(test['url'],headers=json.loads(test['headers']), json=json.loads(test['body'].replace("'", '"')))
+            response = requests.put(test['url'],headers=json.loads(test['headers'].replace("'", '"')), json=json.loads(test['body'].replace("'", '"')))
         elif test['method'] == 'DELETE':
-            response = requests.delete(test['url'],headers=json.loads(test['headers']), json=json.loads(test['body'].replace("'", '"')))
+            response = requests.delete(test['url'],headers=json.loads(test['headers'].replace("'", '"')), json=json.loads(test['body'].replace("'", '"')))
         elif test['method'] == 'HEAD':
             response = requests.head(test['url'])
-        result = f"'expected output':'{test['output']}', 'response':'{response.text}'"
-        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": f"test:\n{test}\nresult:\n{result}"}})
+        result = f"test:'{test}', 'response':'{response.text}'"
+        print(result)
+        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": result}})
         ret += result
     return ret
 
@@ -116,7 +116,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "general_test",
-            "description": "list of tests to perform on the passed API. Take your time to perform the tests and elaborate the solution by yourself. Don't call this function for actions that use database",
+            "description": "list of tests to perform on the passed API. Take your time to perform the tests and elaborate the solution by yourself",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -139,29 +139,29 @@ tools = [
                 }
             }
         },
-        {
-        "type": "function",
-        "function": {
-            "name": "db_test",
-            "description": "an array of the action to test that call the database. The order should be: create, find, update, delete",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "actions_array": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "name": {"type": "string", "description": "name of the action"},
-                                "description": {"type": "string", "description": "complete description of the action with parameters"},
-                                "function": {"type": "string", "description": """fucntion to test"""},
-                                },
-                                "required": ["name", "description", "function"]
-                            },
-                        },
-                    },
-                },
-                "required": ["actions_array"]
-            },
-        },
 ]
+        # {
+        # "type": "function",
+        # "function": {
+        #     "name": "db_test",
+        #     "description": "an array of the action to test that call the database. The order should be: create, find, update, delete",
+        #     "parameters": {
+        #         "type": "object",
+        #         "properties": {
+        #             "actions_array": {
+        #                 "type": "array",
+        #                 "items": {
+        #                     "type": "object",
+        #                     "properties": {
+        #                         "name": {"type": "string", "description": "name of the action"},
+        #                         "description": {"type": "string", "description": "complete description of the action with parameters"},
+        #                         "function": {"type": "string", "description": """fucntion to test"""},
+        #                         },
+        #                         "required": ["name", "description", "function"]
+        #                     },
+        #                 },
+        #             },
+        #         },
+        #         "required": ["actions_array"]
+        #     },
+        # },

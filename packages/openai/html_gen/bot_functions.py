@@ -80,25 +80,4 @@ tools = [
             },
         },
     },
-    {
-        "type": "function",
-        "function": {
-            "name": "html_general",
-            "description": "the user wants to build a non specific HTML page",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "description": {"type": "string", "description": "description of the user requests"},
-                    "actions": {
-                        "type": "array",
-                        "description": "array of actions to be called inside the html",
-                        "items": {
-                            "type": "string"
-                        },
-                    },
-                },
-                "required": ["description"],
-            },
-        },
-    },
 ]

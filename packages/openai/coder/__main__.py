@@ -12,6 +12,7 @@ from secrets import token_urlsafe
 import utils
 import json
 import requests
+import os
 
 AI = None
 MODEL = "gpt-3.5-turbo"
@@ -20,10 +21,10 @@ def ask(
     query: str,
     model: str = MODEL,
 ) -> str:
-    expand = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/prefetch', json={"input": query})
+    config.expand = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/prefetch/coder', json={"input": query, 'package': config.package}).text
     messages = [
         {"role": "system", "content": f"{config.EMB}"},
-        {"role": "user", "content": expand.text}
+        {"role": "user", "content": config.expand}
     ]
     # config.messages.append({"role": "user", "content": query})
     response = AI.chat.completions.create(
@@ -35,6 +36,7 @@ def ask(
     # We start checking if the tools activated. If not we answer generic question about Nuvolaris
     if response.choices[0].finish_reason == "tool_calls":
         tool_calls = response.choices[0].message.tool_calls
+        print(response.choices[0])
         return bot_functions.tools_func(AI, tool_calls, messages, response)
     print("no tools")
     return response.choices[0].message.content
@@ -82,26 +84,25 @@ def main(args):
                 is_password = True
                 config.session_user = user
                 res = {"output": f"Bentornato {user['name']}! Come posso aiutarti?", "password": True}
-                packages = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/action/get_package", json={"name": user['name']})
+                packages = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/package/get_package", json={"name": user['name']})
                 obj = json.loads(packages.text)
                 if obj.get('error') != None:
-                    print("no package found")
+                    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/package/add_package", json={"name": user['name']})
+                if user['name'] != 'admin':
+                    config.namespace = f"gporchia/{user['name']}"
+                    config.package = user['name']
                 else:
-                    if user['name'] != 'admin':
-                        config.namespace = f"gporchia/{user['name']}"
-                        config.package = user['name']
-                    else:
-                        config.namespace = "gporchia"
-                        config.package = 'default'
-                    obj = obj['actions']
-                    for el in obj:
-                        el.pop('version')
-                        annotations = []
-                        for ann in el['annotations']:
-                            if ann['key'] != 'raw-http' and ann['key'] != 'final' and ann['key'] != 'provide-api-key' and ann['key'] != 'exec':
-                                annotations.append(ann)
-                        el['annotations'] = annotations
-                    config.html = f"<html><body><h1>Here's a list of your actions:</h1><br><pre><code><xmp>{json.dumps(obj, indent=2)}</xmp></code></pre></code></html>"
+                    config.namespace = "gporchia"
+                    config.package = 'default'
+                obj = obj['actions']
+                for el in obj:
+                    el.pop('version')
+                    annotations = []
+                    for ann in el['annotations']:
+                        if ann['key'] != 'raw-http' and ann['key'] != 'final' and ann['key'] != 'provide-api-key' and ann['key'] != 'exec':
+                            annotations.append(ann)
+                    el['annotations'] = annotations
+                config.html = f"<html><body><h1>Here's a list of your actions:</h1><br><pre><code><xmp>{json.dumps(obj, indent=2)}</xmp></code></pre></code></html>"
             else:
                 is_login = False
                 stored_user = ""

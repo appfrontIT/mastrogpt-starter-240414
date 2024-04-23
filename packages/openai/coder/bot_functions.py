@@ -15,7 +15,7 @@ MODEL="gpt-3.5-turbo"
 CLIENT = None
 
 def html_gen(args):
-    actions_info = args.get('actions_info', '')
+    actions_info = args.get('actions_names', '')
     description: str = args.get('description', '')
     name: str = args.get('name', '')
     action_array = ""
@@ -42,9 +42,10 @@ def html_gen(args):
         return "failed to generate the HTML"
     ret = {"body": output}
     function = f"""def main(args):\n\treturn {ret}"""
+    print(function)
     action = deploy_action(name, function, description)
     # test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": action})
-    return test.text
+    return f"{action}\nEverything is fine, don't call any other function"
 
 def update_action(name, modifications):
     action_list = utils.get_actions()
@@ -70,7 +71,6 @@ def update_action(name, modifications):
         config.html += "<h1>UPDATE:</h1><br />"
         action = deploy_action(name, obj['function'], obj['description'])
         test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": action})
-        print(test.text)
         return test.text
     return f"No action with that name exists, here a list of existing actions:\n{show_all_actions()}"
 
@@ -127,17 +127,14 @@ def deploy_action(name, function, description):
         """
     return f"url: https://nuvolaris.dev/api/v1/web/gporchia/{config.package}/{name}\ndescription:{description}\nfunction:{function}\n\n"
 
-def create_action(action_array):
+def create_action(args):
     config.html = ""
-    actions = ""
-    for x in action_array:
-        description = x['description']
-        name = x['name']
-        function = x['function']
-        actions += deploy_action(name, function, description)
-        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": f"action '{name}' created"}})
-    test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": actions})
-    print(test.text)
+    name = args.get('name', '')
+    function = args.get('function', '')
+    description = args.get('description')
+    action = deploy_action(name, function, description)
+    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": f"action '{name}' created"}})
+    test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": action})
     return test.text
 
 def action_info(name):
@@ -225,14 +222,7 @@ def tools_func(
     response = AI.chat.completions.create(
         model=MODEL,
         messages=messages,
-        tools=tools,
-        tool_choice="auto"
-    )
-    if response.choices[0].finish_reason == "tool_calls":
-        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": "please wait until I finish all tests"}})
-        tool_calls = response.choices[0].message.tool_calls
-        return tools_func(AI, tool_calls, messages, response)
-    print(response.choices[0].message.content)
+        )
     return response.choices[0].message.content
 
 available_functions = {
@@ -265,20 +255,17 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "action_array": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "name": {"type": "string", "description": "action name"},
-                                "function": {"type": "string", "description": "the generated function. It must starts with 'def main(args):'"},
-                                "description": {"type": "string", "description": "a description of the action you made. The description MUST includes the parameters the action needs such as: {key: type, key: type, ...}. Example: 'an action which add an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}'"},
-                                },
-                                "required": ["name", "function", "description"]
+                    "args": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string", "description": "action name"},
+                            "function": {"type": "string", "description": "the generated function. It must starts with 'def main(args):'"},
+                            "description": {"type": "string", "description": "a description of the action you made. The description MUST includes the parameters the action needs such as: {key: type, key: type, ...}. Example: 'an action which add an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}, None'"},
                             },
-                        }
+                            "required": ["name", "function", "description"],
+                        },
                     },
-                    "required": ["action_array"],
+                    "required": ["args"]
                 },
             },
         },
@@ -344,15 +331,16 @@ tools = [
                         "properties": {
                             "name": {"type": "string", "description": "action name"},
                             "description": {"type": "string", "description": "detailed description of the action to create"},
-                            "actions_info": {
+                            "actions_names": {
                                 "type": "array",
                                 "description": "Array of the actions name to be called inside the HTML. If no actions provided, return an empty array",
                                 "items": {
                                     "type": "string",
                                     }
                                 },
-                            }
-                        }
+                            },
+                            "required": ["name", "description", "actions_names"]
+                        },
                     },
                     "required": ["args"]
                 }

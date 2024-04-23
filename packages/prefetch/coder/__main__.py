@@ -1,5 +1,6 @@
 #--web true
 #--kind python:default
+#--annotation provide-api-key true
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
 #--annotation description "thi action will ensure better output from the agent providing more informations to the request"
 #--timeout 600000
@@ -9,15 +10,15 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
 import json
 import requests
 import config
-import bot_functions
 import os
+import utils
 
 AI = None
 
 def ask(query: str, model: str = config.MODEL) -> str:
     messages = [
         {"role": "system", "content": config.EMB},
-        {"role": "user", "content": f"improve the following query adding informations on how to build the action.\nquery:\n{query}"},
+        {"role": "user", "content": f"Generate a request improving the following query adding informations on how to build the action.\nquery:\n{query}"},
     ]
     response = AI.chat.completions.create(
         model=model,
@@ -28,6 +29,7 @@ def ask(query: str, model: str = config.MODEL) -> str:
 def main(args):
     global AI
     AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
+    config.package = args.get('package', '')
 
     input = args.get("input", "")
     output = ask(query=input, model=config.MODEL)
