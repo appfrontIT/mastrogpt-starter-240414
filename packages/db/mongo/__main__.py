@@ -21,16 +21,25 @@ def update(collection, filter, update_data):
     for key in update_data:
         if update_data[key] != "":
             to_update[key] = update_data[key]
-    data = collection.update_one({'_id':ObjectId(filter['_id'])}, {"$set": to_update})
-    el = collection.find_one({'_id': ObjectId(filter['_id'])})
-    return {"body": format_el(el)}
+    id = filter.get('_id', '')
+    if id == '':
+        return {"body": "error: you must provide the '_id' as filter"}
+    data = collection.update_one({'_id':ObjectId(id)}, {"$set": to_update})
+    if data.modified_count == 0:
+        return {"body": f"error: element not found. _id {id} doens't exits"}
+    el = collection.find_one({'_id': ObjectId(id)})
+    return {"body": f"element {id} updated"}
 
 def delete(collection, filter):
-    print(filter)
-    el = collection.find_one({'_id': ObjectId(filter['_id'])})
+    id = filter.get('_id', '')
+    if id == '':
+        return {"body": "error: you must provide the '_id' as filter"}
+    el = collection.find_one({'_id': ObjectId(id)})
     deleted_el = format_el(el)
-    data = collection.delete_one({'_id':ObjectId(filter['_id'])})
-    return {"body": deleted_el}
+    data = collection.delete_one({'_id':ObjectId(id)})
+    if data.delete_count == 1:
+        return {"body": f"element {id} deleted"}
+    return {"body": f"error: element not found. _id {id} doens't exits"}
 
 def find(collection, filter):
     to_filter = {}
@@ -74,11 +83,18 @@ def main(args):
         db_coll = dbname[collection]
     else:
         db_coll = dbname.create_collection(collection)
-    
+        
     if args.get('add'):
         ins = db_coll.insert_one(data).inserted_id
         el = db_coll.find_one({'_id': ins})
         return {"body": format_el(el)}
+    elif args.get('insert_many'):
+        ins = db_coll.insert_many(data)
+        # TypeError: 'InsertManyResult' object is not iterable
+        ret = []
+        for x in ins:
+            ret.append(format_el(x))
+        return {"body": json.dumps(ret)}
     elif args.get('find_one') == True:
         return find_one(db_coll, data.get('filter', ''))
     elif args.get('find') == True:

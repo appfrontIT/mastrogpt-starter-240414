@@ -35,7 +35,7 @@ def main(args):
             return {"body": {"output": ""}}
         else:
             pass
-        time.sleep(1)
+        time.sleep(0.5)
         loop_time += 1
     obj = format_el(data)
     db_coll.delete_one({'_id':ObjectId(data['_id'])})

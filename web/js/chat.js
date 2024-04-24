@@ -42,13 +42,15 @@ class Invoker {
       // history: history
     }
     // send the request
+    console.log(this.url)
     try {
-      const response = fetch(this.url, {
+      const response = await fetch(this.url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify(json)
-      })
-      return true
+      }).
+        console.log(response)
+        return response
     } catch (error) {
       console.log(error)
     }
@@ -85,8 +87,7 @@ function appendMessage(name, img, side, text) {
 }
 
 async function bot() {
-  let i = 0;
-  while (i < 10) {
+  while (true) {
     await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/chat', {method: 'GET', headers: { "Content-Type": "application/json"}})
     .then(r => r.json())
     .then(r => {
@@ -106,14 +107,12 @@ async function bot() {
       displayWindow.postMessage(data)
       if (output != "") {
         appendMessage(BOT_NAME, BOT_IMG, "left", output);
-        i = -1;
       }
     })
     .catch(e => {
       console.log(e)
       return `ERROR interacting with ${this.url}`
     })
-    ++i;
   }
 }
 
@@ -147,6 +146,6 @@ window.addEventListener('message', async function (ev) {
   invoker = new Invoker(ev.data.name, ev.data.url)
   titleChat.textContent = ev.data.name
   areaChat.innerHTML = ""
-  invoker.invoke("")
-  bot()
+  await invoker.invoke("")
+  await bot()
 })

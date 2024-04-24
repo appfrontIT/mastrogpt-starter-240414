@@ -18,15 +18,16 @@ def general_test(test_array = []):
         return "couldn't generate any test for the passed API"
     ret = ""
     for test in test_array:
+        print(test)
         response = ""
         if test['method'] == 'GET':
             response = requests.get(test['url'])
         elif test['method'] == 'POST':
-            response = requests.post(test['url'], headers=json.loads(test['headers'].replace("'", '"')), json=json.loads(test['body'].replace("'", '"')))
+            response = requests.post(test['url'], headers=json.loads(test['headers']), json=json.loads(test['body']))
         elif test['method'] == 'PUT':
-            response = requests.put(test['url'],headers=json.loads(test['headers'].replace("'", '"')), json=json.loads(test['body'].replace("'", '"')))
+            response = requests.put(test['url'],headers=json.loads(test['headers']), json=json.loads(test['body']))
         elif test['method'] == 'DELETE':
-            response = requests.delete(test['url'],headers=json.loads(test['headers'].replace("'", '"')), json=json.loads(test['body'].replace("'", '"')))
+            response = requests.delete(test['url'],headers=json.loads(test['headers']), json=json.loads(test['body']))
         elif test['method'] == 'HEAD':
             response = requests.head(test['url'])
         result = f"test:'{test}', 'response':'{response.text}'"

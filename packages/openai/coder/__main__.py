@@ -1,4 +1,4 @@
-#--web true
+#--web false
 #--kind python:default
 #--annotation provide-api-key true
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY

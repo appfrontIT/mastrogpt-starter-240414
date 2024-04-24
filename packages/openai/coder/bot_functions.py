@@ -9,10 +9,18 @@ from requests.auth import HTTPBasicAuth
 import json
 import utils
 import config
-import bot_functions
 
 MODEL="gpt-3.5-turbo"
 CLIENT = None
+
+def crawler(url = ''):
+    if url == '':
+        return "No url provided"
+    OW_KEY = os.getenv('__OW_API_KEY')
+    split = OW_KEY.split(':')
+    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/apify_scraper", auth=HTTPBasicAuth(split[0], split[1]), json={"url": url})
+    print(resp.text)
+    return resp.text
 
 def html_gen(args):
     actions_info = args.get('actions_names', '')
@@ -231,7 +239,8 @@ available_functions = {
     "action_info": action_info,
     "create_action": create_action,
     "update_action": update_action,
-    "html_gen": html_gen
+    "html_gen": html_gen,
+    "crawler": crawler
 }
 
 tools = [
@@ -346,4 +355,18 @@ tools = [
                 }
             }
         },
+        {
+        "type": "function",
+        "function": {
+            "name": "crawler",
+            "description": "the user wants information about a web page. A crawler basically",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string", "description": "the url to crawl"}
+                    },
+                    "required": ["url"]
+                }
+            }
+        }
 ]

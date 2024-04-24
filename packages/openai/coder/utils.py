@@ -15,6 +15,8 @@ def delete_action(package, name):
 
 def action_info(package, name):
     split = OW_KEY.split(':')
+    print(split[0])
+    print(split[1])
     resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(split[0], split[1]))
     return resp.text
 
