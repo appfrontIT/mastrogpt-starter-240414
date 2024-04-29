@@ -84,19 +84,22 @@ def main(args):
                 is_password = True
                 config.session_user = user
                 res = {"output": f"Bentornato {user['name']}! Come posso aiutarti?", "password": True}
-                packages = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/package/get_package", json={"name": user['name']})
-                obj = json.loads(packages.text)
-                if obj.get('error') != None:
-                    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/package/add_package", json={"name": user['name']})
-                if user['name'] != 'admin':
+                if user['role'] != 'admin':
+                    packages = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/package/get_package", json={"name": user['name']})
+                    obj = packages.json()
+                    if obj.get('error') != None:
+                        obj = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/package/add_package", json={"name": user['name']}).json()
                     config.namespace = f"gporchia/{user['name']}"
                     config.package = user['name']
+                    obj = obj['actions']
                 else:
                     config.namespace = "gporchia"
                     config.package = 'default'
-                obj = obj['actions']
+                    obj = json.loads(utils.get_actions())
                 for el in obj:
                     el.pop('version')
+                    el.pop('limits')
+                    el.pop('updated')
                     annotations = []
                     for ann in el['annotations']:
                         if ann['key'] != 'raw-http' and ann['key'] != 'final' and ann['key'] != 'provide-api-key' and ann['key'] != 'exec':

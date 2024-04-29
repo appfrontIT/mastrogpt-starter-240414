@@ -13,12 +13,13 @@ import config
 MODEL="gpt-3.5-turbo"
 CLIENT = None
 
-def crawler(url = ''):
+def crawler(url = '', embedding = False):
+    print(embedding)
     if url == '':
         return "No url provided"
     OW_KEY = os.getenv('__OW_API_KEY')
     split = OW_KEY.split(':')
-    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/apify_scraper", auth=HTTPBasicAuth(split[0], split[1]), json={"url": url})
+    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/apify_scraper", auth=HTTPBasicAuth(split[0], split[1]), json={"url": url, "embedding": embedding})
     print(resp.text)
     return resp.text
 
@@ -359,13 +360,14 @@ tools = [
         "type": "function",
         "function": {
             "name": "crawler",
-            "description": "the user wants information about a web page. A crawler basically",
+            "description": "the user wants information about a web page or explicity ask to crawl a web page. A crawler basically",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "url": {"type": "string", "description": "the url to crawl"}
+                    "url": {"type": "string", "description": "the url to crawl"},
+                    "embedding": {"type": "boolean", "description": "True in case the user asks to embed data of the url, False otherwise"}
                     },
-                    "required": ["url"]
+                    "required": ["url", "embedding"]
                 }
             }
         }

@@ -22,54 +22,10 @@ import man
 MODEL = "gpt-3.5-turbo"
 
 AI = None
-# file = AI.files.create(
-#         file=open("fine_tuning.jsonl", "rb"),
-#         purpose="fine-tune"
-#     )
-# fine_tunig = AI.fine_tuning.jobs.create(
-#         training_file=file.id,
-#         model=MODEL
-#     )
-# job_list = AI.fine_tuning.jobs.list()
-# print("job list: ")
-# for x in job_list:
-#     print(x.id)
-#     print(x.fine_tuned_model)
-#     print(x.status)
 
 messages=[{"role": "system", "content": config.LOOKINGLASS_ASSISTANT}]
 
-# BATCH_SIZE = 1000  # you can submit up to 2048 embedding inputs per request
-# embeddings = []
-
-# emb_cpy = config.EMB
 EMBEDDING_MODEL = "text-embedding-3-small"
-
-# def embedding():
-#     batch_list = []
-#     for batch_start in range(0, len(emb_cpy), BATCH_SIZE):
-#         batch_end = batch_start + BATCH_SIZE
-#         batch = emb_cpy[batch_start:batch_end]
-#         batch_list.append(batch)
-#         response = AI.embeddings.create(model=EMBEDDING_MODEL, input=batch)
-#         for i, be in enumerate(response.data):
-#             assert i == be.index  # double check embeddings are in same order as input
-#         batch_embeddings = [e.embedding for e in response.data]
-#         embeddings.extend(batch_embeddings)
-
-#     store = pd.DataFrame({"text": batch_list, "embedding": embeddings})
-#     # save document chunks and embeddings
-#     SAVE_PATH = "man.csv"
-#     store.to_csv(SAVE_PATH, index=False)
-#     df = pd.read_csv("man.csv")
-#     # from IPython.display import display
-#     # display(df)
-#     # convert embeddings from CSV str type back to list type
-#     df['embedding'] = df['embedding'].apply(ast.literal_eval)
-#     # the dataframe has two columns: "text" and "embedding"
-#     return df
-
-# df = embedding()
 
 def strings_ranked_by_relatedness(
     query: str,
@@ -217,11 +173,7 @@ def main(args):
     # for el in obj:
     #     data.append({"text": el['text'], "embedding": el['embedding']})
     # df = pd.DataFrame(data)
-    # if fine_tunig.status == "succeeded":
-    #     TUNED_MODEL = fine_tunig.fine_tuned_model
-    # else:
-    #     TUNED_MODEL = MODEL
-    # print("model " + TUNED_MODEL)
+
     TUNED_MODEL = MODEL
     
     input = args.get("input", "")

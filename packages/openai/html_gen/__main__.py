@@ -45,8 +45,6 @@ def main(args):
         output = ask(query=input, model=MODEL)
         output = output.replace("```html", '')
         output = output.replace("```", '')
-        print(output)
-        # output = output.replace('"', '&quot;')
 
     res = { "output": output}
     return {"body": res }

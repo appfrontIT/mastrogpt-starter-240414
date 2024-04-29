@@ -42,7 +42,8 @@ class Invoker {
       // history: history
     }
     // send the request
-    console.log(this.url)
+    document.getElementById("hybrid").type = "text"
+    
     try {
       const response = await fetch(this.url, {
         method: 'POST',

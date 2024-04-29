@@ -3,6 +3,7 @@
 #--annotation description "an action which perform operations to the database, suche as: add, update, delete, find. Required parameters: {'db': db name, 'collection': collection name, 'type of operation(add, find_one, find, delete, update)': True, 'data': required data as json. Example: 'name': name, 'role': role, 'password': password, ...}"
 
 from pymongo import MongoClient
+from pymongo import errors
 import json
 from bson.objectid import ObjectId
 
@@ -34,10 +35,8 @@ def delete(collection, filter):
     id = filter.get('_id', '')
     if id == '':
         return {"body": "error: you must provide the '_id' as filter"}
-    el = collection.find_one({'_id': ObjectId(id)})
-    deleted_el = format_el(el)
     data = collection.delete_one({'_id':ObjectId(id)})
-    if data.delete_count == 1:
+    if data.deleted_count == 1:
         return {"body": f"element {id} deleted"}
     return {"body": f"error: element not found. _id {id} doens't exits"}
 
@@ -52,11 +51,16 @@ def find(collection, filter):
         ret.append(format_el(x))
     return {"body": json.dumps(ret)}
 
+def find_by_id(collection, filter):
+    data = collection.find_one({'_id': ObjectId(filter)})
+    if data:
+        return {"body": format_el(data)}
+
 def find_one(collection, filter):
     to_filter = {}
     for key in filter:
         if filter[key] != "":
-            to_filter[key] = filter[key]
+                to_filter[key] = filter[key]
     data = collection.find_one(to_filter)
     if data:
         return {"body": format_el(data)}
@@ -89,14 +93,16 @@ def main(args):
         el = db_coll.find_one({'_id': ins})
         return {"body": format_el(el)}
     elif args.get('insert_many'):
-        ins = db_coll.insert_many(data)
-        # TypeError: 'InsertManyResult' object is not iterable
-        ret = []
-        for x in ins:
-            ret.append(format_el(x))
-        return {"body": json.dumps(ret)}
+        try:
+            ins = db_coll.insert_many(data)
+        except errors.OperationFailure as exc:
+            return {"body": "there was an error while inserting the elements"}
+        else:
+            return {"body": "elements correctly inserted"}
     elif args.get('find_one') == True:
         return find_one(db_coll, data.get('filter', ''))
+    elif args.get('find_by_id') == True:
+        return find_by_id(db_coll, data.get('filter', ''))
     elif args.get('find') == True:
         return find(db_coll, data.get('filter', ''))
     elif args.get('delete') == True:

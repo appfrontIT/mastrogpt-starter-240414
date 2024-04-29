@@ -1,6 +1,6 @@
 #--web false
 #--kind python:default
-#--annotation description "This action scrape a web page and all the links of the same domain inside the page"
+#--annotation description "This action scrape a web page and all the links of the same domain inside the page. It stores data inside the database. If embedding is true, it also store the embedding array. Parameters: {"url": url, "embedding": true/false}"
 #--param APIFY_ACTOR $APIFY_ACTOR
 #--param APIFY_TOKEN $APIFY_TOKEN
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
@@ -27,6 +27,8 @@ def extract_domain(url):
 def main(args):
     ACTOR = args.get('APIFY_ACTOR', '')
     TOKEN = args.get('APIFY_TOKEN', '')
+    embedding = args.get('embedding', False)
+    print(embedding)
     if ACTOR == '' or TOKEN == '':
         return {"body": "error: couldn't get the credentials to use Apify"}
     url = args.get('url', '')
@@ -57,28 +59,37 @@ def main(args):
     crawl = requests.post(f"https://api.apify.com/v2/acts/apify~website-content-crawler/run-sync-get-dataset-items",headers={"Content-Type": "application/json","Authorization": f"Bearer {TOKEN}"}, json=obj)
     if crawl.status_code != 201:
         return {"body": "error crawling the desidered link"}
-
     obj_list = []
     AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
-    ROLE = """You're job is just to make a synthesis of the texts you receive.
+    ROLE = """You're job is just to explain the text received.
     Format your output including a Title for each section and a description. Example: "**This is the title**\nHere you will put the desctiption.\n\n**Another title**\nAnother description" and so on.
     Take your time to answer, it's very important that the text is outputted in a very smart and comprehensible way.
-    Answer only with the synthesized text, nothing else must be returned."""
+    Answer only with the explaination text, nothing else must be returned."""
     ret = ""
     for dict in crawl.json():
         response = AI.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": ROLE},
-                {"role": "user", "content": f"summarize the following text:\n{dict['text']}"}
+                {"role": "user", "content": f"explain me the following text:\n{dict['text']}"}
             ],
         )
         ret += f"url:{url}\nsummary:{response.choices[0].message.content}\n\n"
-        data = {
+        if embedding:
+            embedded_response = AI.embeddings.create(model="text-embedding-3-small", input=response.choices[0].message.content)
+            embedded_data = embedded_response.data[0].embedding
+            data = {
             "url": dict['url'],
-            "content": dict['text'],
-            "summary": response.choices[0].message.content
+            "text": dict['text'],
+            "summary": response.choices[0].message.content,
+            "embedding": embedded_data
             }
+        else:
+            data = {
+                "url": dict['url'],
+                "text": dict['text'],
+                "summary": response.choices[0].message.content
+                }
         obj_list.append(data)
     db_data = {
             "insert_many": True,

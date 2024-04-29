@@ -1,17 +1,34 @@
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
 from typing import List
-from bs4 import BeautifulSoup
 import requests
-import os
 import requests
-from requests.auth import HTTPBasicAuth
 import json
-import utils
 import config
 
 MODEL="gpt-3.5-turbo"
 CLIENT = None
+
+def create_user(name, password, role = 'user'):
+    response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/user/add_user",
+                            json={"name": name, "password": password, "role": role})
+    users = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find": True, "collection": "users", "data": {"filter": {}}})
+    config.html = f"<html><body><h1>In this section you can create, update, and delete an user!</h1><br><h2>Current users:</h2><br><pre><code><xmp>{json.dumps(users.json(), indent=2)}</xmp></code></pre></code></html>"
+    return response.text
+
+def update_user(name, role = 'user'):
+    response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/user/update_user",
+                            json={"name": name, "role": role})
+    users = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find": True, "collection": "users", "data": {"filter": {}}})
+    config.html = f"<html><body><h1>In this section you can create, update, and delete an user!</h1><br><h2>Current users:</h2><br><pre><code><xmp>{json.dumps(users.json(), indent=2)}</xmp></code></pre></code></html>"
+    return response.text
+
+def delete_user(id):
+    response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/user/del_user",
+                            json={"_id": id})
+    users = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find": True, "collection": "users", "data": {"filter": {}}})
+    config.html = f"<html><body><h1>In this section you can create, update, and delete an user!</h1><br><h2>Current users:</h2><br><pre><code><xmp>{json.dumps(users.json(), indent=2)}</xmp></code></pre></code></html>"
+    return response.text
 
 def tools_func(
         AI: OpenAI,
@@ -42,6 +59,9 @@ def tools_func(
     return response.choices[0].message.content
 
 available_functions = {
+    "create_user": create_user,
+    "update_user": update_user,
+    "delete_user": delete_user
 }
 
 tools = [
@@ -82,9 +102,23 @@ tools = [
                 "type": "object",
                 "properties": {
                     "name": {"type": "string", "description": "user name"},
-                    "modifications": {"type": "string", "description": "the admin requested modifications"},
+                    "role": {"type": "string", "description": "the user new role"},
                     },
-                    "required": ["name", "modifications"],
+                    "required": ["name", "role"],
+                }
+            }
+        },
+        {
+        "type": "function",
+        "function": {
+            "name": "delete_user",
+            "description": "delete an user by id. Example: delete 'user id'",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string", "description": "the id of the user to delete"},
+                    },
+                    "required": ["id"],
                 }
             }
         },
