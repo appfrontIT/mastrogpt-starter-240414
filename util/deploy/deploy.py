@@ -70,12 +70,6 @@ def deploy_action(sp):
     exec(f"nuv action update {package}/{name} {artifact} {args}")
 
 
-"""
-file = "packages/deploy/hello.py"
-file = "packages/deploy/multi.zip"
-file = "packages/deploy/multi/__main__.py"
-file = "packages/deploy/multi/requirements.txt"
-"""
 def deploy(file):
     print(f"*** {file}")
     sp = file.split("/")

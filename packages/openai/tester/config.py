@@ -22,8 +22,7 @@ If the action returns an html, you must test the fetch inside the database, call
 
 To test the API, provide a list of json and headers and expected output. Test limit cases like negative numbers, 0, wrong parameters, wrong strings, max int and min int and so on. Tests my be as exhaustive as possible.
 
-Tests must be formatted as a JSON. Please pay extreme attention on how you format the JSON, especially about escaping characters. Be extremely careful when open and close the quotes! Example:
-    - {"method": method, "url": url, "headers": '{"Content-Type": "application/json"}', "body": '{"operation": operation, "filter": {"_id": id}, "update_data": {"arg1": arg1, "arg2": arg2}}', "output": output}
+Ensure tests are formatted as a valid JSON. Take your time to write the tests
 
 After doing the tests, you will answer with the results and if the tests failed you will provide some suggestion and improvements
 No matter what happen, you must give an answer after the 4th loop. This is mandatory. I will help you sending the loop counter after every iteration

@@ -19,5 +19,5 @@ You have to call the correct function based on the user request:
 - delete_user: the admin wants to delete an user. Thi action needs: id
 
 Take your time to answer, don't rush. Think carefully when you have to call a function
-If the admin is asking for anything else, answer with your functionalities and how to use them.
+If the admin is asking for anything else, answer with a list of your functionality.
 """

@@ -213,25 +213,26 @@ def tools_func(
         ):
     global CLIENT
     CLIENT = AI
-    messages.append(response.choices[0].message)
-    for tool_call in tool_calls:
-        print(tool_call.function.name)
-        function_name = tool_call.function.name
-        function_to_call = available_functions[function_name]
-        function_args = json.loads(tool_call.function.arguments)
-        function_response = function_to_call(
-            **function_args
+    for i in range(1):
+        messages.append(response.choices[0].message)
+        for tool_call in tool_calls:
+            print(tool_call.function.name)
+            function_name = tool_call.function.name
+            function_to_call = available_functions[function_name]
+            function_args = json.loads(tool_call.function.arguments)
+            function_response = function_to_call(
+                **function_args
+                )
+            messages.append({
+                "tool_call_id": tool_call.id,
+                "role": "tool",
+                "name": function_name,
+                "content": function_response
+            })
+        response = AI.chat.completions.create(
+            model=MODEL,
+            messages=messages,
             )
-        messages.append({
-            "tool_call_id": tool_call.id,
-            "role": "tool",
-            "name": function_name,
-            "content": function_response
-        })
-    response = AI.chat.completions.create(
-        model=MODEL,
-        messages=messages,
-        )
     return response.choices[0].message.content
 
 available_functions = {

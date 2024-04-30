@@ -10,7 +10,7 @@ def main(arg):
             },
             {
                 "name": "Coder",
-                "url": "openai/coder_caller"
+                "url": "openai/coder"
             },
             {
                 "name": "Admin",

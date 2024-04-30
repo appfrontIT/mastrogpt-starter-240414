@@ -1,4 +1,4 @@
-#--web false
+#--web true
 #--kind python:default
 #--annotation provide-api-key true
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
@@ -98,8 +98,8 @@ def main(args):
                     obj = json.loads(utils.get_actions())
                 for el in obj:
                     el.pop('version')
-                    el.pop('limits')
-                    el.pop('updated')
+                    # el.pop('limits')
+                    # el.pop('updated')
                     annotations = []
                     for ann in el['annotations']:
                         if ann['key'] != 'raw-http' and ann['key'] != 'final' and ann['key'] != 'provide-api-key' and ann['key'] != 'exec':

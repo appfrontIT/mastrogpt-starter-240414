@@ -41,15 +41,13 @@ class Invoker {
       input: msg,
       // history: history
     }
-    // send the request
-    document.getElementById("hybrid").type = "text"
-    
+    // send the request    
     try {
       const response = await fetch(this.url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify(json)
-      }).
+      })
         console.log(response)
         return response
     } catch (error) {
@@ -143,6 +141,7 @@ msgerForm.addEventListener("submit", event => {
 });
 
 window.addEventListener('message', async function (ev) {
+  // document.getElementById("hybrid").type = "text"
   console.log(ev);
   invoker = new Invoker(ev.data.name, ev.data.url)
   titleChat.textContent = ev.data.name
