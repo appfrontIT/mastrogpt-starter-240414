@@ -1,62 +1,66 @@
-:root {
-    --primaryH: 210;
-    --primaryS: 50%;
-    --primaryL: 40%;
-    --primary-bg: #fff;
-    --secondaryH: 0;
-    --secondaryS: 0%;
-    --secondaryL: 13%;
-    --secondary-bg: #fff;
-    --font-family: Roboto, Helvetica, Arial, sans-serif;
-    --font-size-root: 100%;
-    --font-weight-bolder: 700;
-    --font-weight-bold: 400;
-    --font-weight-normal: 200;
-    --font-weight-thin: 100;
-    --line-height: 1.75rem;
-    --heading-margin: 0.5rem 0 0.5rem;
-    --border-radius: 2px;
-    --error: #d00;
-    --warning: #ec0;
-    --info: #369;
-    --correct: #080;
-}
-
-body,
-html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    max-width: 100%;
-}
-
-#top-area {
-    height: 10%;
+/*index.css*/
+body {
     display: flex;
-    margin: 0;
-    padding: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
     align-items: center;
-}
-
-#top-area > * {
-    margin: 10px; 
-}
-
-#iframe-container {
-    position: absolute;
-    top: 10%;
-    left: 0;
-    height: 90%;
-    width: 100%;
-    display: flex;
+    justify-content: center;
+    font-family: sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    background: #f3f3f3;
+    flex-direction: column;
     margin: 0;
-    padding: 0;
 }
 
-iframe {
-    width: 50%;
-    height: 100%;
+.main {
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    padding: 10px 20px;
+    transition: transform 0.2s;
+    width: 500px;
+    text-align: center;
+}
+
+h1 {
+    color: #fb1cad;
+}
+
+label {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    text-align: left;
+    color: #555;
+    font-weight: bold;
+}
+
+
+input {
+    display: block;
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+button {
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    background-color: #fb1cad;
+    width: 100%;
+    font-size: 16px;
+}
+
+.wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }

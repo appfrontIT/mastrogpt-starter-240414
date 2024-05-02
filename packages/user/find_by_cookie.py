@@ -6,15 +6,11 @@ import requests
 import hashlib
 
 def main(args):
-    password = args.get('password', '')
-    if password != '':
-        password = hashlib.sha256(password.encode()).hexdigest()
+    cookie = args.get('cookie', '')
     data = {
         "find_one": True,
         "filter": {
-            "name": args.get('name'),
-            "password": password,
-            "id": args.get('id', '')
+            "cookie": cookie.split('=')[1],
         }
     }
     response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find_one": True, "collection": "users", "data": data})

@@ -45,9 +45,22 @@ class Invoker {
     try {
       const response = await fetch(this.url, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify(json)
       })
+      console.log(response.text)
+      const data = await response.json()
+      if (data['logout']) {
+        console.log("loggin out")
+        document.cookie = data['cookie'] + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
+        return window.parent.location.replace('/index.html')
+      }
+        switch (response.status) {
+          case 302: window.parent.location.replace(response.headers.get('location')); break;
+          default:
+            break;
+        }
         console.log(response)
         return response
     } catch (error) {
@@ -86,32 +99,22 @@ function appendMessage(name, img, side, text) {
 }
 
 async function bot() {
-  while (true) {
-    await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/chat', {method: 'GET', headers: { "Content-Type": "application/json"}})
-    .then(r => r.json())
-    .then(r => {
-      let data = r
-      let login = data.login
-      if (login) {
-        console.log("login")
-        document.getElementById("hybrid").type = "password"
-        delete data['login']
-      }
-      if (data.password) {
-        document.getElementById("hybrid").type = "text"
-        delete data['password']
-      }
+  let i = 5;
+  while (i-- > 0) {
+    try {
+      r = await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/chat', {method: 'GET', headers: { "Content-Type": "application/json"}})
+      let data = await r.json()
       let output = data.output
       delete data['output']
       displayWindow.postMessage(data)
       if (output != "") {
         appendMessage(BOT_NAME, BOT_IMG, "left", output);
+        i = 5
       }
-    })
-    .catch(e => {
-      console.log(e)
+    } catch(error) {
+      console.log(error)
       return `ERROR interacting with ${this.url}`
-    })
+    }
   }
 }
 
@@ -147,5 +150,5 @@ window.addEventListener('message', async function (ev) {
   titleChat.textContent = ev.data.name
   areaChat.innerHTML = ""
   await invoker.invoke("")
-  await bot()
+  bot()
 })

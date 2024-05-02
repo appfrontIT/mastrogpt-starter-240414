@@ -151,64 +151,32 @@ def ask(
     response_message = response.choices[0].message.content
     return response_message
 
-TUNED_MODEL = None
-is_login = False
-is_password = False
-stored_user = ""
-
 def main(args):
     global AI
-    global TUNED_MODEL
     global df
-    global is_login
-    global is_password
     config.html = "<iframe src='https://appfront.cloud' width='100%' height='800'></iframe>"
 
     AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
-    
-    # Retrieving embeddings from database
-    # response = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/embedding', json={"name": "test", "data": config.EMB})
-    # obj = response.json()
-    # data = []
-    # for el in obj:
-    #     data.append({"text": el['text'], "embedding": el['embedding']})
-    # df = pd.DataFrame(data)
 
-    TUNED_MODEL = MODEL
+    cookie = args['__ow_headers'].get('cookie', False)
+    if not cookie:
+        return {"statusCode": 302, "headers": {"location": "https://gporchia.nuvolaris.dev"}}
+    response = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/user/find_by_cookie', json={"cookie": cookie})
+    if response.status_code == 404:
+        return {"statusCode": 404}
+    config.session_user = response.json()
     
     input = args.get("input", "")
     if input == "":
-        is_login = False
-        is_password = False
         res = {
-            "output": "Benvenuti in Walkiria, la piattaforma AI di Appfront. Per favore, inserire il proprio nome utente",
+            "output": f"Bentornato {config.session_user['name']}! Come posso aiutarti?",
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
         }
     else:
-        if is_login == False:
-            user = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/user/find_user", headers={"Content-Type": "application/json"}, json={"name": input}).json()
-            if user != None:
-                global stored_user
-                is_login = True
-                stored_user = user['name']
-                res = {"output": f"per favore inserire la password per l'utente {input}", "login": True}
-            else:
-                res = {"output": "errore, l'utente non esiste, riprovare nuovamente"}
-        elif is_login == True and is_password == False:
-            user = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/user/find_user", headers={"Content-Type": "application/json"}, json={"name": stored_user, "password": input}).json()
-            if user != None:
-                is_password = True
-                config.session_user = user
-                res = {"output": f"Bentornato {user['name']}! Come posso aiutarti?", "password": True}
-            else:
-                is_login = False
-                stored_user = ""
-                res = {"output": "Errore, password non valida. Per favore inserire nome utente", "password": True}
-        else:
-            output = ask(query=input, print_message=False, model=TUNED_MODEL)
-            res = { "output": output}
+        output = ask(query=input, print_message=False, model=MODEL)
+        res = { "output": output}
     if config.html != "":
         res['html'] = config.html
     requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": res})
-    return {"body": {"status": True}}
+    return {"statusCode": 200}

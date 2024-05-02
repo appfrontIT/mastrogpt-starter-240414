@@ -1,27 +1,35 @@
-// global variables
-let chat = document.getElementById("chat").contentWindow
-let display = document.getElementById("display").contentWindow
 let base = location.href.replace(/index\.html$/, "")
 
-
-// inizialize the chat buttons
-document.addEventListener("DOMContentLoaded", function() {
-    // retrieve index
-    fetch(base+"api/my/mastrogpt/index")
-    .then( (x)  => x.json())
-    .then( (data) => {
-        let insert = document.getElementById("top-area")
-        data.services.forEach(service => {
-            const button = document.createElement("button");
-            button.textContent = service.name;
-            button.onclick = function() {
-                let url = base + "api/my/"+service.url
-                chat.postMessage({name: service.name, url: url})
-            };
-            let = p = document.createElement("span")
-            p.appendChild(button);
-            insert.appendChild(p);
-        });
-    })
-    .catch( (e) => { console.log(e); alert("ERROR:  index") } )
+window.addEventListener("DOMContentLoaded", (event) => {
+    let x = document.cookie;
+    console.log(x)
+    if (x) {
+        window.location.assign('/selector.html')
+    }
+    const form = document.getElementById('submit-form');
+    form.addEventListener("submit", onFormSubmit);
+    
+    async function onFormSubmit(event) {
+        event.preventDefault();
+        const data = new FormData(event.target);
+        const user = data.get('name');
+        const password = data.get('password');
+        try {
+            const response = await fetch(base+'api/my/utility/login', {
+                method: 'POST',
+                credentials: 'include',
+                body: JSON.stringify({'user': user, 'password': password}),
+                headers: { 'Content-Type': 'application/json' },
+            })
+            const obj = await response.json();
+            if (response.status != 400) {
+                console.log(obj)
+                window.location.assign('/selector.html')
+                return obj
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
 })
+

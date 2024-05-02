@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 from bson.json_util import dumps
 import time
 
-TIMEOUT = 4
+TIMEOUT = 4.5
 
 def format_el(element):
     ret = {}

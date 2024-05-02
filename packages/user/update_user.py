@@ -13,9 +13,7 @@ def main(args):
                 "name": args.get('name'),
                 "password": hashlib.sha256(args.get("password").encode()).hexdigest(),
             },
-            "updateData": {
-                "role": args.get("role")
-            }
+            "updateData": args.get('updateData')
     }
     response = requests.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"update": True, "collection": "users", "data": data})
     return {"body": response.text}

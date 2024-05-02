@@ -18,10 +18,10 @@ def format_el(element):
     return json.dumps(ret)
 
 def update(collection, filter, update_data):
+    print(update_data)
     to_update = {}
     for key in update_data:
-        if update_data[key] != "":
-            to_update[key] = update_data[key]
+        to_update[key] = update_data[key]
     id = filter.get('_id', '')
     if id == '':
         return {"body": "error: you must provide the '_id' as filter"}
@@ -64,7 +64,7 @@ def find_one(collection, filter):
     data = collection.find_one(to_filter)
     if data:
         return {"body": format_el(data)}
-    return {"body": json.dumps(data)}
+    return {"statusCode": 404, "body": json.dumps(data)}
 
 def main(args):
     # connection_string = args.get('CONNECTION_STRING')

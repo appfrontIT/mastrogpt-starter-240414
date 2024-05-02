@@ -1,20 +1,30 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <link rel="stylesheet" href="/css/almond.min.css" />
-    <link rel="stylesheet" href="/css/index.css" />
+    <title>Walkiria Login page</title>
+    <link rel="stylesheet" href="/css/index.css">
+    <script src="/js/index.js"></script>
 </head>
 
 <body>
-    <div id="top-area">
-        <h2>Walkiria</h2>
-    </div>
-    <div id="iframe-container">
-        <iframe id="chat" src="/chat.html"></iframe>
-        <iframe id="display" src="/display.html"></iframe>
-    </div>
-    <script src="/js/index.js"></script>
-</body>
+    <div class="main">
+        <h1>Walkiria</h1>
+        <h3>Enter your login credentials</h3>
+        <form id="submit-form">
+            <label for="first">Username:</label>
+            <input type="text"
+                name="name"
+                placeholder="Enter your Username" required />
 
+            <label for="password">Password:</label>
+            <input type="password"
+                name="password"
+                placeholder="Enter your Password" required />
+
+            <div class="wrap">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+    </div>
+</body>
 </html>

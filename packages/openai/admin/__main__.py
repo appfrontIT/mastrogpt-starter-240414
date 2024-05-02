@@ -32,62 +32,33 @@ def ask(
         return bot_functions.tools_func(AI, tool_calls, config.messages, response)
     return response.choices[0].message.content
 
-TUNED_MODEL = None
-is_login = False
-is_password = False
-stored_user = ""
-
 def main(args):
     global AI
-    global TUNED_MODEL
-    global is_login
-    global is_password
+    config.html = "<iframe src='https://appfront.cloud' width='100%' height='800'></iframe>"
 
     AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
-    
-    TUNED_MODEL = MODEL
 
+    cookie = args['__ow_headers'].get('cookie', False)
+    if not cookie:
+        return {"statusCode": 302, "headers": {"location": "https://gporchia.nuvolaris.dev"}}
+    response = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/user/find_by_cookie', json={"cookie": cookie})
+    if response.status_code == 404:
+        return {"statusCode": 404}
+    config.session_user = response.json()
+    if config.session_user['role'] != 'admin':
+        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": "Devi essere un Admin per poter accedere a questa sessione"}})
+        return{"statusCode": 403}
     input = args.get("input", "")
     if input == "":
-        config.messages = [{"role": "system", "content": f"{config.EMB}"}]
-        is_login = False
-        is_password = False
         res = {
-            "output": "Benvenuti in Walkiria, la piattaforma AI di Appfront. Per favore, inserire il proprio nome utente",
+            "output": f"Bentornato {config.session_user['name']}! Come posso aiutarti?",
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
         }
     else:
-        if is_login == False:
-            user = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/user/find_user", headers={"Content-Type": "application/json"}, json={"name": input}).json()
-            if user != None:
-                global stored_user
-                stored_user = user['name']
-                is_login = True
-                res = {"output": f"per favore inserire la password per l'utente {input}", "login": True}
-            else:
-                res = {"output": "errore, l'utente non esiste, riprovare nuovamente"}
-        elif is_login == True and is_password == False:
-            user = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/user/find_user", headers={"Content-Type": "application/json"}, json={"name": stored_user, "password": input}).json()
-            if user != None:
-                is_password = True
-                config.session_user = user
-                if user['role'] != 'admin':
-                    res = {"output": "errore: devi essere un admin per utilizzare questa sezione"}
-                else:
-                    res = {"output": f"Bentornato {user['name']}! Come posso aiutarti?", "password": True}
-                    config.namespace = "gporchia"
-                    config.package = 'default'
-                    users = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find": True, "collection": "users", "data": {"filter": {}}})
-                    config.html = f"<html><body><h1>In this section you can create, update, and delete an user!</h1><br><h2>Current users:</h2><br><pre><code><xmp>{json.dumps(users.json(), indent=2)}</xmp></code></pre></code></html>"
-            else:
-                is_login = False
-                stored_user = ""
-                res = {"output": "Errore, password non valida. Per favore inserire nome utente", "password": True}
-        else:
-            output = ask(query=input, model=TUNED_MODEL)
-            res = { "output": output}
+        output = ask(query=input, print_message=False, model=MODEL)
+        res = { "output": output}
     if config.html != "":
         res['html'] = config.html
     requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": res})
-    return {"body": res,}
+    return {"statusCode": 200}

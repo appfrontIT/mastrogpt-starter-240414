@@ -15,6 +15,10 @@ def main(arg):
             {
                 "name": "Admin",
                 "url": "openai/admin"
+            },
+            {
+                "name": "Logout",
+                "url": "mastrogpt/logout"
             }
         ]
     }
