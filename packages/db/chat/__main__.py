@@ -8,8 +8,6 @@ from bson.objectid import ObjectId
 from bson.json_util import dumps
 import time
 
-TIMEOUT = 4.5
-
 def format_el(element):
     ret = {}
     for key in element:
@@ -19,7 +17,7 @@ def format_el(element):
 
 def main(args):
     # connection_string = args.get('CONNECTION_STRING')
-
+    print(args)
     client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
     dbname = client['mastrogpt']
     
@@ -31,12 +29,11 @@ def main(args):
         data = db_coll.find_one()
         if data != None:
             break
-        elif loop_time > TIMEOUT:
-            return {"body": {"output": ""}}
-        else:
-            pass
-        time.sleep(0.5)
+        elif loop_time > 5:
+            return {"statusCode": 204}
+        time.sleep(1)
         loop_time += 1
     obj = format_el(data)
+    print(obj)
     db_coll.delete_one({'_id':ObjectId(data['_id'])})
     return {"body": obj}

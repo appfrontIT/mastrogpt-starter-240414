@@ -14,6 +14,7 @@ const msgerChat = document.querySelector(".msger-chat");
 const titleChat = document.getElementById("chat-title");
 const areaChat = document.getElementById("chat-area");
 const displayWindow = window.parent.document.getElementById("display").contentWindow
+let base = location.href.replace(/chat\.html$/, "")
 
 // Classes
 function sleep(ms) {
@@ -41,16 +42,19 @@ class Invoker {
       input: msg,
       // history: history
     }
-    // send the request    
+    // send the request
+    console.log(this.url)
     try {
-      const response = await fetch(this.url, {
+      let response = await fetch(this.url, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json'},
-        body: JSON.stringify(json)
-      })
-      console.log(response.text)
-      const data = await response.json()
+        body: JSON.stringify(json),
+      });
+      if (response.status == 204) {
+        return response
+      }
+      const d = await response.json()
       if (data['logout']) {
         console.log("loggin out")
         document.cookie = data['cookie'] + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
@@ -62,7 +66,7 @@ class Invoker {
             break;
         }
         console.log(response)
-        return response
+      return response
     } catch (error) {
       console.log(error)
     }
@@ -100,16 +104,27 @@ function appendMessage(name, img, side, text) {
 
 async function bot() {
   let i = 5;
+  url = base+'api/my/db/chat'
+  console.log(url)
   while (i-- > 0) {
     try {
-      r = await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/chat', {method: 'GET', headers: { "Content-Type": "application/json"}})
-      let data = await r.json()
-      let output = data.output
-      delete data['output']
-      displayWindow.postMessage(data)
-      if (output != "") {
-        appendMessage(BOT_NAME, BOT_IMG, "left", output);
-        i = 5
+      let r = await fetch(url, {method: 'GET', headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include"
+      })
+      console.log(r.status)
+      if (r.status == 204) {
+        continue;
+      } else {
+        const data = await r.json()
+        let output = data.output
+        delete data['output']
+        displayWindow.postMessage(data)
+        if (output != "") {
+          appendMessage(BOT_NAME, BOT_IMG, "left", output);
+          i = 5
+        }
       }
     } catch(error) {
       console.log(error)

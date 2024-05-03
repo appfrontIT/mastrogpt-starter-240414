@@ -61,4 +61,4 @@ def main(args):
     if config.html != "":
         res['html'] = config.html
     requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": res})
-    return {"statusCode": 200}
+    return {"statusCode": 204}
