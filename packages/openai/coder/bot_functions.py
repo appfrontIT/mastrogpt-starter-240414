@@ -17,9 +17,7 @@ def crawler(url = '', embedding = False):
     print(embedding)
     if url == '':
         return "No url provided"
-    OW_KEY = os.getenv('__OW_API_KEY')
-    split = OW_KEY.split(':')
-    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/apify_scraper", auth=HTTPBasicAuth(split[0], split[1]), json={"url": url, "embedding": embedding})
+    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/apify_scraper", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"url": url, "embedding": embedding})
     print(resp.text)
     return resp.text
 
@@ -79,7 +77,7 @@ def update_action(name, modifications):
         obj = json.loads(comp)
         config.html += "<h1>UPDATE:</h1><br />"
         action = deploy_action(name, obj['function'], obj['description'])
-        test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": action})
+        test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": action, 'cookie': config.session_user['cookie']})
         return test.text
     return f"No action with that name exists, here a list of existing actions:\n{show_all_actions()}"
 
@@ -142,7 +140,7 @@ def create_action(args):
     function = args.get('function', '')
     description = args.get('description')
     action = deploy_action(name, function, description)
-    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": f"action '{name}' created"}})
+    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(utils.split[0], utils.split[1]), json={'cookie': config.session_user['cookie'], "message": {"output": f"action '{name}' created"}})
     test = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/tester', json={"input": action})
     return test.text
 

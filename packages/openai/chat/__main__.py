@@ -1,5 +1,6 @@
 #--web true
 #--kind python:default
+#--annotation provide-api-key true
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
 #--annotation description 'an action which let you interact with a custom assistant helping you in Lookinglass operations'
 
@@ -18,91 +19,24 @@ from scipy import spatial
 import bot_functions
 import json
 import man
+from requests.auth import HTTPBasicAuth
 
 MODEL = "gpt-3.5-turbo"
-
 AI = None
 
-messages=[{"role": "system", "content": config.LOOKINGLASS_ASSISTANT}]
-
-EMBEDDING_MODEL = "text-embedding-3-small"
-
-def strings_ranked_by_relatedness(
-    query: str,
-    df: pd.DataFrame,
-    relatedness_fn=lambda x, y: 1 - spatial.distance.cosine(x, y),
-    top_n: int = 100
-    ) -> tuple[list[str], list[float]]:
-    """Returns a list of strings and relatednesses, sorted from most related to least."""
-    query_embedding_response = AI.embeddings.create(
-        model=EMBEDDING_MODEL,
-        input=query,
-    )
-    query_embedding = query_embedding_response.data[0].embedding
-    strings_and_relatednesses = [
-        (row["text"], relatedness_fn(query_embedding, row["embedding"]))
-        for i, row in df.iterrows()
-    ]
-    strings_and_relatednesses.sort(key=lambda x: x[1], reverse=True)
-    strings, relatednesses = zip(*strings_and_relatednesses)
-    return strings[:top_n], relatednesses[:top_n]
-
-def num_tokens(text: str, model: str = MODEL) -> int:
-    """Return the number of tokens in a string."""
-    encoding = tiktoken.encoding_for_model(model)
-    return len(encoding.encode(text))
-
-def query_message(
-    query: str,
-    df: pd.DataFrame,
-    model: str,
-    token_budget: int
-) -> str:
-    print("query " + query)
-    """Return a message for GPT, with relevant source texts pulled from a dataframe."""
-    strings, relatednesses = strings_ranked_by_relatedness(query=query, df=df)
-    print(strings)
-    introduction = 'Use the below informations to answer the subsequent question. If the answer cannot be found in the informations, write "I could not find an answer."'
-    question = f"\n\nQuestion: {query}"
-    message = introduction
-    for string in strings:
-        next_article = f'\n\nLookinglass manual section:\n"""\n{string}\n"""'
-        if (
-            num_tokens(message + next_article + question, model=model)
-            > token_budget
-        ):
-            break
-        else:
-            message += next_article
-    print(message)
-    return message + question
-
-df = pd.DataFrame
+available_functions = {
+    "quotation_by_birth": veichle.quotation_by_birth,
+    "quotation_by_cf": veichle.quotation_by_cf,
+    "find_man_page": man.find_man_page
+}
 
 def ask(
     query: str,
     model: str = MODEL,
-    token_budget: int = 4096 - 500,
-    print_message: bool = False,
 ) -> str:
-    """Answers a query using GPT and a dataframe of relevant texts and embeddings."""
-    # UNCOMMENT BELOW TO USE THE EMBEDDING INSTEAD OF THE MANUAL URL
-    # print('ask')
-    # message = query_message(query, df, model=model, token_budget=token_budget)
-    # if print_message:
-    #     print(message)
-    # messages = [
-    #     {"role": "system", "content": config.LOOKINGLASS_ASSISTANT},
-    #     {"role": "user", "content": message},
-    # ]
-    # response = AI.chat.completions.create(
-    #     model=model,
-    #     messages=messages,
-    # )
-    # response_message = response.choices[0].message.content
-    # return response_message
-    messages = [{"role": "system", "content": veichle.VEICHLE_PREV_ROLE},
-                {"role": "user", "content": query}]
+    config.query = query
+    history = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/get_history", json={'cookie': config.session_user['cookie']})
+    messages = json.loads(history.text)
     response = AI.chat.completions.create(
         model=model,
         messages=messages,
@@ -110,50 +44,33 @@ def ask(
         tool_choice="auto"
     )
     if response.choices[0].finish_reason == "tool_calls":
+        print("tool")
         tool_calls = response.choices[0].message.tool_calls
-        return veichle.quotation_func(AI, tool_calls, messages, response)
-    messages = [{"role": "system", "content": man.MAN_ROLE},
-                {"role": "user", "content": query}]
-    response = AI.chat.completions.create(
-        model=model,
-        messages=messages,
-        tools=bot_functions.find_man_page,
-        tool_choice="auto"
-    )
-    if response.choices[0].finish_reason == "tool_calls":
-        tool_calls = response.choices[0].message.tool_calls
-        man.find_man_func(AI, tool_calls, messages, response)
-        if config.man_page != "":
-            introduction = 'Use the below informations to answer the subsequent question. If the answer cannot be found in the informations, write "I could not find an answer.\n\nLookinglass manual section:\n\n"'
-            question = f"\n\nQuestion: {query}"
-            messages = [
-                {"role": "system", "content": config.LOOKINGLASS_ASSISTANT},
-                {"role": "user", "content": introduction + config.man_page + question},
-                ]
-            response = AI.chat.completions.create(
+        messages.append(response.choices[0].message)
+        for tool_call in tool_calls:
+            print(tool_call.function.name)
+            function_name = tool_call.function.name
+            function_to_call = available_functions[function_name]
+            function_args = json.loads(tool_call.function.arguments)
+            function_response = function_to_call(
+                **function_args
+                )
+            messages.append({
+                "tool_call_id": tool_call.id,
+                "role": "tool",
+                "name": function_name,
+                "content": function_response
+            })
+        response = AI.chat.completions.create(
             model=model,
             messages=messages,
-            )
-            response_message = response.choices[0].message.content
-            return response_message
-    # """Answers a query using GPT and a dataframe of relevant texts and embeddings."""
-    # message = query_message(query, df, model=model, token_budget=token_budget)
-    # if print_message:
-    #     print(message)
-    messages = [
-        {"role": "system", "content": config.LOOKINGLASS_ASSISTANT},
-        {"role": "user", "content": query},
-    ]
-    response = AI.chat.completions.create(
-        model=model,
-        messages=messages,
-    )
-    response_message = response.choices[0].message.content
-    return response_message
+        )
+    else:
+        print('no tools')
+    return response.choices[0].message.content
 
 def main(args):
     global AI
-    global df
     config.html = "<iframe src='https://appfront.cloud' width='100%' height='800'></iframe>"
 
     AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
@@ -165,18 +82,21 @@ def main(args):
     if response.status_code == 404:
         return {"statusCode": 404}
     config.session_user = response.json()
-    
     input = args.get("input", "")
     if input == "":
         res = {
             "output": f"Bentornato {config.session_user['name']}! Come posso aiutarti?",
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
+            "html": config.html
         }
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': cookie, 'message': res, 'reset_history': True, 'history': {"role": "system", "content": config.LOOKINGLASS_ASSISTANT}})
+        return { "statusCode": 204, }
     else:
-        output = ask(query=input, print_message=False, model=MODEL)
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': cookie, 'history': {"role": "user", "content": input}}) 
+        output = ask(query=input, model=MODEL)
         res = { "output": output}
     if config.html != "":
         res['html'] = config.html
-    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": res})
+    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': cookie, 'message': res, 'history': {"role": "assistant", "content": res['output']}})
     return { "statusCode": 204, }

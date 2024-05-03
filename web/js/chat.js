@@ -43,7 +43,6 @@ class Invoker {
       // history: history
     }
     // send the request
-    console.log(this.url)
     try {
       let response = await fetch(this.url, {
         method: 'POST',
@@ -103,10 +102,8 @@ function appendMessage(name, img, side, text) {
 }
 
 async function bot() {
-  let i = 5;
   url = base+'api/my/db/chat'
-  console.log(url)
-  while (i-- > 0) {
+  while (true) {
     try {
       let r = await fetch(url, {method: 'GET', headers: {
         "Content-Type": "application/json"
@@ -117,13 +114,16 @@ async function bot() {
       if (r.status == 204) {
         continue;
       } else {
-        const data = await r.json()
-        let output = data.output
-        delete data['output']
-        displayWindow.postMessage(data)
-        if (output != "") {
-          appendMessage(BOT_NAME, BOT_IMG, "left", output);
-          i = 5
+        const obj = await r.json()
+        let chat = obj.chat
+        for (let j = 0; j < chat.length; j++) {
+          let data = chat[j];
+          let output = data.output
+          delete data['output']
+          displayWindow.postMessage(data)
+          if (output != "") {
+            appendMessage(BOT_NAME, BOT_IMG, "left", output);
+          }
         }
       }
     } catch(error) {
@@ -160,7 +160,6 @@ msgerForm.addEventListener("submit", event => {
 
 window.addEventListener('message', async function (ev) {
   // document.getElementById("hybrid").type = "text"
-  console.log(ev);
   invoker = new Invoker(ev.data.name, ev.data.url)
   titleChat.textContent = ev.data.name
   areaChat.innerHTML = ""

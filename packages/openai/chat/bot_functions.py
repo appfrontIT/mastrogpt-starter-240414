@@ -1,6 +1,8 @@
 import config
 from openai.types.chat import ChatCompletion
 
+man_pages = ["accesso", "main", "articoli-wip", "dashboard", "intermediari", "utenti", "profili", "sconti-templates-wip", "preventivi", "blacklist-review", "contraenti-to-start", "dllbg-aagrafica-to-start", "polizze", "titoli", "post-vendita"]
+
 quotation_functions = [
     {
         "type": "function",
@@ -31,22 +33,19 @@ quotation_functions = [
                     "required": ["plate", "cf"],
                 },
             }
-        }
-    ]
-
-find_man_page = [
-    {
+        },
+        {
         "type": "function",
         "function": {
             "name": "find_man_page",
-            "description": "Find the right manual page",
+            "description": "the user wants information about the manual",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "page": {"type": "string", "description": "manual page section"},
+                    "page": {"type": "string", "description": f"one of the following manual page:{man_pages}"},
+                    },
+                    "required": ["page"],
                 },
-            },
-            "required": ["page"],
+            }
         }
-    }
-]
+    ]

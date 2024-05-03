@@ -1,7 +1,10 @@
 from openai.types.chat import ChatCompletion
+import os
 
 AI: ChatCompletion = None
 MODEL = "gpt-3.5-turbo"
+OW_KEY = os.getenv('__OW_API_KEY')
+OW_API_SPLIT = OW_KEY.split(':')
 
 ROLE = """"
 You specialized in testing API. You will recieve an API endpoint, a description of the API call including the parameters to pass to the API and the underlying function of the API. If the API takes parameters as body, you need to provide the correct headers("Content-type": "application/json"). Take your time to answer and read the informations passed 

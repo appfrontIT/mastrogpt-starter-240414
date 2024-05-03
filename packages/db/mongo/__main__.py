@@ -18,7 +18,6 @@ def format_el(element):
     return json.dumps(ret)
 
 def update(collection, filter, update_data):
-    print(update_data)
     to_update = {}
     for key in update_data:
         to_update[key] = update_data[key]
@@ -89,9 +88,11 @@ def main(args):
         db_coll = dbname.create_collection(collection)
         
     if args.get('add'):
-        ins = db_coll.insert_one(data).inserted_id
-        el = db_coll.find_one({'_id': ins})
-        return {"body": format_el(el)}
+        ins = db_coll.insert_one(data)
+        if not ins.acknowledged:
+            return {"statusCode": 400}
+        el = db_coll.find_one({'_id': ins.inserted_id})
+        return {"body": format_el(el), "statusCode": 200}
     elif args.get('insert_many'):
         try:
             ins = db_coll.insert_many(data)

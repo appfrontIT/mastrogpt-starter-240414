@@ -7,11 +7,12 @@ import os
 html = ""
 session_user = None
 
-messages = []
+OW_KEY = os.getenv('__OW_API_KEY')
+OW_API_SPLIT = OW_KEY.split(':')
 
 MODEL = "gpt-3.5-turbo"
 
-EMB = """
+ROLE = """
 You're the administrator of a serverless application.
 You have to call the correct function based on the user request:
 - create_user: The admin wants to create an user. This action needs: name, password, role.

@@ -16,4 +16,4 @@ def main(args):
       "publish": False
       }
    resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages/{args.get('name')}", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
-   return {"body": resp.text}
+   return {"statusCode": resp.status_code}

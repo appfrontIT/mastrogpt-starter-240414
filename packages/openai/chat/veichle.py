@@ -5,13 +5,7 @@ from typing import List
 import config
 import json
 
-VEICHLE_PREV_ROLE="""
-Always answer in the user language.
-you're specialized into veichles ensurance quotations.
-If the message has a plate and a date, call function
-"""
 MODEL="gpt-3.5-turbo"
-messages=[{"role": "system", "content": VEICHLE_PREV_ROLE}]
 
 form_validation = False
 AccessToken = None
@@ -109,30 +103,3 @@ def quotation_by_birth(plate, date_of_birth):
         form_validation = True
         return "quotation obtained"
     return "couldn't get the quotation"
-
-def quotation_func(
-        AI: OpenAI,
-        tool_calls: List[ChatCompletionMessageToolCall],
-        messages: list[dict[str, str]],
-        response: ChatCompletion
-):
-    available_functions = {
-        "quotation_by_birth": quotation_by_birth,
-        "quotation_by_cf": quotation_by_cf
-        }
-    messages.append(response.choices[0].message)
-    for tool_call in tool_calls:
-        function_name = tool_call.function.name
-        function_to_call = available_functions[function_name]
-        function_args = json.loads(tool_call.function.arguments)
-        function_response = function_to_call(
-            **function_args
-            )
-        messages.append({
-            "tool_call_id":tool_call.id,
-            "role": "tool",
-            "name": function_name,
-            "content": function_response
-        })
-    response = AI.chat.completions.create(model=MODEL, messages=messages)
-    return response.choices[0].message.content

@@ -10,6 +10,7 @@ import bot_functions
 from secrets import token_urlsafe
 import json
 import requests
+from requests.auth import HTTPBasicAuth
 
 AI = None
 MODEL = "gpt-3.5-turbo"
@@ -18,10 +19,11 @@ def ask(
     query: str,
     model: str = MODEL,
 ) -> str:
-    config.messages.append({"role": "user", "content": query})
+    history = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/get_history", json={'cookie': config.session_user['cookie']})
+    messages = json.loads(history.text)
     response = AI.chat.completions.create(
         model=model,
-        messages=config.messages,
+        messages=messages,
         tools=bot_functions.tools,
         tool_choice="auto",
         max_tokens=(4096 - 500)
@@ -29,7 +31,7 @@ def ask(
     # We start checking if the tools activated. If not we answer generic question about Nuvolaris
     if response.choices[0].finish_reason == "tool_calls":
         tool_calls = response.choices[0].message.tool_calls
-        return bot_functions.tools_func(AI, tool_calls, config.messages, response)
+        return bot_functions.tools_func(AI, tool_calls, messages, response)
     return response.choices[0].message.content
 
 def main(args):
@@ -55,10 +57,13 @@ def main(args):
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
         }
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': cookie, 'message': res, 'reset_history': True, 'history': {"role": "system", "content": config.ROLE}})
+        return { "statusCode": 204, }
     else:
-        output = ask(query=input, print_message=False, model=MODEL)
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': cookie, 'history': {"role": "user", "content": input}})
+        output = ask(query=input, model=MODEL)
         res = { "output": output}
     if config.html != "":
         res['html'] = config.html
-    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": res})
+    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': cookie, 'message': res, 'history': {"role": "assistant", "content": res['output']}})
     return {"statusCode": 204}

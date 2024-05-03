@@ -18,8 +18,6 @@ def html_crud(args):
     return query
 
 def html_general(description, actions = []):
-    print(description)
-    print(actions)
     return f"""Generate an HTML page representing the following description: {description}
     the html page should call the following actions if provided: {actions}
     Take your time to generate the html. If you need to perform any http request use javascript.

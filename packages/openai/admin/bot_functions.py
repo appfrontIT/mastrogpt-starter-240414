@@ -38,8 +38,7 @@ def tools_func(
         ):
     global CLIENT
     CLIENT = AI
-    temp = messages.copy()
-    temp.append(response.choices[0].message)
+    messages.append(response.choices[0].message)
     for tool_call in tool_calls:
         print(tool_call.function.name)
         function_name = tool_call.function.name
@@ -48,14 +47,13 @@ def tools_func(
         function_response = function_to_call(
             **function_args
             )
-        temp.append({
+        messages.append({
             "tool_call_id": tool_call.id,
             "role": "tool",
             "name": function_name,
             "content": function_response
         })
-    response = AI.chat.completions.create(model=MODEL, messages=temp)
-    config.messages.append(response.choices[0].message)
+    response = AI.chat.completions.create(model=MODEL, messages=messages)
     return response.choices[0].message.content
 
 available_functions = {

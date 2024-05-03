@@ -1,3 +1,7 @@
+import os
+
+OW_KEY = os.getenv('__OW_API_KEY')
+OW_API_SPLIT = OW_KEY.split(':')
 
 ROLE="""
 You're a frontend developer. You develop only using HTML/CSS/JS.

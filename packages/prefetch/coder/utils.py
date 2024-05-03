@@ -7,20 +7,18 @@ import json
 from zipfile import ZipFile 
 
 OW_KEY = os.getenv('__OW_API_KEY')
+OW_API_SPLIT = OW_KEY.split(':')
 
 def delete_action(package, name):
-    split = OW_KEY.split(':')
-    resp = requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(split[0], split[1]))
+    resp = requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
     return resp.text
 
 def action_info(package, name):
-    split = OW_KEY.split(':')
-    resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(split[0], split[1]))
+    resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
     return resp.text
 
 def get_actions():
-    split = OW_KEY.split(':')
-    resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions", auth=HTTPBasicAuth(split[0], split[1]))
+    resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
     return resp.text
 
 def crawl(url):

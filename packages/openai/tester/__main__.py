@@ -9,9 +9,11 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
 import json
 import requests
 import config
+from requests.auth import HTTPBasicAuth
 
 MODEL = "gpt-3.5-turbo"
 AI = None
+COOKIE = None
 
 def general_test(test_array = []):
     if len(test_array) == 0:
@@ -32,7 +34,7 @@ def general_test(test_array = []):
             response = requests.head(test.get('url'))
         result = f"test:'{test}', 'response':'{response.text}'"
         print(result)
-        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": result}})
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': COOKIE, 'message': result})
         ret += result
     return ret
 
@@ -103,8 +105,12 @@ def ask(query: str, AI: OpenAI, model: str = MODEL) -> str:
 
 def main(args):
     global AI
+    global COOKIE
     AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
 
+    COOKIE = args.get('cookie', False)
+    if not COOKIE:
+        return {"statusCode": 403}
     input = args.get("input", "")
     output = ask(query=input, AI=AI, model=MODEL)
     return {"body": {"output": output}}

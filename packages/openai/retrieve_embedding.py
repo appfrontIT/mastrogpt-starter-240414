@@ -47,10 +47,8 @@ def query_message(
     model: str,
     token_budget: int = 4096 - 500
 ) -> str:
-    print("query " + query)
     """Return a message for GPT, with relevant source texts pulled from a dataframe."""
     strings, relatednesses = strings_ranked_by_relatedness(query=query, df=df)
-    print(strings)
     introduction = 'Use the below informations to answer the subsequent question. If the answer cannot be found in the informations, write "I could not find an answer."'
     question = f"\n\nQuestion: {query}"
     message = introduction
@@ -63,7 +61,6 @@ def query_message(
             break
         else:
             message += next_article
-    print(message)
     return message + question
 
 
@@ -72,23 +69,28 @@ def main(args):
     AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
     query = args.get('query', '')
     if query == '':
-        return {"body": "errore: nessuna richiesta. Passare la 'key' query con 'value' la richiesta dell'utente"}
+        return {"statusCode": 400, "body": "errore: nessuna richiesta. Passare la 'key' query con 'value' la richiesta dell'utente"}
     client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
     dbname = client['mastrogpt']
-    collection_list = dbname.list_collection_names()
-    coll_arr = []
-    for coll in collection_list:
-        el = dbname[coll].find_one({})
-        if el and 'embedding' in el:
-            coll_arr.append(coll)
-    print(coll_arr)
-    if len(coll_arr) == 0:
-        return {"body": "nessun embedding presente all'interno del database"}
-    # retrieve all collections with embedding in the schema
     data = []
-    for name in coll_arr:
-        coll_data = dbname[name].find({})
+    collection = args.get('collection', False)
+    if collection:
+        coll_data = dbname[collection].find({})
         for el in coll_data:
             data.append({"text": el['text'], "embedding": el['embedding']})
+    else:
+        collection_list = dbname.list_collection_names()
+        coll_arr = []
+        for coll in collection_list:
+            el = dbname[coll].find_one({})
+            if el and 'embedding' in el:
+                coll_arr.append(coll)
+        if len(coll_arr) == 0:
+            return {"statusCode": 500, "body": "nessun embedding presente all'interno del database"}
+        # retrieve all collections with embedding in the schema
+        for name in coll_arr:
+            coll_data = dbname[name].find({})
+            for el in coll_data:
+                data.append({"text": el['text'], "embedding": el['embedding']})
     df = pd.DataFrame(data)
     return {"body": query_message(query=query, df=df, model='gpt-3.5-turbo')}
