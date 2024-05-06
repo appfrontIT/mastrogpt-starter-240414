@@ -9,20 +9,31 @@ from requests.auth import HTTPBasicAuth
 import os
 
 html = ""
-nuvolaris = []
-test_link = ""
 session_user = None
-namespace = ""
-package = ""
-expand = ""
-
-messages = []
 
 OW_KEY = os.getenv('__OW_API_KEY')
 OW_API_SPLIT = OW_KEY.split(':')
 
+AI: OpenAI = None
+
 action_url = ""
 MODEL = "gpt-3.5-turbo"
+
+ROLE ="""
+Send the user request to the correct function.
+Here is the fuctions list:
+- show_all_actions: use this function if the user wants to list all the actions
+- delete_action: use this if the user wants to delete 1 or more actions
+- action_info: use this if the user wants information about a single action
+- create_action: use this if the user wants to create an action. If the eplicity asks for an html, use html_gen instead
+- update_action: use this if the user watns to update or modify or improve an action
+- html_gen: use this if the user wants to generate an html page
+- crawler: use this if the user wants to crawl or scrape a web page
+- tester: use this if the user wants to test an action
+
+If no function is valid, answer asking to be more specific about the request.
+"""
+
 EMB = """
 From now on you are a programming language. You only code in Python. You generate code to be deployed into an action using Nuvolaris. Here's a short explanation about Nuvolaris: Nuvolaris embeds OpenWhisk functionalities. It generates actions that are invoked using the corresponding url. Actions are stateless functions. For example, an action can be used to detect the faces in an image, respond to a database change, respond to an API call, or post a Tweet. In general, an action is invoked in response to an event and produces some observable output.
 Take your time to answer and you must procede step by step.
@@ -95,6 +106,8 @@ You can call different functions to complete your task:
     5 - update_action: use this if the user watns to update or modify or improve an action
     6 - html_gen: use this if the user wants to generate an html page
     7 - crawler: use this if the user wants to crawl or scrape a web page
+    8 - tester: use this if the user wants to test an action
+    9 - grapher: use this if the user wants to create a chart or a graph
 
 Unless the user explicitly ask differently, use database to store persistent data when needed. This includes any kind of CRUD application or State Machine.
 

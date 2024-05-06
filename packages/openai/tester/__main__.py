@@ -1,5 +1,6 @@
-#--web true
+#--web false
 #--kind python:default
+#--annotation provide-api-key true
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
 #--annotation description "a tester throught AI to test your actions"
 #--timeout 600000
@@ -34,7 +35,7 @@ def general_test(test_array = []):
             response = requests.head(test.get('url'))
         result = f"test:'{test}', 'response':'{response.text}'"
         print(result)
-        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': COOKIE, 'message': result})
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': COOKIE, 'message': {"output": result}})
         ret += result
     return ret
 
@@ -58,6 +59,7 @@ def ask(query: str, AI: OpenAI, model: str = MODEL) -> str:
                         "properties": {
                             "test_array": {
                                 "type": "array",
+                                "response_format": {"type": "json_object"},
                                 "items": {
                                     "type": "object",
                                     "properties": {
@@ -113,4 +115,5 @@ def main(args):
         return {"statusCode": 403}
     input = args.get("input", "")
     output = ask(query=input, AI=AI, model=MODEL)
+    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': COOKIE, 'message': {"output": output}})
     return {"body": {"output": output}}

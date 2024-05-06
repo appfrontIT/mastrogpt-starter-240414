@@ -1,9 +1,8 @@
 let base = location.href.replace(/index\.html$/, "")
 
 window.addEventListener("DOMContentLoaded", (event) => {
-    let x = document.cookie;
-    console.log(x)
-    if (x) {
+    let cookie = document.cookie;
+    if (cookie) {
         window.location.assign('/selector.html')
     }
     const form = document.getElementById('submit-form');

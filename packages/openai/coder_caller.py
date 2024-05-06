@@ -10,5 +10,8 @@ import os
 def main(args):
     OW_KEY = os.getenv('__OW_API_KEY')
     split = OW_KEY.split(':')
-    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/coder", auth=HTTPBasicAuth(split[0], split[1]), json={"input": args.get('input', '')})
+
+    cookie = args['__ow_headers'].get('cookie', False)
+
+    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/coder", auth=HTTPBasicAuth(split[0], split[1]), json={"input": args.get('input', ''), 'cookie': cookie.split('=')[1]})
     return {"statusCode": 200, "body": resp.text}

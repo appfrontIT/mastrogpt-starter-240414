@@ -10,7 +10,7 @@ def main(args):
     data = {
         "find_one": True,
         "filter": {
-            "cookie": cookie.split('=')[1],
+            "cookie": cookie,
         }
     }
     response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find_one": True, "collection": "users", "data": data})

@@ -11,11 +11,16 @@ def main(args):
     role = args.get('role', False)
     if not name and not password and not role:
         return {"statusCode": 400}
+    if role == "admin":
+        package = 'default'
+    else:
+        package = name
     data = {
         "name": name,
         "password": hashlib.sha256(password.encode()).hexdigest(),
         "role": role,
-        "package": name,
+        "namespace": "gporchia",
+        "package": package,
         "shared package": [],
         "chat": [],
     }

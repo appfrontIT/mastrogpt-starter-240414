@@ -57,7 +57,7 @@ def make_quotation_birth(data):
     extract_obj["customer"] = None
     extract_obj['contract_id'] = "123213"
     extract_obj['id_request'] = "213123123123123123"
-    extract_obj['owner']['dati_personali']['cap'] = '55049'
+    extract_obj['owner']['dati_personali']['cap'] = '5#f574f19'
     extract_obj['owner']['dati_personali']['indirizzo'] = 'via del bosco 3'
     extract_obj['owner']['lookinglass']['contact']['email'] = ['matcip@hotmail.com']
 

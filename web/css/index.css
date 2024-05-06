@@ -22,7 +22,7 @@ body {
 }
 
 h1 {
-    color: #fb1cad;
+    color: #f574f1;
 }
 
 label {
@@ -54,7 +54,7 @@ button {
     border: none;
     color: white;
     cursor: pointer;
-    background-color: #fb1cad;
+    background-color: #f574f1;
     width: 100%;
     font-size: 16px;
 }

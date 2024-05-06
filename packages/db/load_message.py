@@ -14,8 +14,8 @@ def main(args):
     if not cookie:
         return {"statusCode": 400}
     if reset:
-        collection.update_one({'cookie': cookie.split('=')[1]}, {"$unset": {"chat": 1, "history": 1}})
+        collection.update_one({'cookie': cookie}, {"$unset": {"chat": 1, "history": 1}})
     message = args.get('message', False)
     history = args.get('history', False)
-    collection.update_one({'cookie': cookie.split('=')[1]}, {"$addToSet": {"chat": message, "history": history}})
+    collection.update_one({'cookie': cookie}, {"$addToSet": {"chat": message, "history": history}})
     return {"statusCode": 204}

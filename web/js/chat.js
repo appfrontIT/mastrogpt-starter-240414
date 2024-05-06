@@ -30,6 +30,11 @@ class Invoker {
 
 
   async invoke(msg) {
+    let cookie = document.cookie;
+    if (!cookie) {
+      alert('error: session expired')
+      window.parent.location.replace('/index.html')
+    }
     // welcome message no input
     if (msg == null) {
       return "Welcome, you have selected " + this.name;
@@ -50,21 +55,19 @@ class Invoker {
         headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify(json),
       });
-      if (response.status == 204) {
-        return response
-      }
-      const d = await response.json()
-      if (data['logout']) {
-        console.log("loggin out")
-        document.cookie = data['cookie'] + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
-        return window.parent.location.replace('/index.html')
-      }
-        switch (response.status) {
-          case 302: window.parent.location.replace(response.headers.get('location')); break;
-          default:
-            break;
+      console.log(response.status)
+      switch (response.status) {
+        case 204: return response
+        case 403: alert("Non hai l'autorizzazione per accedere questa sezione"); return response;
+        case 200: {
+          const data = await response.json()
+          if (data['logout']) {
+            document.cookie = data['cookie'] + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
+            return window.parent.location.replace('/index.html')
+          }
         }
-        console.log(response)
+        default: break;
+      }
       return response
     } catch (error) {
       console.log(error)
