@@ -62,4 +62,4 @@ def main(args):
     if config.html != "":
         res['html'] = config.html
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': config.session_user['cookie'], 'message': res, 'history': {"role": "assistant", "content": res['output']}})
-    return {"statusCode": 204}
+    

@@ -201,6 +201,8 @@ def show_all_actions():
     obj = json.loads(status)
     name_arr = ""
     for x in obj:
+        if x['namespace'] != config.session_user['namespace']:
+            continue
         name_arr += f"Action:{x['namespace']}/{x['name']}"
         annotations = x['annotations']
         description = ""
@@ -209,11 +211,11 @@ def show_all_actions():
                 description = an['value']
                 name_arr += f"\nDescription:{description}\n"
                 break
+    if len(name_arr) == 0:
+        return "tell the user there's no action under his package"
     config.html = f"<html><body><pre><code><xmp>{json.dumps(obj, indent=2)}</xmp></code></pre></code></html>"
     return f"""display ALL the following actions and the description. Example:
-    - with description: **/namespace/package/action/** <br />Description: action description
-    - without description: **/namespace/package/action**
-    Format the answer as markdown
+    Format the output as markdown, using caps and newlines and lists
     Data:\n{name_arr}"""
 
 def tools_func(
@@ -238,9 +240,6 @@ def tools_func(
             "name": function_name,
             "content": function_response
         })
-    messages.append({"role": "user", "content": """based on the informations collected, generate an answer that explain clearly what you've done.
-                    If you generate an action, remember to include some example, using the correct url (never use an alias).
-                    If you put a link in the answer, make it opens in a new tab"""})
     return config.AI.chat.completions.create(model=MODEL, messages=messages,).choices[0].message.content
 
 

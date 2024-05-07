@@ -76,7 +76,6 @@ def main(args):
         return {"body": "error, collection missing"}
     if data == '':
         return {"body": "error, data is missing"}
-    print(data)
     
     client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
     dbname = client[db]

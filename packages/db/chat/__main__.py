@@ -27,15 +27,15 @@ def main(args):
         return {"statusCode": 401}
     cookie = cookie.split("=")[1]
     loop_time = 0
-    data = None
+    chat = None
     while True:
-        data = db_coll.find_one({"cookie": cookie}, {'chat': 1, '_id': 0})
-        if data and data != None:
+        user = db_coll.find_one({"cookie": cookie})
+        chat = user.get('chat', False)
+        if chat and len(chat) > 0:
             break
         elif loop_time > 20:
             return {"statusCode": 204}
         time.sleep(2)
         loop_time += 2
-    obj = format_el(data)
-    db_coll.update_one({'cookie': cookie}, {"$unset": {"chat": 1}})
-    return {"body": obj}
+    db_coll.update_one({'cookie': cookie}, {"$set": {"chat": []}})
+    return {"body": chat}

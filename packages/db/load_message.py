@@ -6,7 +6,6 @@ from pymongo import MongoClient
 import os
 
 def main(args):
-    print(args)
     reset = args.get('reset_history', False)
     cookie = args.get('cookie', False)
     client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
@@ -18,5 +17,10 @@ def main(args):
         collection.update_one({'cookie': cookie}, {"$unset": {"chat": 1, "history": 1}})
     message = args.get('message', False)
     history = args.get('history', False)
-    collection.update_one({'cookie': cookie}, {"$addToSet": {"chat": message, "history": history}})
+    if message and history:
+        collection.update_one({'cookie': cookie}, {"$addToSet": {"chat": message, "history": history}})
+    elif message and not history:
+        collection.update_one({'cookie': cookie}, {"$addToSet": {"chat": message}})
+    elif history and not message:
+        collection.update_one({'cookie': cookie}, {"$addToSet": {"history": history}})
     return {"statusCode": 204}

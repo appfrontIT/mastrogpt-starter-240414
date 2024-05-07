@@ -17,10 +17,6 @@ const displayWindow = window.parent.document.getElementById("display").contentWi
 let base = location.href.replace(/chat\.html$/, "")
 
 // Classes
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 class Invoker {
 
   constructor(name, url) {
@@ -55,10 +51,10 @@ class Invoker {
         headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify(json),
       });
-      console.log(response.status)
       switch (response.status) {
         case 204: return response
         case 403: alert("Non hai l'autorizzazione per accedere questa sezione"); return response;
+        case 404: alert('error: session expired'); return window.parent.location.replace('/index.html');
         case 200: {
           const data = await response.json()
           if (data['logout']) {
@@ -113,12 +109,10 @@ async function bot() {
       },
       credentials: "include"
       })
-      console.log(r.status)
       if (r.status == 204) {
         continue;
       } else {
-        const obj = await r.json()
-        let chat = obj.chat
+        const chat = await r.json()
         for (let j = 0; j < chat.length; j++) {
           let data = chat[j];
           let output = data.output
@@ -141,23 +135,22 @@ function human(msg) {
   msgerInput.value = "";
 }
 
-
 msgerForm.addEventListener("submit", event => {
   event.preventDefault();
 
   const input = msgerInput.value;
   if (!input) return;
-    human(input);
+  
+  human(input);
 
   if (invoker) {
     invoker.invoke(input).then(reply => bot(reply))
   } else {
-    bot("Please select a chat, clicking on one button on the top area.")
+    bot()
   }
 });
 
 window.addEventListener('message', async function (ev) {
-  // document.getElementById("hybrid").type = "text"
   invoker = new Invoker(ev.data.name, ev.data.url)
   titleChat.textContent = ev.data.name
   areaChat.innerHTML = ""
