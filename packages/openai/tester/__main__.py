@@ -3,7 +3,7 @@
 #--annotation provide-api-key true
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
 #--annotation description "a tester throught AI to test your actions"
-#--timeout 600000
+#--timeout 300000
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
@@ -116,4 +116,4 @@ def main(args):
     input = args.get("input", "")
     output = ask(query=input, AI=AI, model=MODEL)
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': COOKIE, 'message': {"output": output}})
-    return {"body": {"output": output}}
+    return {"body": output}

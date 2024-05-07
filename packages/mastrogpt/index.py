@@ -6,7 +6,7 @@ def main(arg):
         "services": [
             {
                 "name": "Lookinglass",
-                "url": "openai/chat"
+                "url": "openai/lookinglass"
             },
             {
                 "name": "Coder",

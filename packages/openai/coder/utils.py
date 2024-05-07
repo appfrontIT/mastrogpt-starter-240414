@@ -8,16 +8,13 @@ from zipfile import ZipFile
 import config
 
 def delete_action(package, name):
-    resp = requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
-    return resp.text
+    return requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1])).text
 
 def action_info(package, name):
-    resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
-    return resp.text
+    return requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1])).text
 
 def get_actions():
-    resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
-    return resp.text
+    return requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1])).text
 
 def crawl(url):
     response = requests.get(url)

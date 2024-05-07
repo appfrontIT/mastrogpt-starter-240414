@@ -83,7 +83,7 @@ tasks:
     devel:
         desc: incremental interactive development mode
         cmds:
-        - task: undeploy
+        # - task: undeploy
         - python -m util.deploy -w {{.FLAGS}}
         
     config:

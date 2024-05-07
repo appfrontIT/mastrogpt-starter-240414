@@ -9,8 +9,6 @@ from openai import OpenAI
 def grapher(type = None, request = None, name = None, description = None):
     if not type or not request or not name or not description:
         return "errore: datai incompleti o errati"
-    print(type)
-    print(request)
     if type.get('collection', False):
         data = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/db/mongo', json={
             "find": True,

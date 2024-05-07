@@ -40,6 +40,7 @@ def main(args):
     AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
 
     cookie = args['__ow_headers'].get('cookie', False)
+    cookie = cookie.split('=')[1]
     response = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/user/find_by_cookie', json={"cookie": cookie})
     if response.status_code == 404:
         return {"statusCode": 404}

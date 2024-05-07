@@ -6,6 +6,7 @@ from pymongo import MongoClient
 import os
 
 def main(args):
+    print(args)
     reset = args.get('reset_history', False)
     cookie = args.get('cookie', False)
     client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")

@@ -1,7 +1,7 @@
 #--web true
 #--kind python:default
 #--annotation description "This action must be used to retrieve the chat object from the database. It will get the oldest chat and delete it until all the chat is extracted"
-#--timeout 600000
+#--timeout 300000
 
 from pymongo import MongoClient
 import json

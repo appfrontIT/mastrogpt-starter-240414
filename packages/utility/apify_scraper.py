@@ -4,7 +4,7 @@
 #--param APIFY_ACTOR $APIFY_ACTOR
 #--param APIFY_TOKEN $APIFY_TOKEN
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
-#--timeout 600000
+#--timeout 300000
 
 from openai import OpenAI
 import requests

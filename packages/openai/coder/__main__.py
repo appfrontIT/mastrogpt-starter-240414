@@ -3,7 +3,7 @@
 #--annotation provide-api-key true
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
 #--annotation description "an action which interact with a custom bot that generate actions"
-#--timeout 600000
+#--timeout 300000
 
 from openai import OpenAI
 import config
@@ -21,7 +21,6 @@ def ask(
     query: str,
     model: str = MODEL,
 ) -> str:
-    # config.expand = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/prefetch/coder', json={"input": query, 'package': config.package}).text
     history = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/get_history", json={'cookie': config.session_user['cookie']})
     messages = json.loads(history.text)
     response = config.AI.chat.completions.create(
@@ -30,10 +29,8 @@ def ask(
         tools=bot_functions.tools,
         tool_choice="auto",
     )
-    # We start checking if the tools activated. If not we answer generic question about Nuvolaris
     if response.choices[0].finish_reason == "tool_calls":
         tool_calls = response.choices[0].message.tool_calls
-        print(response.choices[0])
         return bot_functions.tools_func(tool_calls, messages, response)
     print("no tools")
     return response.choices[0].message.content

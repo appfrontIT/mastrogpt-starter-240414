@@ -2,7 +2,7 @@
 #--kind python:default
 #--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
 #--annotation description "thi action will ensure better output from the agent providing more informations to the request"
-#--timeout 600000
+#--timeout 300000
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall

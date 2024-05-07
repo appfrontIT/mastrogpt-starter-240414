@@ -8,7 +8,7 @@ from requests.auth import HTTPBasicAuth
 import json
 import config, utils
 from chart import grapher
-from test import tester
+from tester import tester
 
 MODEL="gpt-3.5-turbo"
 
@@ -80,9 +80,10 @@ def update_action(name, modifications):
 def deploy_action(name, function, description):
     action_list = utils.get_actions()
     obj = json.loads(action_list)
-    name_arr = []
     # Generate a new name if needed
+    name_arr = ""
     for x in obj:
+        name_arr += (x['name']) + ", "
         if x['namespace'] == f"gporchia/{config.session_user['package']}" and x['name'] == name:
             messages = [
                 {"role": "system", "content": f"Generate an unique name base on the description passed. Only 1 word is allowed. You can't use the following words to generate a name:\n\n{name_arr}"},
@@ -131,15 +132,30 @@ def deploy_action(name, function, description):
     #     """
     return f"url: https://nuvolaris.dev/api/v1/web/gporchia/{config.session_user['package']}/{name}\ndescription:{description}\nfunction:{function}\n\n"
 
-def create_action(args):
-    config.html = ""
-    name = args.get('name', '')
-    function = args.get('function', '')
-    description = args.get('description')
-    action = deploy_action(name, function, description)
-    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': config.session_user['cookie'], "message": {"output": "I'm creating your action, I'll update you as soon as I finished to test it"}})
-    test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/tester', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"input": action, "cookie": config.session_user['cookie']})
-    return test.text
+# def create_action(args):
+#     config.html = ""
+#     name = args.get('name', '')
+#     function = args.get('function', '')
+#     function = function.replace('```', '')
+#     function = function.replace('python', '')
+#     function = function.replace('Python', '')
+#     description = args.get('description')
+#     action = deploy_action(name, function, description)
+#     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': config.session_user['cookie'], "message": {"output": "I'm creating your action, I'll update you as soon as I finished to test it"}})
+#     test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/tester', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"input": action, "cookie": config.session_user['cookie']})
+#     return test.text
+
+def create_action(request):
+    response = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/create_action', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"request": request, "user": config.session_user})
+    print(response.text)
+    return "the action is being created"
+
+def db_store(url, collection, format):
+    return requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/db_store', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
+        "url": url,
+        "collection": collection,
+        "format": format
+    }).text
 
 def action_info(name):
     action_list = utils.get_actions()
@@ -205,27 +221,28 @@ def tools_func(
         messages: list[dict[str, str]],
         response: ChatCompletion
         ):
-    for i in range(1):
-        messages.append(response.choices[0].message)
-        for tool_call in tool_calls:
-            print(tool_call.function.name)
-            function_name = tool_call.function.name
-            function_to_call = available_functions[function_name]
-            function_args = json.loads(tool_call.function.arguments)
-            function_response = function_to_call(
-                **function_args
-                )
-            messages.append({
-                "tool_call_id": tool_call.id,
-                "role": "tool",
-                "name": function_name,
-                "content": function_response
-            })
-        response = config.AI.chat.completions.create(
-            model=MODEL,
-            messages=messages,
+    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': config.session_user['cookie'], "message": {"output": "Sure, I'll get to work on it right away!"}})
+    messages.append(response.choices[0].message)
+    for tool_call in tool_calls:
+        print(tool_call.function.name)
+        function_name = tool_call.function.name
+        function_to_call = available_functions[function_name]
+        function_args = json.loads(tool_call.function.arguments)
+        function_response = function_to_call(
+            **function_args
             )
-    return response.choices[0].message.content
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': config.session_user['cookie'], "message": {"output": "I've elaborated the data, let me generate an answer"}})
+        messages.append({
+            "tool_call_id": tool_call.id,
+            "role": "tool",
+            "name": function_name,
+            "content": function_response
+        })
+    messages.append({"role": "user", "content": """based on the informations collected, generate an answer that explain clearly what you've done.
+                    If you generate an action, remember to include some example, using the correct url (never use an alias).
+                    If you put a link in the answer, make it opens in a new tab"""})
+    return config.AI.chat.completions.create(model=MODEL, messages=messages,).choices[0].message.content
+
 
 available_functions = {
     "show_all_actions": show_all_actions,
@@ -236,7 +253,8 @@ available_functions = {
     "html_gen": html_gen,
     "crawler": crawler,
     "tester": tester,
-    "grapher": grapher 
+    "grapher": grapher,
+    "db_store": db_store,
 }
 
 tools = [
@@ -256,21 +274,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "create_action",
-            "description": "the user asks to create an action NOT returning HTML. If the action returns html use html_gen instead",
+            "description": "the user wants to create an action. Redirect the user request to the correct API.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "args": {
-                        "type": "object",
-                        "properties": {
-                            "name": {"type": "string", "description": "action name"},
-                            "function": {"type": "string", "description": "the generated function. It must starts with 'def main(args):'"},
-                            "description": {"type": "string", "description": "a description of the action you made. The description MUST includes the parameters the action needs such as: {key: type, key: type, ...}. Example: 'an action which add an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}, None'"},
-                            },
-                            "required": ["name", "function", "description"],
-                        },
+                    "request": {"type": "string", "description": "the user request"},
                     },
-                    "required": ["args"]
+                    "required": ["request"]
                 },
             },
         },
@@ -355,7 +365,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "crawler",
-            "description": "the user wants information about a web page or explicity ask to crawl a web page. A crawler basically",
+            "description": "the user wants information about a web page or explicity ask to crawl a web page. Don't call this action if the user wants to store data inside the database",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -400,6 +410,22 @@ tools = [
                         }
                     },
                     "required": ["request", "name", "description", "type"]
+                }
+            }
+        },
+        {
+        "type": "function",
+        "function": {
+            "name": "db_store",
+            "description": "the user gives wants to store data inside the database from an url",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string", "description": "the url of the file to store in the database"},
+                    "collection": {"type": "string", "description": "the collection where to store the data inside the database"},
+                    "format": {"type": "string", "description": "how the data must be stored in pair of key value. MUST be a JSON"},
+                    },
+                    "required": ["url", "collection", "format"]
                 }
             }
         }
