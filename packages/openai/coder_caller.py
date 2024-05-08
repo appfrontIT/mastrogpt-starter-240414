@@ -12,6 +12,11 @@ def main(args):
     split = OW_KEY.split(':')
 
     cookie = args['__ow_headers'].get('cookie', False)
+    cookie_split = cookie.split('=')
 
-    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/coder", auth=HTTPBasicAuth(split[0], split[1]), json={"input": args.get('input', ''), 'cookie': cookie.split('=')[1]})
+    response = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/user/find_by_cookie', json={"cookie": cookie_split[1]})
+    if response.status_code == 404:
+        return {"statusCode": 404, "body": {"cookie": cookie_split[0]}}
+    
+    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/coder", auth=HTTPBasicAuth(split[0], split[1]), json={"input": args.get('input', ''), 'cookie': cookie_split[1]})
     return {"statusCode": 200, "body": resp.text}

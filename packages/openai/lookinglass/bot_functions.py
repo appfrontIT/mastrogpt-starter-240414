@@ -1,7 +1,7 @@
 import config
 from openai.types.chat import ChatCompletion
 
-man_pages = ["accesso", "main", "articoli-wip", "dashboard", "intermediari", "utenti", "profili", "sconti-templates-wip", "preventivi", "blacklist-review", "contraenti-to-start", "dllbg-aagrafica-to-start", "polizze", "titoli", "post-vendita"]
+man_pages = ["accesso", "main", "articoli-wip", "dashboard", "intermediari", "utenti", "profili", "sconti-templates-wip", "preventivi", "blacklist-review", "contraenti-to-start", "dllbg-aagrafica-to-start", "polizze", "titoli", "post-vendita", "appendice-a-teoria-rca"]
 
 quotation_functions = [
     {

@@ -16,14 +16,16 @@ OW_API_SPLIT = OW_KEY.split(':')
 AI: OpenAI = None
 USER = None
 NAME = ""
+TEST = False
 ROLE ="""
 Your role is to create an action and test it. If the tester suggests improvements you must implement them and test again. If all tests are passed, don't call any function.
 You only code in Python.
 Take your time to answer and you must procede step by step.
 Function ALWAYS start with "def main(args):".
 The return is always: {"body": string}. Example: '{"body": text}', '{"body": response.text}.
-It's important to import the modules you will use. Example: import requests, import os, import json, and so on
 NEVER, EVER, BE LAZY! IF YOU NEED TIME TO UNDERSTAND THE TASK TAKE YOUR TIME, BUT ALWAYS ANSWER PROPERLY WITH ALL THE USER REQUESTS
+
+Mandatory: import the modules you use in the function.
 
 If you have to store data inside a database you MUST use the following action: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo. How to use the database:
 - Based on the operation, you need to set True the following keys: add, update, find, find_one, delete.
@@ -34,6 +36,7 @@ If you have to store data inside a database you MUST use the following action: h
 - The only valid filter to update or delete is '_id'.
 - Consider everthing between ``` an example:
         ```
+        import json
         def main(args):
             if args.get('action') == 'create':
                 data = {
@@ -76,6 +79,7 @@ If you have to store data inside a database you MUST use the following action: h
 You can't use async.
 If you need to accept parameters you will get those such as: args.get("url") to get "url", args.get("name") to get "name" and so on
 You can use only the follow libraries: requests, re, json, BeatifulSoup. Remember to import the modules you use!
+ALWAYS IMPORT requests, re, json, and any library you're going to use inside the function
 """
 
 messages = [
@@ -119,10 +123,11 @@ def deploy_action(name, function, description):
     if resp.status_code != 200:
         return resp.text
     requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "walkiria", "collection": USER['package'], "data": resp.json()})
-    return f"url: https://nuvolaris.dev/api/v1/web/gporchia/{USER['package']}/{name}\ndescription:{description}\nfunction:{function}\n\n"
+    return f"url:'https://nuvolaris.dev/api/v1/web/gporchia/{USER['package']}/{name}', description:'description', function:'function'"
 
 def create_action(args):
     global NAME
+    global TEST
     NAME = args.get('name', False)
     function = args.get('function', False)
     function = function.replace('```', '')
@@ -131,8 +136,9 @@ def create_action(args):
     description = args.get('description', False)
     action = deploy_action(NAME, function, description)
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={'cookie': USER['cookie'], "message": {"output": "I'm creating your action, I'll update you as soon as I finished to test it"}})
-    test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/tester', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"input": action, "cookie": USER['cookie']})
-    return test.text
+    if TEST:
+        test_result = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/tester', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"input": action, "cookie": USER['cookie']})
+    return action
 
 def improve_action(args):
     function = args.get('function', False)
@@ -150,9 +156,11 @@ def improve_action(args):
 
 def main(args):
     global USER
+    global TEST
     AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
     request = args.get('request', False)
     USER = args.get('user', False)
+    TEST = args.get('test', False)
     if not request or not USER:
         return {"statusCode": 400}
     
@@ -163,8 +171,8 @@ def main(args):
         tools=create_action_tool,
         tool_choice={"type": "function", "function": {"name": "create_action"}},
     )
+    print(response.choices[0])
     if response.choices[0].message.tool_calls:
-        messages.append(response.choices[0].message)
         tool_calls = response.choices[0].message.tool_calls
         for tool_call in tool_calls:
             function_name = "create_action"
@@ -173,16 +181,15 @@ def main(args):
             function_response = function_to_call(
                 **function_args
                 )
-            messages.append({
-                "tool_call_id": tool_call.id,
-                "role": "tool",
-                "name": function_name,
-                "content": function_response
-            })
+            # messages.append({
+            #     "tool_call_id": tool_call.id,
+            #     "role": "tool",
+            #     "name": function_name,
+            #     "content": function_response
+            # })
+            return {"body": function_response}
+    print('no tool')
     return {"body": response.choices[0].message.content}
-    
-    # elimiare la action
-    return {"statusCode": 500, "body": "there was an error while creating the action"}
 
 
 create_action_tool = [{

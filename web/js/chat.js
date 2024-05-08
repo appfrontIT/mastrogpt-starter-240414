@@ -54,7 +54,11 @@ class Invoker {
       switch (response.status) {
         case 204: return response
         case 403: alert("Non hai l'autorizzazione per accedere questa sezione"); return response;
-        case 404: alert('error: session expired'); return window.parent.location.replace('/index.html');
+        case 404: {
+          const data = await response.json()
+          document.cookie = data['cookie'] + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT';
+          alert('error: session expired');
+          return window.parent.location.replace('/index.html');}
         case 200: {
           const data = await response.json()
           if (data['logout']) {
@@ -80,7 +84,8 @@ function formatDate(date) {
 
 function appendMessage(name, img, side, text) {
   //   Simple solution for small apps
-  let html = marked.parse(text)
+  var converter  = new showdown.Converter()
+  let html = converter.makeHtml(text);
   const msgHTML = `
     <div class="msg ${side}-msg">
       <div class="msg-bubble">
@@ -91,7 +96,7 @@ function appendMessage(name, img, side, text) {
           </div>
           <div class="msg-info-time"> ${formatDate(new Date())}</div>
         </div>
-        <div class="msg-text">${html}</div>
+        <div class="msg-text"><code>${html}</code></div>
       </div>
     </div>
   `;
@@ -135,7 +140,7 @@ function human(msg) {
   msgerInput.value = "";
 }
 
-msgerForm.addEventListener("submit", event => {
+msgerForm.addEventListener("submit", async event => {
   event.preventDefault();
 
   const input = msgerInput.value;
@@ -143,17 +148,13 @@ msgerForm.addEventListener("submit", event => {
   
   human(input);
 
-  if (invoker) {
-    invoker.invoke(input).then(reply => bot(reply))
-  } else {
-    bot()
-  }
+  await invoker.invoke(input)
 });
 
 window.addEventListener('message', async function (ev) {
   invoker = new Invoker(ev.data.name, ev.data.url)
   titleChat.textContent = ev.data.name
   areaChat.innerHTML = ""
-  await invoker.invoke("")
+  invoker.invoke("")
   bot()
 })

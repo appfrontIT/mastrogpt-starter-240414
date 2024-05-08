@@ -30,7 +30,8 @@ def main(args):
     chat = None
     while True:
         user = db_coll.find_one({"cookie": cookie})
-        chat = user.get('chat', False)
+        if user:
+            chat = user.get('chat', False)
         if chat and len(chat) > 0:
             break
         elif loop_time > 20:

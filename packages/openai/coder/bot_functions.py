@@ -132,29 +132,16 @@ def deploy_action(name, function, description):
     #     """
     return f"url: https://nuvolaris.dev/api/v1/web/gporchia/{config.session_user['package']}/{name}\ndescription:{description}\nfunction:{function}\n\n"
 
-# def create_action(args):
-#     config.html = ""
-#     name = args.get('name', '')
-#     function = args.get('function', '')
-#     function = function.replace('```', '')
-#     function = function.replace('python', '')
-#     function = function.replace('Python', '')
-#     description = args.get('description')
-#     action = deploy_action(name, function, description)
-#     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': config.session_user['cookie'], "message": {"output": "I'm creating your action, I'll update you as soon as I finished to test it"}})
-#     test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/tester', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"input": action, "cookie": config.session_user['cookie']})
-#     return test.text
-
 def create_action(request):
     response = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/create_action', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"request": request, "user": config.session_user})
-    print(response.text)
-    return "the action is being created"
+    return "the action is in production and it will tested as well"
 
 def db_store(url, collection, format):
-    return requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/db_store', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
+    return requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/db_store_init', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
         "url": url,
         "collection": collection,
-        "format": format
+        "format": format,
+        "user": config.session_user
     }).text
 
 def action_info(name):
@@ -177,13 +164,12 @@ def action_info(name):
                 return description
             else:
                 return status[:8000]
-        return f"""The action url is EXACTLY this: https://nuvolaris.dev/api/v1/web/gporchia/{config.session_user['package']}/{name}. ALWAYS USE THE FULL URL. Fill everythin between ``. Give information about the following action following this example:
+        return f"""The action url is EXACTLY this: https://nuvolaris.dev/api/v1/web/gporchia/{config.session_user['package']}/{name}. ALWAYS USE THE FULL URL. Fill everythin between ``:
         - **Description**: `put description here`
         - **Parameters**: `put parameters here`
         - **Code**: `put python code example that use the action`
         - **Curl**: `put curl request example to the action`
         - **Action URL**: `put the action url here`
-        Format the answer as markdown
         Action:\n{status}"""
     return f""""The action you requested does not exists. Here is a list of available actions:\n{name_arr}
     """
@@ -214,9 +200,8 @@ def show_all_actions():
     if len(name_arr) == 0:
         return "tell the user there's no action under his package"
     config.html = f"<html><body><pre><code><xmp>{json.dumps(obj, indent=2)}</xmp></code></pre></code></html>"
-    return f"""display ALL the following actions and the description. Example:
-    Format the output as markdown, using caps and newlines and lists
-    Data:\n{name_arr}"""
+    return f"""display each actions with the description.
+    Actions:\n{name_arr}"""
 
 def tools_func(
         tool_calls: List[ChatCompletionMessageToolCall],
@@ -322,7 +307,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "action_info",
-            "description": "the user asks informations about an action. Don't call this function if the user wants to update",
+            "description": "the user wnats information about an action or how to use it",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -421,8 +406,8 @@ tools = [
                 "type": "object",
                 "properties": {
                     "url": {"type": "string", "description": "the url of the file to store in the database"},
-                    "collection": {"type": "string", "description": "the collection where to store the data inside the database"},
-                    "format": {"type": "string", "description": "how the data must be stored in pair of key value. MUST be a JSON"},
+                    "collection": {"type": "string", "description": "the collection where to store the data inside the database in snake_case. This should't include the 'collection' prefix"},
+                    "format": {"type": "string", "description": "how the data must be stored in pair of key value. Must be in markdown format"},
                     },
                     "required": ["url", "collection", "format"]
                 }
