@@ -19,5 +19,5 @@ def main(args):
         })
     if response.status_code == 200:
         obj = user.json()
-        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/package/del_package", json={"name": obj['name']})
+        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/package/del", json={"name": obj['name']})
     return {"name": response.text}

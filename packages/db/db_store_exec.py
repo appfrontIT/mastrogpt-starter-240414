@@ -1,7 +1,7 @@
 #--web false
 #--kind python:default
 #--annotation provide-api-key true
-#--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action that create and test an action asynchronously"
 #--timeout 600000
 
@@ -25,7 +25,7 @@ You must answer in valid JSON format
 """
 
 def main(args):
-    AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
+    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     format = args.get('format', False)
     collection = args.get('collection', False)
     text = args.get('text', False)

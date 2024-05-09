@@ -1,6 +1,6 @@
 #--web true
 #--kind python:default
-#--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--param OPENAI_API_KEY $OPENAI_API_KEY
 
 from openai import OpenAI
 import requests
@@ -66,7 +66,7 @@ def main(args):
     data = args.get('data', '')
     if data == '':
         return {"body": "error: data or name missing"}
-    AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
+    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     df = embedding(name, data)
     db_coll.insert_many(df)
     cursor = db_coll.find({}, {'_id': False})

@@ -1,7 +1,7 @@
 #--web true
 #--kind python:default
 #--annotation provide-api-key true
-#--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description 'an action which let you interact with a custom assistant helping you in Lookinglass operations'
 
 from openai import OpenAI
@@ -73,7 +73,7 @@ def main(args):
     global AI
     config.html = ""
 
-    AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
+    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
     cookie = args['__ow_headers'].get('cookie', False)
     cookie = cookie.split('=')[1]

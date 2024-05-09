@@ -1,7 +1,7 @@
 #--web false
 #--kind python:default
 #--annotation provide-api-key true
-#--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action that create and test an action asynchronously"
 #--timeout 300000
 
@@ -138,7 +138,7 @@ def create_action(args):
     if not action:
         return "there was an error generating the action, tell the user to try again"
     if TEST:
-        test_result = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/tester', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"input": action, "cookie": USER['cookie']})
+        test_result = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"input": action, "cookie": USER['cookie']})
     return action
 
 def improve_action(args):
@@ -152,13 +152,13 @@ def improve_action(args):
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{USER['package']}/{NAME}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json={"exec":{"kind":"python:default", "code":function},})
     requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "walkiria", "collection": USER['package'], "data": resp.json()})
     action = f"url: https://nuvolaris.dev/api/v1/web/gporchia/{USER['package']}/{NAME}\ndescription:{description}\nfunction:{function}\n\n"
-    test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/tester', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"input": action, "cookie": USER['cookie']})
+    test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"input": action, "cookie": USER['cookie']})
     return test.text
 
 def main(args):
     global USER
     global TEST
-    AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
+    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     request = args.get('request', False)
     USER = args.get('user', False)
     TEST = args.get('test', False)

@@ -35,4 +35,4 @@ def load_zip(path):
         file_list = myzip.namelist()
         for file in file_list:
             content = str(myzip.read(file))
-            requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/embedding', json={"name": name, "data": content})
+            requests.post('https://nuvolaris.dev/api/v1/web/gporchia/embedding/embed', json={"name": name, "data": content})

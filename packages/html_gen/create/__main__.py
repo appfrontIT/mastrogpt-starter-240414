@@ -1,7 +1,7 @@
 #--web true
 #--kind python:default
 #--annotation provide-api-key true
-#--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action which generate an action returning an HTML page"
 
 from openai import OpenAI
@@ -34,7 +34,7 @@ TUNED_MODEL = None
 def main(args):
     global AI
 
-    AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
+    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
     input = args.get("input", "")
     print(input)

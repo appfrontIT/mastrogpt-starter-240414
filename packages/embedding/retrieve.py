@@ -1,6 +1,6 @@
 #--web true
 #--kind python:default
-#--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--param OPENAI_API_KEY $OPENAI_API_KEY
 #--timeout 300000
 
 from openai import OpenAI
@@ -66,7 +66,7 @@ def query_message(
 
 def main(args):
     global AI
-    AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
+    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     query = args.get('query', '')
     if query == '':
         return {"statusCode": 400, "body": "errore: nessuna richiesta. Passare la 'key' query con 'value' la richiesta dell'utente"}

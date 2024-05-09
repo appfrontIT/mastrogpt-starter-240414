@@ -1,7 +1,7 @@
 #--web false
 #--kind python:default
 #--annotation provide-api-key true
-#--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action that create and test an action asynchronously"
 #--timeout 600000
 
@@ -123,7 +123,7 @@ def main(args):
 
     Remember to keep the same keys as the guidelines, all lowercase and snake_case
     """
-    action = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/create_action?blocking=true',
+    action = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/action/create?blocking=true',
                         auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
                         json={"request": request, "user": user
                             })
@@ -137,7 +137,7 @@ def main(args):
         lines = list(islice(split, 500))
         if not lines:
             break
-        requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/db_store_exec',
+        requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/db_store_exec',
                     auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
                     json={"format": md, "collection": collection, "text": lines, "user": user, "url": url}
                     )

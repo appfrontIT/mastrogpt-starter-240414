@@ -19,7 +19,7 @@ def tester(name = None):
             action_s += f"{pair['key']}: {pair['value']}\n"
     action_s += f"code: {action_obj['exec']['code']}\n"
     test = requests.post(
-        'https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/tester',
+        'https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run',
         auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
         json={"input": action_s, "cookie": config.session_user['cookie']})
     return test.text

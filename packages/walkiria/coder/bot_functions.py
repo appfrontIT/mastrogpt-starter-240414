@@ -39,7 +39,7 @@ def html_gen(args):
         query = f"{description}\nHere the informations about the actions you have to call inside it: {action_array}"
     else:
         query = description
-    html = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/openai/html_gen", json={"input": query})
+    html = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/html_gen/create", json={"input": query})
     html_obj = html.json()
     output = html_obj.get('output', '')
     if output == '':
@@ -47,7 +47,7 @@ def html_gen(args):
     ret = {"body": output}
     function = f"""def main(args):\n\treturn {ret}"""
     action = deploy_action(name, function, description)
-    # test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/tester', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"input": action, "cookie": config.session_user['cookie']})
+    # test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"input": action, "cookie": config.session_user['cookie']})
     return f"{action}\nEverything is fine, don't call any other function"
 
 def update_action(name, modifications):
@@ -73,7 +73,7 @@ def update_action(name, modifications):
         obj = json.loads(comp)
         config.html += "<h1>UPDATE:</h1><br />"
         action = deploy_action(name, obj['function'], obj['description'])
-        test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/tester', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"input": action, "cookie": config.session_user['cookie']})
+        test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"input": action, "cookie": config.session_user['cookie']})
         return test.text
     return f"No action with that name exists, here a list of existing actions:\n{show_all_actions()}"
 
@@ -133,12 +133,12 @@ def deploy_action(name, function, description):
     return f"url: https://nuvolaris.dev/api/v1/web/gporchia/{config.session_user['package']}/{name}\ndescription:{description}\nfunction:{function}\n\n"
 
 def create_action(request):
-    response = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/create_action', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"request": request, "user": config.session_user, "test": True})
+    response = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/action/create', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"request": request, "user": config.session_user, "test": True})
     return "the action is in production and it will tested as well"
 
 def db_store(url, collection, format):
     print(collection)
-    return requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/db_store_init', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
+    return requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/db_store_init', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
         "url": url,
         "collection": collection,
         "format": format,

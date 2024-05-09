@@ -18,7 +18,7 @@ def grapher(type = None, request = None, name = None, description = None):
     else:
         data = type.get('data', False)
     graph = requests.post(
-        'https://nuvolaris.dev/api/v1/web/gporchia/openai/grapher',
+        'https://nuvolaris.dev/api/v1/web/gporchia/grapher/create',
         json={"input": f"request:\n{request}\n\ndata:\n{data}"})
     config.html = f"<iframe src='https://nuvolaris.dev/api/v1/web/gporchia/{config.session_user['package']}/{name}' width='100%' height='800'></iframe>"
     ret = {"body": graph.text}

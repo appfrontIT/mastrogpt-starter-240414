@@ -12,7 +12,7 @@ MODEL="gpt-3.5-turbo"
 EMBEDDING_MODEL = "text-embedding-3-small"
 
 def find_man_page(page: str):
-    query = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/openai/retrieve_embedding', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
+    query = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/embedding/retrieve', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
         "collection": 'crawl_appfront_operations__gitbook__io',
         'query': config.query
     })

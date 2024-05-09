@@ -11,7 +11,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     async function onFormSubmit(event) {
         event.preventDefault();
         const data = new FormData(event.target);
-        const user = data.get('name');
+        const user = data.get('username');
         const password = data.get('password');
         try {
             const response = await fetch(base+'api/my/utility/login', {

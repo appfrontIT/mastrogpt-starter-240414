@@ -3,7 +3,7 @@
 #--annotation description "This action scrape a web page and all the links of the same domain inside the page. It stores data inside the database. If embedding is true, it also store the embedding array. Parameters: {"url": url, "embedding": true/false}"
 #--param APIFY_ACTOR $APIFY_ACTOR
 #--param APIFY_TOKEN $APIFY_TOKEN
-#--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--param OPENAI_API_KEY $OPENAI_API_KEY
 #--timeout 300000
 
 from openai import OpenAI
@@ -60,7 +60,7 @@ def main(args):
     if crawl.status_code != 201:
         return {"body": "error crawling the desidered link"}
     obj_list = []
-    AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
+    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     ROLE = """You're job is just to explain the text received.
     Format your output including a Title for each section and a description. Example: "**This is the title**\nHere you will put the desctiption.\n\n**Another title**\nAnother description" and so on.
     Take your time to answer, it's very important that the text is outputted in a very smart and comprehensible way.

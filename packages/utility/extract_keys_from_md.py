@@ -1,6 +1,6 @@
 #--web false
 #--kind python:default
-#--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "This action take a markdown document in input and extract each key from a tab. It returns a json. Parameter: {"md": 'md file'}"
 #--timeout 300000
 
@@ -90,7 +90,7 @@ def main(args):
     md = args.get('md', False)
     if not md:
         return {"statusCode": 400,}
-    AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
+    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
     messages = [
             {"role": "system", "content": ROLE},

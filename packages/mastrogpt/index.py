@@ -6,19 +6,19 @@ def main(arg):
         "services": [
             {
                 "name": "Lookinglass",
-                "url": "openai/lookinglass"
+                "url": "lookinglass/chat"
             },
             {
                 "name": "Coder",
-                "url": "openai/coder_caller"
+                "url": "walkiria/coder_caller"
             },
             {
                 "name": "Admin",
-                "url": "openai/admin"
+                "url": "admin/admin"
             },
             {
                 "name": "Logout",
-                "url": "mastrogpt/logout"
+                "url": "utility/logout"
             }
         ]
     }

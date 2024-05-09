@@ -9,6 +9,7 @@ import os
 
 def main(args):
     OW_KEY = os.getenv('__OW_API_KEY')
+    print(OW_KEY)
     split = OW_KEY.split(':')
 
     cookie = args['__ow_headers'].get('cookie', False)
@@ -18,5 +19,5 @@ def main(args):
     if response.status_code == 404:
         return {"statusCode": 404, "body": {"cookie": cookie_split[0]}}
     
-    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/coder", auth=HTTPBasicAuth(split[0], split[1]), json={"input": args.get('input', ''), 'cookie': cookie_split[1]})
+    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/coder", auth=HTTPBasicAuth(split[0], split[1]), json={"input": args.get('input', ''), 'cookie': cookie_split[1]})
     return {"statusCode": 200, "body": resp.text}

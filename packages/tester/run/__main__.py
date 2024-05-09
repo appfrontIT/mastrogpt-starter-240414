@@ -1,7 +1,7 @@
 #--web false
 #--kind python:default
 #--annotation provide-api-key true
-#--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "a tester throught AI to test your actions"
 #--timeout 300000
 
@@ -108,7 +108,7 @@ def ask(query: str, AI: OpenAI, model: str = MODEL) -> str:
 def main(args):
     global AI
     global COOKIE
-    AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
+    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
     COOKIE = args.get('cookie', False)
     if not COOKIE:

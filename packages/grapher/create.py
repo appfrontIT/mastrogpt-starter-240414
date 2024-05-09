@@ -1,7 +1,7 @@
 #--web true
 #--kind python:default
 #--annotation provide-api-key true
-#--param GPORCHIA_API_KEY $GPORCHIA_API_KEY
+#--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action which generate an action returning an HTML page"
 #--timeout 300000
 
@@ -14,7 +14,7 @@ MODEL = "gpt-3.5-turbo"
 def main(args):
     global AI
 
-    AI = OpenAI(api_key=args['GPORCHIA_API_KEY'])
+    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     input = args.get("input", False)
     if not input:
         return {"statusCode": "400", "body": "error: no input provided"}
