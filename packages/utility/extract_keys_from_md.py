@@ -6,7 +6,7 @@
 
 from openai import OpenAI
     
-ROLE = """Your job is to read a markdown file and extract all the fields inside 'DESCRIZIONE CAMPO', using snake_case. 
+ROLE = """Your job is to read a markdown file and extract all the fields inside 'DESCRIZIONE CAMPO', using snake_case and only lowercase. 
 Return a json object that works as a guideline to parse a text file.
 Example:
 {

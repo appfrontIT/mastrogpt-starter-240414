@@ -133,10 +133,11 @@ def deploy_action(name, function, description):
     return f"url: https://nuvolaris.dev/api/v1/web/gporchia/{config.session_user['package']}/{name}\ndescription:{description}\nfunction:{function}\n\n"
 
 def create_action(request):
-    response = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/create_action', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"request": request, "user": config.session_user})
+    response = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/create_action', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"request": request, "user": config.session_user, "test": True})
     return "the action is in production and it will tested as well"
 
 def db_store(url, collection, format):
+    print(collection)
     return requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/db_store_init', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
         "url": url,
         "collection": collection,

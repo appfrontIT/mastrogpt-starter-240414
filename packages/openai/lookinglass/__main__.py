@@ -44,7 +44,7 @@ def ask(
         tool_choice="auto"
     )
     if response.choices[0].finish_reason == "tool_calls":
-        print("tool")
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': config.session_user['cookie'], "message": {"output": "Certamente, procedo subito ad elaborare la tua richiesta"}})
         tool_calls = response.choices[0].message.tool_calls
         messages.append(response.choices[0].message)
         for tool_call in tool_calls:

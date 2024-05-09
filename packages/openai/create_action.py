@@ -121,7 +121,7 @@ def deploy_action(name, function, description):
     else:
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{USER['package']}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
     if resp.status_code != 200:
-        return resp.text
+        return False
     requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "walkiria", "collection": USER['package'], "data": resp.json()})
     return f"url:'https://nuvolaris.dev/api/v1/web/gporchia/{USER['package']}/{name}', description:'description', function:'function'"
 
@@ -135,7 +135,8 @@ def create_action(args):
     function = function.replace('Python', '')
     description = args.get('description', False)
     action = deploy_action(NAME, function, description)
-    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={'cookie': USER['cookie'], "message": {"output": "I'm creating your action, I'll update you as soon as I finished to test it"}})
+    if not action:
+        return "there was an error generating the action, tell the user to try again"
     if TEST:
         test_result = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/openai/tester', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"input": action, "cookie": USER['cookie']})
     return action
@@ -207,7 +208,6 @@ create_action_tool = [{
                             "function": {"type": "string", "description": "the generated function. It must starts with 'def main(args):'"},
                             "description": {"type": "string", "description": "a description of the action you made. The description MUST includes the parameters the action needs such as: {key: type, key: type, ...}. Example: 'an action which add an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}, None'"},
                             },
-                            "required": ["name", "function", "description"],
                         },
                     },
                     "required": ["args"]
