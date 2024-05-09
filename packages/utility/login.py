@@ -8,14 +8,14 @@ import hashlib
 from secrets import token_urlsafe
 
 def main(args):
-    name = args.get('user', False)
+    username = args.get('username', False)
     password = args.get('password', False)
-    if not name or not password:
+    if not username or not password:
         return {"statusCode": 400}
     data = {
         "find_one": True,
         "filter": {
-            "name": name,
+            "username": username,
             "password": hashlib.sha256(password.encode()).hexdigest(),
         }
     }
