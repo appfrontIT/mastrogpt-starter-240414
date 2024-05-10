@@ -1,83 +1,106 @@
-#--web true
+#--web raw
 #--kind python:default
 #--annotation description "an action which perform operations to the database, suche as: add, update, delete, find. Required parameters: {'db': db name, 'collection': collection name, 'type of operation(add, find_one, find, delete, update)': True, 'data': required data as json. Example: 'name': name, 'role': role, 'password': password, ...}"
+#--param CONNECTION_STRING $CONNECTION_STRING
 
-from pymongo import MongoClient
-from pymongo import errors
+from pymongo import MongoClient, errors
+from pymongo.collection import Collection
 import json
 from bson.objectid import ObjectId
+import base64
 
-def format_el(element):
-    ret = {}
-    for key in element:
-        if key == '_id':
-            id = element[key]
-            ret['ID'] = str(id)
-        else:
-            ret[key] = element[key]
-    return json.dumps(ret)
-
-def update(collection, filter, update_data):
-    to_update = {}
-    for key in update_data:
-        to_update[key] = update_data[key]
-    id = filter.get('_id', '')
-    if id == '':
-        return {"body": "error: you must provide the '_id' as filter"}
-    data = collection.update_one({'_id':ObjectId(id)}, {"$set": to_update})
-    if data.modified_count == 0:
-        return {"body": f"error: element not found. _id {id} doens't exits"}
+def update(collection: Collection, data, id = False):
+    if not id or not data:
+        return {"statusCode": 400, "body": "error: parameter 'id' missing or 'data' missing"}
+    split = id.split('=')
+    if len(split) == 2:
+        if split[0] == 'id':
+            id = split[1]
+    if not id or not data:
+        return {"statusCode": 400, "body": "error: parameter 'id'"}
+    response = collection.update_one({'_id':ObjectId(id)}, {"$set": json.loads(data)['data']})
+    if response.modified_count == 0:
+        return {"statusCode": 404}
     el = collection.find_one({'_id': ObjectId(id)})
-    return {"body": f"element {id} updated"}
+    el['_id'] = str(el['_id'])
+    return {"statusCode": 200, "body": json.dumps(el)}
 
-def delete(collection, filter):
-    id = filter.get('_id', '')
-    if id == '':
-        return {"body": "error: you must provide the '_id' as filter"}
+def delete(collection, id = False):
+    if not id:
+        return {"statusCode": 400, "body": "error: parameter 'id' missing"}
+    split = id.split('=')
+    if len(split) == 2:
+        if split[0] == 'id':
+            id = split[1]
     data = collection.delete_one({'_id':ObjectId(id)})
     if data.deleted_count == 1:
-        return {"body": f"element {id} deleted"}
-    return {"body": f"error: element not found. _id {id} doens't exits"}
+        return {"statusCode": 204}
+    return {"statusCode": 404}
 
-def find(collection, filter):
-    to_filter = {}
-    for key in filter:
-        if filter[key] != "":
-            to_filter[key] = filter[key]
-    data = collection.find(to_filter)
+def find_one(collection: Collection, query_param):
+    n_params = query_param.split('&')
+    filter = {}
+    for param in n_params:
+        split_params = param.split('=')
+        if split_params[0] == 'id':
+            filter['_id'] = ObjectId(split_params[1])
+        else:
+            filter[split_params[0]] = split_params[1]
+    data = collection.find_one(filter)
+    if data:
+        data['_id'] = str(data['_id'])
+        return {"statusCode": 200, "body": json.dumps(data)}
+    return {"statusCode": 404}
+
+def find_many(collection: Collection, query_param = False):
+    filter = {}
+    if query_param:
+        n_params = query_param.split('&')
+        for param in n_params:
+            split_params = param.split('=')
+            filter[split_params[0]] = split_params[1]
+    data = collection.find(filter)
     ret = []
     for x in data:
-        ret.append(format_el(x))
-    return {"body": json.dumps(ret)}
+        x['_id'] = str(x['_id'])
+        ret.append(x)
+    if len(ret) > 0:
+        return {"statusCode": 200, "body": json.dumps(ret)}
+    return {"statusCode": 404}
 
-def find_by_id(collection, filter):
-    data = collection.find_one({'_id': ObjectId(filter)})
-    if data:
-        return {"body": format_el(data)}
+def add(collection: Collection, data = False):
+    if not data:
+        return {"statusCode": 400, "body": "error: parameter 'data' is missing"}
+    ins = collection.insert_one(json.loads(data)['data'])
+    if not ins.acknowledged:
+        return {"statusCode": 400}
+    el = collection.find_one({'_id': ins.inserted_id})
+    el['_id'] = str(el['_id'])
+    return {"body": json.dumps(el), "statusCode": 200}
 
-def find_one(collection, filter):
-    to_filter = {}
-    for key in filter:
-        if filter[key] != "":
-                to_filter[key] = filter[key]
-    data = collection.find_one(to_filter)
-    if data:
-        return {"body": format_el(data)}
-    return {"statusCode": 404, "body": json.dumps(data)}
+def add_many(collection: Collection, data):
+    if not data:
+        return {"statusCode": 400, "body": "error: 'data'"}
+    try:
+        ins = collection.insert_many(data)
+        if not ins.acknowledged:
+            return {"statusCode": 400}
+        return {"statusCode": 204}
+    except errors.OperationFailure as exc:
+        return {"statusCode": 404, "body": f"{exc.code}: {exc.details}"}
 
 def main(args):
-    # connection_string = args.get('CONNECTION_STRING')
-    db = args.get('db', '')
-    if db == '':
-        db = 'mastrogpt'
-    collection = args.get('collection', '')
-    data = args.get('data', '')
-    if collection == '':
-        return {"body": "error, collection missing"}
-    if data == '':
-        return {"body": "error, data is missing"}
+    connection_string = args.get('CONNECTION_STRING', False)
+    path: str = args.get('__ow_path', False)
+    path_spl = path.split('/')
+    if len(path_spl) != 4:
+        return {"statusCode": 400}
+    db = path_spl[1]
+    collection = path_spl[2]
+    if not collection or not db:
+        return {"statusCode": 400, "body": "parameter 'db' or 'collection' missing"}
     
-    client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
+    client = MongoClient(connection_string)
     dbname = client[db]
     
     collection_list = dbname.list_collection_names()
@@ -86,28 +109,29 @@ def main(args):
         db_coll = dbname[collection]
     else:
         db_coll = dbname.create_collection(collection)
-        
-    if args.get('add'):
-        ins = db_coll.insert_one(data)
-        if not ins.acknowledged:
-            return {"statusCode": 400}
-        el = db_coll.find_one({'_id': ins.inserted_id})
-        return {"body": format_el(el), "statusCode": 200}
-    elif args.get('insert_many'):
+    
+    op = path_spl[3]
+    method = args['__ow_method']
+    if op == 'find_one' and method == 'get':
+        return find_one(db_coll, args['__ow_query'])
+    elif op == 'find_many' and method == 'get':
+        return find_many(db_coll, args['__ow_query'])
+    elif op == 'add' and method == 'post':
         try:
-            ins = db_coll.insert_many(data)
-        except errors.OperationFailure as exc:
-            return {"body": "there was an error while inserting the elements"}
-        else:
-            return {"body": "elements correctly inserted"}
-    elif args.get('find_one') == True:
-        return find_one(db_coll, data.get('filter', ''))
-    elif args.get('find_by_id') == True:
-        return find_by_id(db_coll, data.get('filter', ''))
-    elif args.get('find') == True:
-        return find(db_coll, data.get('filter', ''))
-    elif args.get('delete') == True:
-        return delete(db_coll, data.get('filter', ''))
-    elif args.get('update') == True:
-        return update(db_coll, data.get('filter', ''), data.get('updateData', ''))
-    return {"body": "error couldn't find any method(add, find_one, find, delete, update)"}
+            body: str = args['__ow_body']
+            decoded = base64.b64decode(body).decode('utf-8')
+        except:
+            return {"body": "Could not decode body from Base64."}
+        return add(collection=db_coll, data=decoded)
+    elif op == 'add_many' and method == 'post':
+            return add_many(db_coll, args.get('data', False))
+    elif op == 'delete' and method == 'delete':
+        return delete(db_coll, args['__ow_query'])
+    elif op == 'update' and method == 'put':
+        try:
+            body: str = args['__ow_body']
+            decoded = base64.b64decode(body).decode('utf-8')
+        except:
+            return {"body": "Could not decode body from Base64."}
+        return update(db_coll, decoded, args['__ow_query'])
+    return {"statusCode": 400}

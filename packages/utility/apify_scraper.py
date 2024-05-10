@@ -91,10 +91,6 @@ def main(args):
                 "summary": response.choices[0].message.content
                 }
         obj_list.append(data)
-    db_data = {
-            "insert_many": True,
-            "collection": f"crawl_{extract_domain(url).replace('-', '_').replace('.', '__')}",
-            "data": obj_list
-        }
-    response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json=db_data)
+    collection = f"crawl_{extract_domain(url).replace('-', '_').replace('.', '__')}"
+    response = requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/add_many", json={"data": obj_list})
     return {"body": ret}

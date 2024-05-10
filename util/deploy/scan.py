@@ -33,6 +33,11 @@ def scan():
         deployments.add(single)
         packages.add(sp[1])
 
+    no_package = glob("packages/*.py")
+    for no_p in no_package:
+        print(">", no_p)
+        deploy_no_package(no_p.split("/"))
+
     print(">>> Deploying:")
 
     for package in packages:

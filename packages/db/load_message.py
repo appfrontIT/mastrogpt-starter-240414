@@ -1,17 +1,19 @@
 #--kind python:default
 #--annotation provide-api-key true
 #--annotation description "This action append a message to the user chat"
+#--param CONNECTION_STRING $CONNECTION_STRING
 
 from pymongo import MongoClient
 import os
 import requests
 
 def main(args):
+    connection_string = args.get('CONNECTION_STRING', False)
     reset = args.get('reset_history', False)
     cookie = args.get('cookie', False)
     if not cookie:
         return {"statusCode": 400}
-    client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
+    client = MongoClient(connection_string)
     dbname = client['mastrogpt']
     collection = dbname['users']
     if reset:

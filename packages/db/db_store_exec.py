@@ -42,10 +42,6 @@ def main(args):
         if response.status_code == 200:
             arr.append(response.json())
     print(arr)
-    insertion = requests.post(
-        "https://nuvolaris.dev/api/v1/web/gporchia/db/mongo",
-        json={
-            "insert_many": True, "db": "mastrogpt", "collection": collection, "data": arr
-            })
+    insertion = requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/add_many", json={"data": arr})
     print(insertion.text)
     return {"statusCode": 204}

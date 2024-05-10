@@ -9,12 +9,9 @@ from openai import OpenAI
 def grapher(type = None, request = None, name = None, description = None):
     if not type or not request or not name or not description:
         return "errore: datai incompleti o errati"
-    if type.get('collection', False):
-        data = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/db/mongo', json={
-            "find": True,
-            "collection": type.get('collection'),
-            "data": {"filter": {}}
-        }).text
+    collection = type.get('collection', False)
+    if collection:
+        data = requests.get(f'https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/find_many').text
     else:
         data = type.get('data', False)
     graph = requests.post(

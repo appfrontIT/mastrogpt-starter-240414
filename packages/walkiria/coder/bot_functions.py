@@ -117,7 +117,7 @@ def deploy_action(name, function, description):
     print(resp.text)
     if resp.status_code != 200:
         return resp.text
-    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "walkiria", "collection": config.session_user['package'], "data": resp.json()})
+    requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/walkiria/{config.session_user['package']}/add", json={"data": resp.json()})
     # config.html += f"""
     #     <head>
     #     <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">

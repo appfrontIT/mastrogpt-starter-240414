@@ -77,14 +77,14 @@ def main(args):
 
     cookie = args['__ow_headers'].get('cookie', False)
     cookie = cookie.split('=')[1]
-    response = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/user/find_by_cookie', json={"cookie": cookie})
+    response = requests.post(f'https://nuvolaris.dev/api/v1/web/gporchia/user/find?cookie={cookie}')
     if response.status_code == 404:
         return {"statusCode": 404}
     config.session_user = response.json()
     input = args.get("input", "")
     if input == "":
         res = {
-            "output": f"Bentornato {config.session_user['name']}! Come posso aiutarti?",
+            "output": f"Bentornato {config.session_user['username']}! Come posso aiutarti?",
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
             "html": "<iframe src='https://appfront.cloud' width='100%' height='800'></iframe>"

@@ -41,18 +41,18 @@ def main(args):
 
     cookie = args['__ow_headers'].get('cookie', False)
     cookie = cookie.split('=')[1]
-    response = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/user/find_by_cookie', json={"cookie": cookie})
+    response = requests.post(f'https://nuvolaris.dev/api/v1/web/gporchia/user/find?cookie={cookie}')
     if response.status_code == 404:
         return {"statusCode": 404}
     config.session_user = response.json()
     if config.session_user['role'] != 'admin':
-        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "mastrogpt", "collection": "chat", "data": {"output": "Devi essere un Admin per poter accedere a questa sessione"}})
+        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/chat", json={"data": {"output": "Devi essere un Admin per poter accedere a questa sessione"}})
         return{"statusCode": 403}
     input = args.get("input", "")
     if input == "":
         users = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find": True, "collection": "users", "data": {"filter": {}}})
         res = {
-            "output": f"Bentornato {config.session_user['name']}! Come posso aiutarti?",
+            "output": f"Bentornato {config.session_user['username']}! Come posso aiutarti?",
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
             "html": f"<html><body><h1>In this section you can create, update, and delete an user!</h1><br><h2>Current users:</h2><br><pre><code><xmp>{json.dumps(users.json(), indent=2)}</xmp></code></pre></code></html>"

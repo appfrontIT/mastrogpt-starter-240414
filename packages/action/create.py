@@ -27,57 +27,50 @@ NEVER, EVER, BE LAZY! IF YOU NEED TIME TO UNDERSTAND THE TASK TAKE YOUR TIME, BU
 
 Mandatory: import the modules you use in the function.
 
-If you have to store data inside a database you MUST use the following action: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo. How to use the database:
-- Based on the operation, you need to set True the following keys: add, update, find, find_one, delete.
-- You need to specify the collection key.
-- you need to specify the data key.
-- If you need to query the database for an element, you have to specify the 'filter' key inside 'data'.
-- If you want to update an element you need to specify the 'updateData' key.
-- The only valid filter to update or delete is '_id'.
-- Consider everthing between ``` an example:
-        ```
-        import json
-        def main(args):
-            if args.get('action') == 'create':
-                data = {
-                    "title": args.get('title'),
-                    "author": args.get('author'),
-                    "genre": args.get('genre'),
-                    "published_year": args.get('published_year')
-                }
-                response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "collection": "books", "data": data})
-                return {"body": response.text}
-            elif args.get('action') == 'read':
-                data = {"filter": args.get('filter')}
-                response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find": True, "collection": "books", "data": data})
-                return {"body": response.text}
-            elif args.get('operation') == 'read_one':
-                data = {
-                    "title": args.get('title'),
-                    "author": args.get('author'),
-                    "genre": args.get('genre'),
-                    "published_year": args.get('published_year')
-                }
-                response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find_one": True, "collection": "books", "data": data})
-                return {"body": response.text}
-            elif args.get('action') == 'update':
-                data = {"filter": args.get('filter'),
-                    "updateData": {
-                        "title": args.get('title'),
-                        "author": args.get('author'),
-                        "genre": args.get('genre'),
-                        "published_year": args.get('published_year')
-                    }
-                }
-                response = requests.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"update": True, "collection": "books", "data": data})
-                return {"body": response.text}
-            elif args.get('action') == 'delete':
-                data = {"filter": args.get('filter')}
-                response = requests.delete("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"delete": True, "collection": "books", "data": data})
-                return {"body": response.text}
-        ```
+If you have to store data inside a database you MUST use the following action: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/{operation}. How to use the database:
+You need to fill collection and  operation.
+Remember to set the path in the beginning of the code.
+{operation} can be one of the following: 'find_one', 'find_many', 'add', 'add_many', 'delete', 'update'.
+Here's an example using model 'Book', wiht fields: 'title', 'author', 'pages', 'year':
+```python
+
+    import requests
+    import json
+
+    def main(args):
+        path = args.get('__ow_path', False)
+        if not path:
+            return {"statusCode": 500}
+        
+        # create an element using 'data'
+        if path == '/create':
+            response = request.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/add", json={"data": {"title": args.get("title"), "author": args.get("author"), "pages": args.get("pages"), "year": args.get("year")}})
+            return {"statusCode": response.status_code, "body": response.text}
+        
+        # delete an element by id
+        elif path == '/delete':
+            response = request.delete("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/delete?id=" + args.get('id'))
+            return {"statusCode": response.status_code, "body": response.text}
+        
+        # update an element by id using 'data'
+        elif path == '/update':
+            response = request.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/update?id=" + args.get('id'), json={"data": {"title": args.get("title"), "author": args.get("author"), "pages": args.get("pages"), "year": args.get("year")}})
+            return {"statusCode": response.status_code, "body": response.text}
+        
+        # find single element matching the filter
+        elif path == '/find':
+            response = request.get("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/find_one?title=" + args.get('title') + "&author=" args.get('author'))
+            return {"statusCode": response.status_code, "body": response.text}
+        
+        # find all elements matching the filter
+        elif path == '/find_many':
+            response = request.get("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/find_many")
+            return {"statusCode": response.status_code, "body": response.text}
+        return {"statusCode": 400}
+```
+Try to use a path to identify the type of operation.
 You can't use async.
-If you need to accept parameters you will get those such as: args.get("url") to get "url", args.get("name") to get "name" and so on
+Each parameters must be extracter using 'args.get('param')'. Example: args.get("url") to get "url", args.get("name") to get "name" and so on
 You can use only the follow libraries: requests, re, json, BeatifulSoup. Remember to import the modules you use!
 ALWAYS IMPORT requests, re, json, and any library you're going to use inside the function
 """
@@ -122,7 +115,7 @@ def deploy_action(name, function, description):
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{USER['package']}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
     if resp.status_code != 200:
         return False
-    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "walkiria", "collection": USER['package'], "data": resp.json()})
+    requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/walkiria/{USER['package']}/add", json={"data": resp.json()})
     return f"url:'https://nuvolaris.dev/api/v1/web/gporchia/{USER['package']}/{name}', description:'description', function:'function'"
 
 def create_action(args):
@@ -150,7 +143,7 @@ def improve_action(args):
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{NAME}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json={"exec":{"kind":"python:default", "code":function},})
     else:
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{USER['package']}/{NAME}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json={"exec":{"kind":"python:default", "code":function},})
-    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"add": True, "db": "walkiria", "collection": USER['package'], "data": resp.json()})
+    requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/walkiria/{USER['package']}", json={"data": resp.json()})
     action = f"url: https://nuvolaris.dev/api/v1/web/gporchia/{USER['package']}/{NAME}\ndescription:{description}\nfunction:{function}\n\n"
     test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"input": action, "cookie": USER['cookie']})
     return test.text

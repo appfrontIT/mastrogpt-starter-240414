@@ -90,21 +90,16 @@ def main(args):
         <script>
             function showPopup(id) {{
                 // Show the selected popup
-                fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/mongo', {{
-                method: 'POST',
+                fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/' + id + '/find_many', {{
+                method: 'GET',
                 headers: {{ 'Content-type': 'application/json; charset=UTF-8' }},
-                body: JSON.stringify({{
-                    'collection': id,
-                    'find': true,
-                    'data': {{}}
-                    }})
                 }})
                 .then(response => response.json())
                 .then(data => {{
                 node = document.getElementById('popup')
                 node.textContent = '';
                 for (let i = 0; i < data.length; i++) {{
-                    obj = JSON.parse(data[i])
+                    let obj = data[i]
                     let section = document.createElement('div');
                     section.classList.add('card')
                     to_display = "<ul>"

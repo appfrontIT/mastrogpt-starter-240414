@@ -40,7 +40,7 @@ def main(args):
     config.AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
     cookie = args.get('cookie', False)
-    response = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/user/find_by_cookie', json={"cookie": cookie})
+    response = requests.get(f'https://nuvolaris.dev/api/v1/web/gporchia/default/user/find?cookie={cookie}')
     if response.status_code == 404:
         return {"statusCode": 404}
     config.session_user = response.json()
@@ -48,7 +48,7 @@ def main(args):
     input = args.get("input", "")
     if input == "":
         res = {
-            "output": f"Bentornato {config.session_user['name']}! Come posso aiutarti?",
+            "output": f"Bentornato {config.session_user['username']}! Come posso aiutarti?",
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
             "html": config.HTML_INFO

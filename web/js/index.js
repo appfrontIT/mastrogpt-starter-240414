@@ -17,7 +17,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
             const response = await fetch(base+'api/my/utility/login', {
                 method: 'POST',
                 credentials: 'include',
-                body: JSON.stringify({'user': user, 'password': password}),
+                body: JSON.stringify({'username': user, 'password': password}),
                 headers: { 'Content-Type': 'application/json' },
             })
             const obj = await response.json();
