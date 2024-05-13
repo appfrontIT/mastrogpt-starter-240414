@@ -1,6 +1,7 @@
 #--web true
 #--kind python:default
 #--annotation description "This action must be used to retrieve the chat object from the database. It will get the oldest chat and delete it until all the chat is extracted"
+#--param CONNECTION_STRING $CONNECTION_STRING
 #--timeout 300000
 
 from pymongo import MongoClient
@@ -17,8 +18,8 @@ def format_el(element):
     return ret
 
 def main(args):
-    # connection_string = args.get('CONNECTION_STRING')
-    client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
+    connection_string = args.get('CONNECTION_STRING')
+    client = MongoClient(connection_string)
     dbname = client['mastrogpt']
     
     db_coll = dbname['users']

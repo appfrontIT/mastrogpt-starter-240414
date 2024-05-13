@@ -30,10 +30,10 @@ def main(args):
     embedding = args.get('embedding', False)
     print(embedding)
     if ACTOR == '' or TOKEN == '':
-        return {"body": "error: couldn't get the credentials to use Apify"}
+        return {'statuCode': 500, "body": "internal server error"}
     url = args.get('url', '')
     if url == '':
-        return {"body": "you need to pass an url to use this action"}
+        return {'statuCode': 400, "body": "parameter 'url' not found"}
     
     obj = {
         "aggressivePrune": False,
@@ -58,7 +58,7 @@ def main(args):
         }
     crawl = requests.post(f"https://api.apify.com/v2/acts/apify~website-content-crawler/run-sync-get-dataset-items",headers={"Content-Type": "application/json","Authorization": f"Bearer {TOKEN}"}, json=obj)
     if crawl.status_code != 201:
-        return {"body": "error crawling the desidered link"}
+        return {'statusCode': crawl.status_code, "body": crawl.text}
     obj_list = []
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     ROLE = """You're job is just to explain the text received.

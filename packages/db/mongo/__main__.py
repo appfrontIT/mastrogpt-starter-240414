@@ -16,14 +16,14 @@ def update(collection: Collection, data, id = False):
     if len(split) == 2:
         if split[0] == 'id':
             id = split[1]
-    if not id or not data:
+    if not id:
         return {"statusCode": 400, "body": "error: parameter 'id'"}
     response = collection.update_one({'_id':ObjectId(id)}, {"$set": json.loads(data)['data']})
     if response.modified_count == 0:
         return {"statusCode": 404}
     el = collection.find_one({'_id': ObjectId(id)})
     el['_id'] = str(el['_id'])
-    return {"statusCode": 200, "body": json.dumps(el)}
+    return {"statusCode": 200, "body": el}
 
 def delete(collection, id = False):
     if not id:
@@ -49,7 +49,7 @@ def find_one(collection: Collection, query_param):
     data = collection.find_one(filter)
     if data:
         data['_id'] = str(data['_id'])
-        return {"statusCode": 200, "body": json.dumps(data)}
+        return {"statusCode": 200, "body": data}
     return {"statusCode": 404}
 
 def find_many(collection: Collection, query_param = False):
@@ -65,18 +65,18 @@ def find_many(collection: Collection, query_param = False):
         x['_id'] = str(x['_id'])
         ret.append(x)
     if len(ret) > 0:
-        return {"statusCode": 200, "body": json.dumps(ret)}
+        return {"statusCode": 200, "body": ret}
     return {"statusCode": 404}
 
 def add(collection: Collection, data = False):
     if not data:
-        return {"statusCode": 400, "body": "error: parameter 'data' is missing"}
+        return {"statusCode": 400, "body": "parameter 'data' is missing"}
     ins = collection.insert_one(json.loads(data)['data'])
     if not ins.acknowledged:
         return {"statusCode": 400}
     el = collection.find_one({'_id': ins.inserted_id})
     el['_id'] = str(el['_id'])
-    return {"body": json.dumps(el), "statusCode": 200}
+    return {"body": el, "statusCode": 200}
 
 def add_many(collection: Collection, data):
     if not data:
@@ -102,7 +102,7 @@ def main(args):
     
     client = MongoClient(connection_string)
     dbname = client[db]
-    
+
     collection_list = dbname.list_collection_names()
     db_coll = ""
     if collection in collection_list:

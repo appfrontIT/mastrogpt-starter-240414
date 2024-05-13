@@ -4,9 +4,18 @@ let display = document.getElementById("display").contentWindow
 let base = location.href.replace(/selector\.html$/, "")
 
 // inizialize the chat buttons
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", async function() {
     let x = document.cookie;
     if (!x) {
+        return window.location.assign('/index.html')
+    }
+    const token_response = await fetch(base + 'api/my/default/auth/token', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json'},
+    })
+    if (!token_response.ok) {
+        document.cookie = 'appfront-sess-cookie=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
         return window.location.assign('/index.html')
     }
     // retrieve index

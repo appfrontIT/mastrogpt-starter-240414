@@ -31,6 +31,15 @@ class Invoker {
       alert('error: session expired')
       window.parent.location.replace('/index.html')
     }
+    if (this.name == 'Logout') {
+      const response = await fetch(this.url, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json'},
+      });
+      document.cookie = 'appfront-sess-cookie=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
+      return window.parent.location.replace('/index.html')
+    }
     // welcome message no input
     if (msg == null) {
       return "Welcome, you have selected " + this.name;
@@ -56,16 +65,9 @@ class Invoker {
         case 403: alert("Non hai l'autorizzazione per accedere questa sezione"); return response;
         case 404: {
           const data = await response.json()
-          document.cookie = data['cookie'] + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT';
           alert('error: session expired');
           return window.parent.location.replace('/index.html');}
-        case 200: {
-          const data = await response.json()
-          if (data['logout']) {
-            document.cookie = data['cookie'] + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
-            return window.parent.location.replace('/index.html')
-          }
-        }
+        case 200: {};
         default: break;
       }
       return response

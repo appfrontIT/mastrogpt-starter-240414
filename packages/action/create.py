@@ -58,7 +58,7 @@ Here's an example using model 'Book', wiht fields: 'title', 'author', 'pages', '
             return {"statusCode": response.status_code, "body": response.text}
         
         # find single element matching the filter
-        elif path == '/find':
+        elif path == '/find_one':
             response = request.get("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/find_one?title=" + args.get('title') + "&author=" args.get('author'))
             return {"statusCode": response.status_code, "body": response.text}
         
@@ -116,7 +116,7 @@ def deploy_action(name, function, description):
     if resp.status_code != 200:
         return False
     requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/walkiria/{USER['package']}/add", json={"data": resp.json()})
-    return f"url:'https://nuvolaris.dev/api/v1/web/gporchia/{USER['package']}/{name}', description:'description', function:'function'"
+    return f"url:'https://nuvolaris.dev/api/v1/web/gporchia/{USER['package']}/{name}', description: {description}, function:{function}"
 
 def create_action(args):
     global NAME

@@ -1,0 +1,860 @@
+openapi: 3.1.0
+info:
+  title: Lookinglass - OpenAPI 3.1
+  description: |-
+    [Lookinglass page](https://www.appfront.cloud/)
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: it@appfront.cloud
+  version: 1.0.11
+externalDocs:
+  description: Lookinglass manual
+  url: https://appfront-operations.gitbook.io/lookinglass-manuale-utente
+servers:
+  - url: https://nuvolaris.dev/api/v1/web
+tags:
+  - name: auth
+    description: authorization endpoints
+  - name: user
+    description: Operations about user
+  - name: db
+    description: Operations using the database
+  - name: package
+    description: operations with an OpenWhisk package
+paths:
+  /gporchia/default/auth/login:
+    post:
+      tags:
+        - auth
+      summary: login
+      description: login into Appfront platform
+      operationId: login
+      requestBody:
+        description: login with username and password
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  examples: ['user']
+                password:
+                  type: string
+                  examples: ['password']
+        required: true
+      responses:
+        '200':
+          description: login successful. Returns a JWT encrypting the user
+          content:
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    examples: ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjNlNGYyZDU1Nzg2Mzc2MDEyMjdhYTciLCJ1c2VybmFtZSI6InBpcHBvIiwicGFzc3dvcmQiOiJhMjI0MmVhZDU1Yzk0YzNkZWI3Y2YyMzQwYmZlZjlkNWJjYWNhMjJkZmU2NmU2NDY3NDVlZTQzNzFjNjMzZmM4Iiwicm9sZSI6InVzZXIiLCJuYW1lc3BhY2UiOiJncG9yY2hpYS9waXBwbyIsInBhY2thZ2UiOiJwaXBwbyIsInNoYXJlZCBwYWNrYWdlIjpbXSwiY29va2llIjoid25PazdfbkNjbFJSeTg2WU1RT2dHMzdVM1pxOWtiSnZpd3EwSXJjNWpoNnE4N0hiMWtGQWVHUmVERGVHMjNwUUlpRXZXSENMbkQtQmpoZjZDSGZkM3ciLCJjaGF0IjpbXX0.2u8Ina23yGPRnjKGhakTo-tywYfcQ9QDuxW8xFS0GBw']
+        '400':
+          description: username or password are missing
+        '404':
+          description: user not found
+  /gporchia/default/auth/logout:
+    delete:
+      tags:
+        - auth
+      summary: logout
+      description: logout from Appfront platform. Delete cookies
+      operationId: logout
+      responses:
+        '200':
+          description: user logout
+  /gporchia/default/auth/token:
+    get:
+      tags:
+        - auth
+      summary: get JWT
+      description: get the user JWT if the cookie is present. Meaningful only while working with the client
+      operationId: getToken
+      responses:
+        200:
+          description: user found by cookie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    examples: ['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjNlNGYyZDU1Nzg2Mzc2MDEyMjdhYTciLCJ1c2VybmFtZSI6InBpcHBvIiwicGFzc3dvcmQiOiJhMjI0MmVhZDU1Yzk0YzNkZWI3Y2YyMzQwYmZlZjlkNWJjYWNhMjJkZmU2NmU2NDY3NDVlZTQzNzFjNjMzZmM4Iiwicm9sZSI6InVzZXIiLCJuYW1lc3BhY2UiOiJncG9yY2hpYS9waXBwbyIsInBhY2thZ2UiOiJwaXBwbyIsInNoYXJlZCBwYWNrYWdlIjpbXSwiY29va2llIjoid25PazdfbkNjbFJSeTg2WU1RT2dHMzdVM1pxOWtiSnZpd3EwSXJjNWpoNnE4N0hiMWtGQWVHUmVERGVHMjNwUUlpRXZXSENMbkQtQmpoZjZDSGZkM3ciLCJjaGF0IjpbXX0.2u8Ina23yGPRnjKGhakTo-tywYfcQ9QDuxW8xFS0GBw']
+        404:
+          description: cookie or user not found
+          content:
+            text/plain: 
+              schema:
+                type: string
+                examples: ["'cookie not found' or 'user not found'"]
+  /gporchia/default/user/add:
+    post:
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      summary: Create user
+      description: This can only be done by the admin.
+      operationId: createUser
+      requestBody:
+        description: create user
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+      responses:
+        200:
+          description: user created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: bad request
+        405:
+          description: method not allowed
+  /gporchia/default/user/delete:
+    delete:
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      summary: Delete user
+      description: This can only be done by the admin.
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: query
+          description: the user id
+          required: true
+          schema: 
+            type: number
+      responses:
+        204:
+          description: user deleted
+        400:
+          description: bad request
+        405:
+          description: method not allowed
+  /gporchia/default/user/update:
+    put:
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      summary: update an user
+      description: update an user providing the correct schema
+      operationId: updateUser
+      parameters:
+        - name: id
+          in: query
+          description: the user id to update
+          required: true
+          schema:
+            type: number
+      requestBody:
+        description: update user
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    role:
+                      type: string
+                    shared_package: 
+                      type: array
+                    cookie:
+                      type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: bad request
+        401:
+          description: unauthorized
+        404:
+          description: not found
+  /gporchia/default/user/find:
+    get:
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      summary: find an user
+      description: find an user using the id
+      operationId: findUser
+      parameters:
+      - name: id
+        in: query
+        description: the user id to update
+        required: true
+        schema:
+          type: number
+      responses:
+        200:
+          description: the found user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: bad request
+        401:
+          description: unauthorized
+        404:
+          description: not found
+  /gporchia/db/mongo/{database}/{collection}/add:
+    post:
+      tags:
+        - db
+      security:
+        - bearerAuth: []
+      summary: add an element
+      operationId: dbAdd
+      parameters:
+      - in: path
+        name: database
+        required: true
+        schema:
+          type: string
+        description: the desidered database
+      - in: path
+        name: collection
+        required: true
+        schema:
+          type: string
+        description: the desidered collection. If the collection is not in the database it will create it
+      requestBody:
+        description: the data to store
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+      responses:
+        200:
+          description: the added element
+          content:
+            application/json:
+              schema:
+                type: object
+        400:
+          description: bad request
+          content:
+            text/plain: 
+              schema:
+                type: string
+        401:
+          description: unauthorized
+  /gporchia/db/mongo/{database}/{collection}/add_many:
+    post:
+      tags:
+        - db
+      security:
+        - bearerAuth: []
+      summary: add an element
+      operationId: dbAdd_many
+      parameters:
+      - in: path
+        name: database
+        required: true
+        schema:
+          type: string
+        description: the desidered database
+      - in: path
+        name: collection
+        required: true
+        schema:
+          type: string
+        description: the desidered collection. If the collection is not in the database it will create it
+      requestBody:
+        description: the data to store
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  examples: [[{}, {}]]
+      responses:
+        204:
+          description: no content
+        400:
+          description: bad request
+          content:
+            text/plain: 
+              schema:
+                type: string
+        401:
+          description: unauthorized
+        404:
+          description: request failed
+  /gporchia/db/mongo/{database}/{collection}/delete:
+    delete:
+      tags:
+        - db
+      security:
+        - bearerAuth: []
+      summary: delete an element
+      operationId: dbDelete
+      parameters:
+        - in: path
+          name: database
+          required: true
+          schema:
+            type: string
+          description: the desidered database
+        - in: path
+          name: collection
+          required: true
+          schema:
+            type: string
+          description: the desidered collection. If the collection is not in the database it will create it
+        - in: query
+          name: id
+          description: the element id to delete
+          required: true
+          schema:
+            type: number
+      responses:
+        204:
+          description: no content
+        400:
+          description: bad request
+          content:
+            text/plain: 
+              schema:
+                type: string
+        401:
+          description: unauthorized
+        404:
+          description: not found
+  /gporchia/db/mongo/{database}/{collection}/update:
+    put:
+      tags:
+        - db
+      security:
+        - bearerAuth: []
+      summary: delete an element
+      operationId: dbUpdate
+      parameters:
+        - in: path
+          name: database
+          required: true
+          schema:
+            type: string
+          description: the desidered database
+        - in: path
+          name: collection
+          required: true
+          schema:
+            type: string
+          description: the desidered collection. If the collection is not in the database it will create it
+        - in: query
+          name: id
+          description: the element id to update
+          required: true
+          schema:
+            type: number
+      requestBody:
+        description: the update data
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+      responses:
+        200:
+          description: successfull. Returns the updated element
+          content:
+            application/json:
+              schema:
+                type: object
+        400:
+          description: bad request
+          content:
+            text/plain: 
+              schema:
+                type: string
+        401:
+          description: unauthorized
+        404:
+          description: not found
+  /gporchia/db/mongo/{database}/{collection}/find_one:
+    get:
+      tags:
+        - db
+      security:
+        - bearerAuth: []
+      summary: get a single element
+      operationId: dbFind_one
+      parameters:
+        - in: path
+          name: database
+          required: true
+          schema:
+            type: string
+          description: the desidered database
+        - in: path
+          name: collection
+          required: true
+          schema:
+            type: string
+          description: the desidered collection. If the collection is not in the database it will create it
+        - in: query
+          name: any
+          description: list of keys to filter the collection separated by '&'
+          required: false
+          schema:
+            type: string
+            examples: [prova]
+      responses:
+        200:
+          description: the found element
+          content:
+            application/json:
+              schema:
+                type: object
+        400:
+          description: bad request
+          content:
+            text/plain: 
+              schema:
+                type: string
+        401:
+          description: unauthorized
+        404:
+          description: not found
+  /gporchia/db/mongo/{database}/{collection}/find_many:
+    get:
+      tags:
+        - db
+      security:
+        - bearerAuth: []
+      summary: get an array of elements
+      operationId: dbFind_many
+      parameters:
+        - in: path
+          name: database
+          required: true
+          schema:
+            type: string
+          description: the desidered database
+        - in: path
+          name: collection
+          required: true
+          schema:
+            type: string
+          description: the desidered collection. If the collection is not in the database it will create it
+        - in: query
+          name: any
+          description: list of keys to filter the collection separated by '&'
+          required: false
+          schema:
+            type: string
+            examples: [prova]
+      responses:
+        200:
+          description: the found elements as an array of json
+          content:
+            application/json:
+              schema:
+                type: array
+                examples: [[{}, {}]]
+        400:
+          description: bad request
+          content:
+            text/plain: 
+              schema:
+                type: string
+        401:
+          description: unauthorized
+        404:
+          description: not found
+  /gporchia/default/package/add:
+    post:
+      tags:
+        - package
+      security:
+        - bearerAuth: []
+      summary: add a package
+      operationId: addPackage
+      requestBody:
+        description: add a package
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        200:
+          description: the created package
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Package'
+        400:
+          description: bad request
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        401:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        403:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        409:
+          description: conflicting itrem already exists
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        413:
+          description: request entity too large
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        500:
+          description: server error
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+  /gporchia/default/package/delete:
+    delete:
+      tags:
+        - package
+      security:
+        - bearerAuth: []
+      summary: delete a package
+      operationId: delPackage
+      parameters:
+        - in: query
+          name: name
+          description: the name of the package to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: deleted item
+        400:
+          description: bad request
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        401:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        403:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        409:
+          description: conflicting itrem already exists
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        413:
+          description: request entity too large
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        500:
+          description: server error
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+  /gporchia/default/package/find:
+    get:
+      tags:
+        - package
+      security:
+        - bearerAuth: []
+      summary: delete a package
+      operationId: findPackage
+      parameters:
+        - in: query
+          name: name
+          description: the name of the package to find
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: found item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Package'
+        400:
+          description: bad request
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        401:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        403:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        409:
+          description: conflicting itrem already exists
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        413:
+          description: request entity too large
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        500:
+          description: server error
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+  /gporchia/default/package/share:
+    put:
+      tags:
+        - package
+      security:
+        - bearerAuth: []
+      summary: share a package with an existing user
+      operationId: sharePackage
+      parameters:
+        - in: query
+          name: id
+          description: the user id to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: array of packages names
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                packages:
+                  type: array
+                  items:
+                    type: string
+
+      responses:
+        200:
+          description: user updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: bad request
+        401:
+          description: unauthorized
+        403:
+          description: unauthorized
+        409:
+          description: conflicting itrem already exists
+        413:
+          description: request entity too large
+        500:
+          description: server error
+
+components:
+  schemas:
+    Activation:
+      type: object
+      properties:
+        id:
+          type: string
+          examples: ['23f48615b71d4139b48615b71d6139d8']
+      xml:
+        name: activation
+    User:
+      type: object
+      properties:
+        _id:
+          type: number
+          examples: [663cf63d5fa286ca3f33f563]
+        username:
+          type: string
+          examples: [user]
+        password:
+          type: string
+          examples: ['164697ecfa6ccab1caa3c97f0f3fc5ebf362bf02c50ef00a59f47ec73a3371af']
+        namespace:
+          trype: string
+          examples: [gporchia/user]
+        package:
+          type: string
+          examples: [user]
+        role:
+          type: string
+          examples: [admin]
+        shared package:
+          type: array
+          examples: 
+            - [package1, package2]
+        cookie:
+          type: string
+          examples: [tOoTNPeBM7jK36EdBWDkzGDGVxYt2LSyvht0sBplSLD7Vt2zmGzIeyeYPhHVOJZ3sVQOV4GrtBvK6P_9QNcqbw]
+        chat:
+          type: array
+        history:
+          type: array
+      xml:
+        name: user
+    Chat:
+      type: object
+      properties:
+        input:
+          type: string
+          examples: [str]
+        OPENAI_API_KEY:
+          type: string
+          examples: [sk-******************************************kkAte]
+        cookie:
+          type: string
+          examples: [tOoTNPeBM7jK36EdBWDkzGDGVxYt2LSyvht0sBplSLD7Vt2zmGzIeyeYPhHVOJZ3sVQOV4GrtBvK6P_9QNcqbw]
+      xml:
+        name: chat
+    Package:
+      type: object
+      properties:
+        namespace:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        publish:
+          type: boolean
+        annotations:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+        parameters:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+        bindings:
+          type: object
+          properties:
+            namespace:
+              type: string
+            name:
+              type: string
+        actions:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              version:
+                type: string
+              annotations:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      type: string
+                    value:
+                      type: string
+              parameters:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      type: string
+                    value:
+                      type: string
+        feeds:
+          type: array
+          items:
+            type: object
+        updated:
+          type: number
+          examples: [0]
+    PackageError:
+        type: object
+        properties:
+          error:
+            type: string
+          code:
+            type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -5,28 +5,24 @@
 import os
 import requests
 from requests.auth import HTTPBasicAuth
+OW_KEY = os.getenv('__OW_API_KEY')
+SPLIT = OW_KEY.split(':')
 
 def find(args):
-    ow_key = os.getenv('__OW_API_KEY')
-    split = ow_key.split(':')
     name = args.get('name', False)
     if not name:
         return {"statusCode": 400}
-    resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages/{name}", auth=HTTPBasicAuth(split[0], split[1]))
+    resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
     return {"statusCode": 200, "body": resp.text}
 
 def delete(args):
-    ow_key = os.getenv('__OW_API_KEY')
-    split = ow_key.split(':')
     name = args.get('name', False)
     if not name:
         return {"statusCode": 400}
-    resp = requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages/{name}", auth=HTTPBasicAuth(split[0], split[1]))
-    return {"statusCode": 200, "body": resp.text}
+    resp = requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
+    return {"statusCode": 200, "body": resp.json()}
 
-def create(args):
-    ow_key = os.getenv('__OW_API_KEY')
-    split = ow_key.split(':')
+def add(args):
     name = args.get('name', False)
     if not name:
         return {"statusCode": 400}
@@ -35,27 +31,41 @@ def create(args):
         "name": name,
         "publish": False
         }
-    resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages/{name}", auth=HTTPBasicAuth(split[0], split[1]), headers={"Content-type": "application/json"}, json=body)
-    return {"statusCode": resp.status_code}
+    resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
+    return {"statusCode": resp.status_code, 'body': resp.json()}
+
+def share(args):
+    id = args.get('id', False)
+    packages = args.get('packages', False)
+    if not id or not packages:
+        return {'statusCode': 400}
+    for name in packages:
+        resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
+        if resp.status_code != 200:
+            return {'statusCode': 404, 'body': f'package {name} not found'}
+    user = requests.get(f'https://nuvolaris.dev/api/v1/web/gporchia/default/user/find?id={id}')
+    if user.status_code == 200:
+        obj = user.json()
+        shared_package: list = obj['shared_package']
+        for name in packages:
+            if name not in shared_package:
+                shared_package.append(name)
+        update = requests.put(f'https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/update?id={id}', json={'data': {'shared_packaged': shared_package}})
+        return {'statusCode': update.status_code, 'body': update.json()}
+    return {'statusCode': user.status_code}
 
 def main(args):
     path = args.get('__ow_path', False)
-    if not path:
-        return {"statusCode": 500}
-    if path == '/create':
-        if args['__ow_method'] != 'post':
-            return {"statusCode": 405}
-        return create(args)
-    elif path == '/delete':
-        if args['__ow_method'] != 'delete':
-            return {"statusCode": 405}
+    if path == '/add' and args['__ow_method'] == 'post':
+        return add(args)
+    elif path == '/delete' and args['__ow_method'] == 'delete':
         return delete(args)
+    elif path == '/share' and args['__ow_method'] == 'put':
+        return share(args)
     # elif path == '/update':
     #     if args['__ow_method'] != 'put':
     #         return {"statusCode": 405}
     #     return update(args)
-    elif path == '/find':
-        if args['__ow_method'] != 'get':
-            return {"statusCode": 405}
+    elif path == '/find' and args['__ow_method'] == 'get':
         return find(args)
-    return {"statusCode": 400}
+    return {"statusCode": 404}

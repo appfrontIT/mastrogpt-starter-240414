@@ -14,17 +14,16 @@ window.addEventListener("DOMContentLoaded", (event) => {
         const user = data.get('username');
         const password = data.get('password');
         try {
-            const response = await fetch(base+'api/my/utility/login', {
+            const response = await fetch(base+'api/my/default/auth/login', {
                 method: 'POST',
                 credentials: 'include',
                 body: JSON.stringify({'username': user, 'password': password}),
                 headers: { 'Content-Type': 'application/json' },
             })
             const obj = await response.json();
-            if (response.status != 400) {
+            if (response.status == 200) {
                 console.log(obj)
-                window.location.assign('/selector.html')
-                return obj
+                return window.location.assign('/selector.html')
             }
         } catch (error) {
             console.log(error)

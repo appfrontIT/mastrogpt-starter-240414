@@ -18,7 +18,7 @@ def main(arg):
             },
             {
                 "name": "Logout",
-                "url": "utility/logout"
+                "url": "default/auth/logout"
             }
         ]
     }
