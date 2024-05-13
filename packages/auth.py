@@ -27,7 +27,6 @@ def token(cookie):
         "body": {'token': encoded_jwt},
         }
 
-
 def logout(args):
     cookie = args['__ow_headers'].get('cookie', False)
     if cookie:
@@ -56,7 +55,7 @@ def login(args):
         obj = user.json()
         encoded_jwt = jwt.encode({'id': str(obj['_id']), 'role': obj['role']}, SECRET, algorithm='HS256')
         update = requests.put('https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/update?id=' + obj['_id'], json={
-                "data": {"cookie": cookie}
+                "data": {"cookie": cookie, "JWT": encoded_jwt},
                 })
         return {
             "statusCode": 200,

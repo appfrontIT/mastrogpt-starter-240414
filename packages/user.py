@@ -9,6 +9,14 @@ import hashlib
 import jwt
 
 def create(args):
+    token = args['__ow_headers'].get('authorization', False)
+    if not token:
+        return {'statusCode': 401}
+    token = token.split(' ')[1]
+    secret = args.get('JWT_SECRET')
+    decoded = jwt.decode(token, key=secret, algorithms='HS256')
+    if decoded['role'] != 'admin':
+        return {'statusCode': 401}
     username = args.get('username', False)
     password = args.get('password', False)
     role = args.get('role', False)
@@ -37,6 +45,14 @@ def create(args):
     return {"statusCode": package.status_code, "body": package.text}
 
 def delete(args):
+    token = args['__ow_headers'].get('authorization', False)
+    if not token:
+        return {'statusCode': 401}
+    token = token.split(' ')[1]
+    secret = args.get('JWT_SECRET')
+    decoded = jwt.decode(token, key=secret, algorithms='HS256')
+    if decoded['role'] != 'admin':
+        return {'statusCode': 401}
     id = args.get('id', False)
     if not id:
         return {"statusCode": 400}
@@ -53,7 +69,14 @@ def delete(args):
     return {"statusCode": response.status_code}
 
 def update(args):
-    # print(args)
+    token = args['__ow_headers'].get('authorization', False)
+    if not token:
+        return {'statusCode': 401}
+    token = token.split(' ')[1]
+    secret = args.get('JWT_SECRET')
+    decoded = jwt.decode(token, key=secret, algorithms='HS256')
+    if decoded['role'] != 'admin':
+        return {'statusCode': 401}
     data = args.get('data', False)
     id = args.get('id', False)
     if not data or not id:
@@ -74,14 +97,6 @@ def find(args):
     
 
 def main(args):
-    token = args['__ow_headers'].get('authorization', False)
-    if not token:
-        return {'statusCode': 401}
-    token = token.split(' ')[1]
-    secret = args.get('JWT_SECRET')
-    decoded = jwt.decode(token, key=secret, algorithms='HS256')
-    if decoded['role'] != 'admin':
-        return {'statusCode': 401}
     path = args['__ow_path']
     if path == '/add' and args['__ow_method'] != 'post':
         return create(args)

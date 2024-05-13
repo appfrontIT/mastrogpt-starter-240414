@@ -21,7 +21,7 @@ def ask(
     query: str,
     model: str = MODEL,
 ) -> str:
-    history = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/get_history", json={'cookie': config.session_user['cookie']})
+    history = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/get_history", json={'id': config.session_user['_id']})
     messages = json.loads(history.text)
     response = config.AI.chat.completions.create(
         model=model,
@@ -39,9 +39,9 @@ def main(args):
     config.html = ""
     config.AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
-    id = args.get('id', False)
-    response = requests.get(f'https://nuvolaris.dev/api/v1/web/gporchia/default/user/find?id={id}')
-    if response.status_code == 404:
+    token = args.get('token', False)
+    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?JWT={token.split(' ')[1]}", headers={'Authorization': token})
+    if response.status_code != 200:
         return {"statusCode": 404}
     config.session_user = response.json()
 
@@ -53,13 +53,13 @@ def main(args):
             "message": "You can chat with OpenAI.",
             "html": config.HTML_INFO
         }
-        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': id, 'message': res, 'reset_history': True, 'history': {"role": "system", "content": config.ROLE}})
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'message': res, 'reset_history': True, 'history': {"role": "system", "content": config.ROLE}})
         return { "statusCode": 204, }  
     else:
-        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': id, 'history': {"role": "user", "content": input }})
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'history': {"role": "user", "content": input }})
         output = ask(query=input, model=MODEL)
         res = { "output": output}
     if config.html != "":
         res['html'] = config.html
-    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': id, 'message': res, 'history': {"role": "assistant", "content": res['output']}})
+    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'message': res, 'history': {"role": "assistant", "content": res['output']}})
     return {"statusCode": 204}    

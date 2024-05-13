@@ -6,6 +6,7 @@ const BOT_IMG = "/img/hari.png";
 const PERSON_IMG = "/img/human-mini.png";
 const BOT_NAME = "Hari";
 const PERSON_NAME = "YOU";
+let token = undefined
 
 // Page compoents
 const msgerForm = document.querySelector(".msger-inputarea");
@@ -30,6 +31,15 @@ class Invoker {
     if (!cookie) {
       alert('error: session expired')
       window.parent.location.replace('/index.html')
+    } else {
+      const response = await fetch(base + 'api/my/default/auth/token', {
+        method: 'GET',
+        credentials: 'include'
+      })
+      if (response.ok) {
+        const obj = await response.json()
+        token = obj['token']
+      }
     }
     if (this.name == 'Logout') {
       const response = await fetch(this.url, {
@@ -57,7 +67,7 @@ class Invoker {
       let response = await fetch(this.url, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token},
         body: JSON.stringify(json),
       });
       switch (response.status) {

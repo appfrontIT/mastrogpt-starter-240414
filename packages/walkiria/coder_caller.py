@@ -16,11 +16,7 @@ def main(args):
     token = args['__ow_headers'].get('authorization', False)
     if not token:
         return {'statusCode': 401}
-    token = token.split(' ')[1]
-    decoded = jwt.decode(token, key=args.get('JWT_SECRET'), algorithms='HS256')
-    print(decoded['id'])
-    response = requests.post(f'https://nuvolaris.dev/api/v1/web/gporchia/default/user/find?id={decoded['id']}')
-    if response.status_code == 404:
-        return {"statusCode": 404}
-    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/coder", auth=HTTPBasicAuth(split[0], split[1]), json={"input": args.get('input', ''), 'id': decoded['id']})
+    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/coder",
+                        auth=HTTPBasicAuth(split[0], split[1]),
+                        json={"input": args.get('input', ''), 'token': token,})
     return {"statusCode": 200, "body": resp.text}

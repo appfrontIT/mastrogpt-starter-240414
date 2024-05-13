@@ -2,16 +2,18 @@
 #--kind python:default
 #--annotation provide-api-key true
 #--annotation description "This action retrieve the user history"
+#--param CONNECTION_STRING $CONNECTION_STRING
 
 from pymongo import MongoClient
 import os
 
 def main(args):
-    cookie = args.get('cookie', False)
-    client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
+    connection_string = args.get('CONNECTION_STRING', False)
+    client = MongoClient(connection_string)
     dbname = client['mastrogpt']
     collection = dbname['users']
-    if not cookie:
+    id = args.get('id', False)
+    if not id:
         return {"statusCode": 400}
-    data = collection.find_one({'cookie': cookie})
+    data = collection.find_one({'id': id})
     return {"statusCode": 200, "body": data['history']}
