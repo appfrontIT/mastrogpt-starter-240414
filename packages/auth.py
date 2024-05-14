@@ -21,7 +21,14 @@ def token(cookie):
     if user.status_code == 404:
         return {'statusCode': 404, 'body': 'user not found'}
     obj = user.json()
-    encoded_jwt = jwt.encode({'id': str(obj['_id']), 'role': obj['role']}, SECRET, algorithm='HS256')
+    encoded_jwt = jwt.encode({
+            'id': str(obj['_id']),
+            'role': obj['role'],
+            'package': obj['package'],
+            'namespace': obj['namespace'],
+            'shared_package': obj['shared_package']
+            },
+            SECRET, algorithm='HS256')
     return {
         "statusCode": 200,
         "body": {'token': encoded_jwt},
@@ -53,7 +60,14 @@ def login(args):
     if user.status_code != 404 and user.status_code != 400:
         cookie = token_urlsafe(64)
         obj = user.json()
-        encoded_jwt = jwt.encode({'id': str(obj['_id']), 'role': obj['role']}, SECRET, algorithm='HS256')
+        encoded_jwt = jwt.encode({
+            'id': str(obj['_id']),
+            'role': obj['role'],
+            'package': obj['package'],
+            'namespace': obj['namespace'],
+            'shared_package': obj['shared_package']
+            },
+            SECRET, algorithm='HS256')
         update = requests.put('https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/update?id=' + obj['_id'], json={
                 "data": {"cookie": cookie, "JWT": encoded_jwt},
                 })

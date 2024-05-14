@@ -6,15 +6,15 @@ def main(arg):
         "services": [
             {
                 "name": "Lookinglass",
-                "url": "lookinglass/chat"
+                "url": "default/invoke/lookinglass"
             },
             {
                 "name": "Coder",
-                "url": "walkiria/coder_caller"
+                "url": "default/invoke/walkiria"
             },
             {
                 "name": "Admin",
-                "url": "admin/admin"
+                "url": "default/invoke/admin"
             },
             {
                 "name": "Logout",

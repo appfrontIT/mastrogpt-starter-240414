@@ -13,7 +13,7 @@ session_user = None
 
 OW_KEY = os.getenv('__OW_API_KEY')
 OW_API_SPLIT = OW_KEY.split(':')
-
+QUERY: str = ""
 AI: OpenAI = None
 
 action_url = ""
@@ -47,6 +47,8 @@ Internally, you can call the following functions:
 - tester: use this if the user wants to test an action
 - grapher: use this if the user wants to create a chart or a graph
 - db_store: use this if the user wants to store data inside the database
+
+If you have to show code in your output, ensure the code is between ```
 
 """
 

@@ -21,7 +21,502 @@ tags:
     description: Operations using the database
   - name: package
     description: operations with an OpenWhisk package
+  - name: invoke
+    description: action to invoke the relative chat bot
+  - name: action
+    description: endpoint to work with actions
+  - name: utility
+    description: collection of utility API
 paths:
+  /gporchia/utility/apify_scraper:
+    get:
+      tags:
+        - utility
+      security:
+        - bearerAuth: []
+      summary: apify scraper
+      description: scrape the desidered url and all subpages of the same domain
+      operationId: apifyScraper
+      parameters:
+        - in: query
+          name: url
+          description: the url to scrape
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: embedding
+          description: true if you want to store also the embedding of each page
+          required: false
+          schema: 
+            type: boolean
+      responses:
+        204:
+          description: operation succesfull
+        400:
+          description: bad request
+        401:
+          description: unauthorized
+        500:
+          description: internal server error
+  /gporchia/utility/to_md:
+    get:
+      tags:
+        - utility
+      summary: convert text or pdf in markdown providing url
+      description: convert the file at the given url into markdown.
+      operationId: ToMarkdown
+      parameters:
+        - in: query
+          name: url
+          description: the url of the desidered file (needs the extension)
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: operation succesfull
+          content:
+            text/plain:
+              schema:
+                type: string
+        400:
+          description: bad request
+        500:
+          descriptin: server internal error
+  /gporchia/utility/md_to_json:
+    get:
+      tags:
+        - utility
+      summary: markdown to json object
+      description: convert a markdown table into a json object
+      operationId: mdToJson
+      parameters:
+        - in: query
+          name: md
+          description: the md string
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: the json string
+          content:
+            application/json:
+              schema:
+                type: string
+        400:
+          description: bad request
+        500:
+          description: server internal error
+  /gporchia/default/action/add:
+    post:
+      tags:
+        - action
+      security:
+        - bearerAuth: []
+      summary: add an action to Nuvolaris
+      description: this API will upload an action inside Nuvolaris cluster
+      operationId: addAction
+      requestBody:
+        description: the action parameters
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                function:
+                  type: string
+                description:
+                  type: string
+      responses:
+        200:
+          description: the uploaded action
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Action'
+        400:
+          description: bad request
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        401:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        403:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        409:
+          description: conflicting itrem already exists
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        413:
+          description: request entity too large
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        500:
+          description: server error
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+  /gporchia/default/action/delete:
+    delete:
+      tags:
+        - action
+      security:
+        - bearerAuth: []
+      summary: delete an action from Nuvolaris
+      description: this API will delete an action inside Nuvolaris cluster
+      operationId: deleteAction
+      parameters:
+        - in: query
+          name: name
+          description: the action name
+          required: true
+          schema: 
+            type: string
+      responses:
+        200:
+          description: deleted item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Action'
+        400:
+          description: bad request
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        401:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        403:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        409:
+          description: conflicting itrem already exists
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        404:
+          description: not found
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        500:
+          description: server error
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+  /gporchia/default/action/update:
+    post:
+      tags:
+        - action
+      security:
+        - bearerAuth: []
+      summary: update an action
+      description: this API will update an action inside Nuvolaris cluster
+      operationId: updateAction
+      requestBody:
+        description: the action parameters
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                function:
+                  type: string
+                description:
+                  type: string
+      responses:
+        200:
+          description: the uploaded action
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Action'
+        400:
+          description: bad request
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        401:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        403:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        409:
+          description: conflicting itrem already exists
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        413:
+          description: request entity too large
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        500:
+          description: server error
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+  /gporchia/default/action/find:
+    get:
+      tags:
+        - action
+      security:
+        - bearerAuth: []
+      summary: find an action inside Nuvolaris
+      description: this API will find an action inside Nuvolaris cluster
+      operationId: findAction
+      parameters:
+        - in: query
+          name: name
+          description: the action name
+          required: true
+          schema: 
+            type: string
+      responses:
+        200:
+          description: the uploaded action
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Action'
+        400:
+          description: bad request
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        401:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        403:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        404:
+          description: not found
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        500:
+          description: server error
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+  /gporchia/default/action/find_all:
+    get:
+      tags:
+        - action
+      security:
+        - bearerAuth: []
+      summary: find all actions
+      description: this API will find all the actions inside Nuvolaris cluster
+      operationId: find_allAction
+      responses:
+        200:
+          description: all the actions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Action'
+        401:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        500:
+          description: server error
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+  /gporchia/default/action/activation:
+    get:
+      tags:
+        - action
+      security:
+        - bearerAuth: []
+      summary: get an action status
+      description: this API will get an action status
+      operationId: activationAction
+      parameters:
+        - in: query
+          name: id
+          description: the action id
+          required: true
+          schema: 
+            type: number
+      responses:
+        202:
+          description: the action result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  result:
+                    type: string
+                  success:
+                    type: boolean
+                  size:
+                    type: number
+        401:
+          description: unauthorized
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        404:
+          description: not found
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+        500:
+          description: server error
+          content:
+            allplication/json:
+              schema:
+                $ref: '#/components/schemas/PackageError'
+  /gporchia/default/invoke/walkiria:
+    post:
+      tags:
+        - invoke
+      security:
+        - bearerAuth: []
+      summary: invoke walkiria bot (code generator)
+      description: this API will pass the input to the chat bot asynchronously
+      operationId: invokeWalkiria
+      requestBody:
+        description: the query to pass to the bot
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: string
+                  examples: ['Please, write an action that returns a string passed as parameter backwards']
+      responses:
+        200:
+          description: action invokation id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activation'
+        401:
+          description: unautorized
+  /gporchia/default/invoke/lookinglass:
+    post:
+      tags:
+        - invoke
+      security:
+        - bearerAuth: []
+      summary: invoke Lookinglass bot (Manual references)
+      description: this API will pass the input to the chat bot asynchronously
+      operationId: invokeLookinglass
+      requestBody:
+        description: the query to pass to the bot
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: string
+                  examples: ['how do you make a quotation?']
+      responses:
+        200:
+          description: action invokation id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activation'
+        401:
+          description: unautorized
+  /gporchia/default/invoke/admin:
+    post:
+      tags:
+        - invoke
+      security:
+        - bearerAuth: []
+      summary: invoke Admin bot (administration features)
+      description: this API will pass the input to the chat bot asynchronously
+      operationId: invokeAdmin
+      requestBody:
+        description: the query to pass to the bot
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: string
+                  examples: ['Please, give me the list of the users']
+      responses:
+        200:
+          description: action invokation id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activation'
+        401:
+          description: unautorized
+        403:
+          description: forbidden
   /gporchia/default/auth/login:
     post:
       tags:
@@ -717,7 +1212,6 @@ paths:
           description: request entity too large
         500:
           description: server error
-
 components:
   schemas:
     Activation:
@@ -846,6 +1340,73 @@ components:
         updated:
           type: number
           examples: [0]
+    Action:
+      type: object
+      properties:
+        namespace:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        publish:
+          type: boolean
+        exec:
+          type: object
+          properties:
+            kind:
+              type: string
+            code:
+              type: string
+            image:
+              type: string
+            main:
+              type: string
+            binary:
+              type: boolean
+            components:
+              type: array
+              items:
+                type: string
+        annotations:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+        delAnnotations:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+        limits:
+          type: object
+          properties:
+            timeout:
+              type: number
+              examples: [60000]
+            memory:
+              type: number
+              examples: [256]
+            logs:
+              type: number
+              examples: [10]
+            concurrency:
+              type: number
+              examples: [1]
+            instances:
+              type: number
     PackageError:
         type: object
         properties:

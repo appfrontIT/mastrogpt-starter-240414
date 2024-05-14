@@ -27,8 +27,10 @@ def extract_domain(url):
 def main(args):
     ACTOR = args.get('APIFY_ACTOR', '')
     TOKEN = args.get('APIFY_TOKEN', '')
+    token = args['__ow_headers'].get('authorization', False)
+    if not token:
+        return {'statusCode': 401}
     embedding = args.get('embedding', False)
-    print(embedding)
     if ACTOR == '' or TOKEN == '':
         return {'statuCode': 500, "body": "internal server error"}
     url = args.get('url', '')
@@ -65,7 +67,6 @@ def main(args):
     Format your output including a Title for each section and a description. Example: "**This is the title**\nHere you will put the desctiption.\n\n**Another title**\nAnother description" and so on.
     Take your time to answer, it's very important that the text is outputted in a very smart and comprehensible way.
     Answer only with the explaination text, nothing else must be returned."""
-    ret = ""
     for dict in crawl.json():
         response = AI.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -74,23 +75,16 @@ def main(args):
                 {"role": "user", "content": f"explain me the following text:\n{dict['text']}"}
             ],
         )
-        ret += f"url:{url}\nsummary:{response.choices[0].message.content}\n\n"
+        data = {
+            "url": dict['url'],
+            "text": dict['text'],
+            "summary": response.choices[0].message.content
+            }
         if embedding:
             embedded_response = AI.embeddings.create(model="text-embedding-3-small", input=response.choices[0].message.content)
             embedded_data = embedded_response.data[0].embedding
-            data = {
-            "url": dict['url'],
-            "text": dict['text'],
-            "summary": response.choices[0].message.content,
-            "embedding": embedded_data
-            }
-        else:
-            data = {
-                "url": dict['url'],
-                "text": dict['text'],
-                "summary": response.choices[0].message.content
-                }
+            data['embedding'] = embedded_data
         obj_list.append(data)
     collection = f"crawl_{extract_domain(url).replace('-', '_').replace('.', '__')}"
     response = requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/add_many", json={"data": obj_list})
-    return {"body": ret}
+    return {'statusCode': 204}

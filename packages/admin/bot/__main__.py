@@ -1,4 +1,4 @@
-#--web true
+#--web false
 #--kind python:default
 #--annotation provide-api-key true
 #--param OPENAI_API_KEY $OPENAI_API_KEY
@@ -39,17 +39,12 @@ def main(args):
     config.html = ""
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
-    token = args['__ow_headers'].get('authorization', False)
-    if not token:
-        return {'statusCode': 401}
+    token = args.get('token', False)
     response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?JWT={token.split(' ')[1]}", headers={'Authorization': token})
     if response.status_code != 200:
         return {"statusCode": 404}
     config.session_user = response.json()
     
-    if config.session_user['role'] != 'admin':
-        requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/chat", json={"data": {"output": "Devi essere un Admin per poter accedere a questa sessione"}})
-        return{"statusCode": 403}
     input = args.get("input", "")
     if input == "":
         users = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo", json={"find": True, "collection": "users", "data": {"filter": {}}})

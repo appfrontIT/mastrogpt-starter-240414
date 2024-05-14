@@ -9,7 +9,7 @@ from openai import OpenAI
 MODEL = "gpt-3.5-turbo"
 
 ROLE = """
-format the text in a markdown. Don't change the content, just the format! The text must be exactly the same, you can't change not even a word!
+format the text in a markdown. Don't change the content, just the format! The text must be exactly the same, you can't change not even a word! Remember to escape the correct characters
 """
 
 def main(args):

@@ -5,6 +5,7 @@
 #--param CONNECTION_STRING $CONNECTION_STRING
 
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 import os
 
 def main(args):
@@ -15,5 +16,5 @@ def main(args):
     id = args.get('id', False)
     if not id:
         return {"statusCode": 400}
-    data = collection.find_one({'id': id})
+    data = collection.find_one({'_id': ObjectId(id)})
     return {"statusCode": 200, "body": data['history']}

@@ -33,7 +33,7 @@ def main(args):
         return {"statusCode": 400, "body": "data incomplete"}
     
     text = crawl(url)
-    format_obj = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/extract_keys_from_md?blocking=true', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={
+    format_obj = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/md_to_json?blocking=true', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={
         "md": format
     })
     obj = format_obj.json()

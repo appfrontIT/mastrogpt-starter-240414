@@ -1,4 +1,4 @@
-#--web true
+#--web false
 #--kind python:default
 #--annotation provide-api-key true
 #--param OPENAI_API_KEY $OPENAI_API_KEY
@@ -75,9 +75,7 @@ def main(args):
 
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
-    token = args['__ow_headers'].get('authorization', False)
-    if not token:
-        return {'statusCode': 401}
+    token = args.get('token', False)
     response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?JWT={token.split(' ')[1]}", headers={'Authorization': token})
     if response.status_code != 200:
         return {"statusCode": 404}

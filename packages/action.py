@@ -12,17 +12,17 @@ import os
 
 OW_KEY = os.getenv('__OW_API_KEY')
 OW_API_SPLIT = OW_KEY.split(':')
-USER: None
+JWT: None
 
 def add(args):
     name = args.get('name', False)
     function = args.get('function', False)
     description = args.get('description', False)
-    if not function and not name and not description:
+    if not function or not name or not description:
         return {'statusCode': 400}
-    url = f"https://nuvolaris.dev/api/v1/web/gporchia/{USER['package']}/{name}"
+    url = f"https://nuvolaris.dev/api/v1/web/gporchia/{JWT['package']}/{name}"
     body = {
-        "namespace": "gporchia/" + USER['package'],
+        "namespace": "gporchia/" + JWT['package'],
         "name": name,
         "exec":{"kind":"python:default", "code":function},
         "annotations":[
@@ -33,41 +33,81 @@ def add(args):
             {"key": "url", "value": url}
             ]
         }
-    if USER['role'] == "admin":
+    if JWT['role'] == "admin":
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
     else:
-        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{USER['package']}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
+        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{JWT['package']}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
     return {'statusCode': resp.status_code, 'body': resp.json()}
 
 def delete(args):
-
+    name_array = args.get('actions', False)
+    if not name_array:
+        return {'statusCode': 400}
+    to_obj = []
+    for name in name_array:
+        item = requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{JWT['package']}/{name}",
+                        auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+        to_obj.append(item.json)
+    return {'statusCode': 200, 'body': to_obj}
 
 def update(args):
-
+    name = args.get('name', False)
+    function = args.get('function', False)
+    description = args.get('description', False)
+    if not function or not name or not description:
+        return {'statusCode': 400}
+    if JWT['role'] == "admin":
+        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json={
+            "name": name,
+            "exec":{"kind":"python:default", "code":function},
+            "annotations":[{"key": "description", "value": description},]
+        })
+    else:
+        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{JWT['package']}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json={
+            "name": name,
+            "exec":{"kind":"python:default", "code":function},
+            "annotations":[{"key": "description", "value": description},]
+        })
+    return {'statusCode': resp.status_code, 'body': resp.json()}
 
 def find(args):
+    name = args.get('name', False)
+    if not name:
+        return {'statusCode': 400}
+    action = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{JWT['package']}/{name}",
+                auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+    return {'statusCode': action.status_code, 'body': action.json()}
 
+def find_all():
+    actions = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+    return {'statusCode': actions.status_code, 'body': actions.json()}
+
+def activation(args):
+    id = args.get('id', False)
+    if not id:
+        return {'statusCode': 400}
+    action = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/activations/{id}/result", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+    return {'statusCode': action.status_code, 'body': action.json()}
 
 def main(args):
+    global JWT
     token = args['__ow_headers'].get('authorization', False)
     if not token:
         return {'statusCode': 401}
     token = token.split(' ')[1]
     secret = args.get('JWT_SECRET')
-    decoded = jwt.decode(token, key=secret, algorithms='HS256')
-    global USER
-    response = requests.get(f'https://nuvolaris.dev/api/v1/web/gporchia/default/user/find?id={decoded['id']}')
-    if response.status_code == 200:
-        USER = response.json()
-    else:
-        return {'statusCode': 404, 'body': 'user not found'}
+    JWT = jwt.decode(token, key=secret, algorithms='HS256')
     path = args.get('__ow_path', False)
     if path == '/add' and args['__ow_method'] == 'post':
         return add(args)
-    if path == '/delete' and args['__ow_method'] == 'delete':
+    elif path == '/delete' and args['__ow_method'] == 'delete':
         return delete(args)
-    if path == '/update' and args['__ow_method'] == 'put':
+    elif path == '/update' and args['__ow_method'] == 'put':
         return update(args)
-    if path == '/find' and args['__ow_method'] == 'get':
+    elif path == '/find' and args['__ow_method'] == 'get':
         return find(args)
+    elif path == '/find_all' and args['__ow_method'] == 'get':
+        return find_all()
+    elif path == '/activation' and args['__ow_method'] == 'get':
+        return activation(args)
     return {"statusCode": 404}

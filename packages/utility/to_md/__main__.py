@@ -4,9 +4,12 @@
 #--timeout 300000
 
 import requests
+import urllib.request
+import io
 from pdfminer.high_level import extract_text
 
 def extract_text_from_pdf(pdf_path):
+    print(pdf_path)
     return extract_text(pdf_path)
 
 def convert_to_markdown(text):
@@ -18,22 +21,27 @@ def convert_to_markdown(text):
     return "\\\\n".join(lines)
 
 def main(args):
-    pdf = args.get('pdf', False)
-    txt = args.get('text', False)
-    if not pdf and not txt:
+    url: str = args.get('url', False)
+    if not url:
         return {"statusCode": 400}
+    pdf = url.endswith('.pdf')
+    txt = url.endswith('.txt')
+    md: str = ""
     if pdf:
+        print('downloading pdf')
         try:
-            response = requests.get(pdf)
+            response = requests.get(url)
+            with open('temp.pdf', 'wb') as f:
+                f.write(response.content)
+            text = extract_text('temp.pdf')
+            md = convert_to_markdown(text)
         except:
             print("Error")
-        text = extract_text_from_pdf(response.content)
-        md = convert_to_markdown(text)
     elif txt:
         try:
-            response = requests.get(txt)
+            response = requests.get(url)
+            text = response.text
+            md = convert_to_markdown(text)
         except:
             print("error")
-        text = response.text
-        md = convert_to_markdown(text)
-    return {"body": md}
+    return {'statusCode': 200, "body": md}

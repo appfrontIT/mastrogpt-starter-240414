@@ -21,5 +21,5 @@ def tester(name = None):
     test = requests.post(
         'https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run',
         auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
-        json={"input": action_s, "cookie": config.session_user['cookie']})
+        json={"action": action_s, "id": str(config.session_user['_id'])})
     return test.text
