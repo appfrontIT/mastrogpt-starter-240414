@@ -17,6 +17,7 @@ def main(args):
     if not token:
         return {'statusCode': 401}
     path = args['__ow_path']
+    token = token.split(' ')[1]
     if path == '/walkiria':
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
@@ -33,4 +34,8 @@ def main(args):
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/admin/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": args.get('input', ''), 'token': token,})
+    elif path == '/test':
+        resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run",
+                            auth=HTTPBasicAuth(split[0], split[1]),
+                            json={"action": args.get('input', ''), 'token': token,})
     return {"statusCode": resp.status_code, "body": resp.json()}

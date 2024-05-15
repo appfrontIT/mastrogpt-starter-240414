@@ -17,6 +17,7 @@ OW_KEY = os.getenv('__OW_API_KEY')
 OW_API_SPLIT = OW_KEY.split(':')
 AI: OpenAI = None
 JWT = None
+TOKEN = None
 NAME = ""
 TEST = False
 ROLE ="""
@@ -83,6 +84,7 @@ messages = [
 
 def deploy_action(name, function, description):
     global AI
+    global JWT
     action_list = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1])).json()
     # Generate a new name if needed
     name_arr = ""
@@ -118,7 +120,7 @@ def deploy_action(name, function, description):
     if resp.status_code != 200:
         return False
     requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/walkiria/{JWT['package']}/add", json={"data": resp.json()})
-    return f"url:'https://nuvolaris.dev/api/v1/web/gporchia/{JWT['package']}/{name}', description: {description}, function:{function}"
+    return f"""url: https://nuvolaris.dev/api/v1/web/gporchia/{JWT['package']}/{name}\ndescription: {description}\nfunction: {function}"""
 
 def create_action(args):
     global NAME
@@ -130,10 +132,10 @@ def create_action(args):
     function = function.replace('Python', '')
     description = args.get('description', False)
     action = deploy_action(NAME, function, description)
-    if not action:
-        return "there was an error generating the action, tell the user to try again"
-    if TEST:
-        test_result = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"action": action, "id": JWT['id']})
+    # if not action:
+    #     return "there was an error generating the action, tell the user to try again"
+    # if TEST:
+    #     test_result = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"action": action, "token": TOKEN})
     return action
 
 def improve_action(args):
@@ -147,20 +149,21 @@ def improve_action(args):
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{JWT['package']}/{NAME}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json={"exec":{"kind":"python:default", "code":function},})
     requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/walkiria/{JWT['package']}", json={"data": resp.json()})
     action = f"url: https://nuvolaris.dev/api/v1/web/gporchia/{JWT['package']}/{NAME}\ndescription:{description}\nfunction:{function}\n\n"
-    test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"action": action, "id": JWT['id']})
+    test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"action": action, "token": JWT})
     return test.text
 
 def main(args):
     global JWT
     global TEST
+    global TOKEN
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     request = args.get('request', False)
-    token = args.get('token', False)
+    TOKEN = args.get('token', False)
     TEST = args.get('test', False)
-    if not request or not token:
+    if not request or not TOKEN:
         return {"statusCode": 400}
     secret = args.get('JWT_SECRET')
-    JWT = jwt.decode(token, key=secret, algorithms='HS256')
+    JWT = jwt.decode(TOKEN, key=secret, algorithms='HS256')
     messages.append({"role": "user", "content": request})
     response = AI.chat.completions.create(
         model="gpt-3.5-turbo",
@@ -183,6 +186,9 @@ def main(args):
             #     "name": function_name,
             #     "content": function_response
             # })
+            openapi = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/openAPI',
+                                    auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
+                                    json={'action': function_response, 'token': TOKEN})
             return {"body": function_response}
     print('no tool')
     return {"body": response.choices[0].message.content}

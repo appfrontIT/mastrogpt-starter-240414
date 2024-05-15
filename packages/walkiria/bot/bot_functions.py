@@ -71,7 +71,7 @@ def update_action(name, modifications):
         obj = json.loads(comp)
         config.html += "<h1>UPDATE:</h1><br />"
         action = deploy_action(name, obj['function'], obj['description'])
-        test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"input": action, "id": str(config.session_user['id'])})
+        test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"input": action, "token": str(config.session_user['JWT'])})
         return test.text
     return f"No action with that name exists, here a list of existing actions:\n{show_all_actions()}"
 

@@ -90,13 +90,16 @@ def add_many(collection: Collection, data):
         return {"statusCode": 404, "body": f"{exc.code}: {exc.details}"}
 
 def main(args):
+    token = args['__ow_headers'].get('authorization', False)
+    if not token:
+        return {'statusCode': 401}
     connection_string = args.get('CONNECTION_STRING', False)
     path: str = args.get('__ow_path', False)
-    path_spl = path.split('/')
-    if len(path_spl) != 4:
+    path_spl = path[1:].split('/')
+    if len(path_spl) != 3:
         return {"statusCode": 400}
-    db = path_spl[1]
-    collection = path_spl[2]
+    db = path_spl[0]
+    collection = path_spl[1]
     if not collection or not db:
         return {"statusCode": 400, "body": "parameter 'db' or 'collection' missing"}
     
@@ -110,7 +113,7 @@ def main(args):
     else:
         db_coll = dbname.create_collection(collection)
     
-    op = path_spl[3]
+    op = path_spl[2]
     method = args['__ow_method']
     if op == 'find_one' and method == 'get':
         return find_one(db_coll, args['__ow_query'])

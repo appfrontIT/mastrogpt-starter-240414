@@ -22,7 +22,6 @@ window.addEventListener("DOMContentLoaded", (event) => {
             })
             const obj = await response.json();
             if (response.status == 200) {
-                console.log(obj)
                 return window.location.assign('/selector.html')
             }
         } catch (error) {

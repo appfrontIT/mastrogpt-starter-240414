@@ -26,6 +26,14 @@ def create(args):
         package = 'default'
     else:
         package = username
+    yaml = f"""openapi: 3.1.0
+info:
+  title: {package} - OpenAPI 3.1
+  termsOfService: http://swagger.io/terms/
+  version: 1.0.11
+servers:
+  - url: https://nuvolaris.dev/api/v1/web
+    """
     data = {
         "username": username,
         "password": hashlib.sha256(password.encode()).hexdigest(),
@@ -34,10 +42,11 @@ def create(args):
         "package": package,
         "shared_package": [],
         "chat": [],
+        "yaml": yaml
     }
-    package = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/default/package/create", json={"name": username})
+    package = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/default/package/add", json={"name": username})
     if package.status_code == 200:
-        response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/add", json={"data": data})
+        response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/add", json={"data": data}, headers={'Authorization': 'Bearer ' + token})
         if response.status_code == 200:
             return {"statusCode": 200, "body": response.json()}
         requests.delete("https://nuvolaris.dev/api/v1/web/gporchia/default/package/delete", json={"name": username})
@@ -98,12 +107,12 @@ def find(args):
 
 def main(args):
     path = args['__ow_path']
-    if path == '/add' and args['__ow_method'] != 'post':
+    if path == '/add' and args['__ow_method'] == 'post':
         return create(args)
-    elif path == '/delete' and args['__ow_method'] != 'delete':
+    elif path == '/delete' and args['__ow_method'] == 'delete':
         return delete(args)
-    elif path == '/update' and args['__ow_method'] != 'put':
+    elif path == '/update' and args['__ow_method'] == 'put':
         return update(args)
-    elif path == '/find'and args['__ow_method'] != 'get':
+    elif path == '/find'and args['__ow_method'] == 'get':
         return find(args)
     return {"statusCode": 404}

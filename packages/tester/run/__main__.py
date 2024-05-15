@@ -3,6 +3,7 @@
 #--annotation provide-api-key true
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "a tester throught AI to test your actions"
+#--param JWT_SECRET $JWT_SECRET
 #--timeout 300000
 
 from openai import OpenAI
@@ -11,18 +12,18 @@ import json
 import requests
 import config
 import re
+import jwt
 from requests.auth import HTTPBasicAuth
 
 MODEL = "gpt-3.5-turbo"
 AI = None
-ID = None
+JWT = None
 
 def general_test(test_array = []):
     if len(test_array) == 0:
         return "couldn't generate any test for the passed API"
     ret = ""
     for test in test_array:
-        print(test)
         response = ""
         url = test.get('url')
         headers = json.loads(test.get('headers', '{}').replace("'", '"'))
@@ -41,7 +42,7 @@ def general_test(test_array = []):
         print(result)
         requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                     auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
-                    json={'id': ID, 'message': {"output": result}})
+                    json={'id': JWT['id'], 'message': {"output": result}})
         ret += result
     return ret
 
@@ -113,15 +114,17 @@ def ask(query: str, AI: OpenAI, model: str = MODEL) -> str:
 
 def main(args):
     global AI
-    global ID
+    global JWT
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
-    ID = args.get('id', False)
-    if not ID:
-        return {"statusCode": 403}
+    token = args.get('token', False)
+    if not token:
+        return {'statusCode': 401}
+    secret = args.get('JWT_SECRET')
+    JWT = jwt.decode(token, key=secret, algorithms='HS256')
     action = args.get("action", "")
     output = ask(query=action, AI=AI, model=MODEL)
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                 auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
-                json={'id': ID, 'message': {"output": output}})
+                json={'id': JWT['id'], 'message': {"output": output}})
     return {"body": output}
