@@ -12,8 +12,9 @@ let token = undefined
 const msgerForm = document.querySelector(".msger-inputarea");
 const msgerInput = document.querySelector(".msger-input");
 const msgerChat = document.querySelector(".msger-chat");
-const titleChat = document.getElementById("chat-title");
+// const titleChat = document.getElementById("chat-title");
 const areaChat = document.getElementById("chat-area");
+const display = parent.document.getElementById("display")
 const displayWindow = window.parent.document.getElementById("display").contentWindow
 let base = location.href.replace(/chat\.html$/, "")
 
@@ -96,8 +97,9 @@ function formatDate(date) {
 
 function appendMessage(name, img, side, text) {
   //   Simple solution for small apps
-  var converter  = new showdown.Converter()
-  let html = converter.makeHtml(text);
+  // var converter  = new showdown.Converter()
+  // let html = converter.makeHtml(text);
+  let html = marked.parse(text)
   const msgHTML = `
     <div class="msg ${side}-msg">
       <div class="msg-bubble">
@@ -165,7 +167,12 @@ msgerForm.addEventListener("submit", async event => {
 
 window.addEventListener('message', async function (ev) {
   invoker = new Invoker(ev.data.name, ev.data.url)
-  titleChat.textContent = ev.data.name
+  if (ev.data.name == "Coder") {
+    display.src = '/code-editor.html'
+  } else {
+    display.src = '/display.html'
+  }
+  // titleChat.textContent = ev.data.name
   areaChat.innerHTML = ""
   invoker.invoke("")
   bot()

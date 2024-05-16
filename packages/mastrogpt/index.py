@@ -17,6 +17,10 @@ def main(arg):
                 "url": "default/invoke/admin"
             },
             {
+                "name": "Tester",
+                "url": "default/invoke/test"
+            },
+            {
                 "name": "Logout",
                 "url": "default/auth/logout"
             }

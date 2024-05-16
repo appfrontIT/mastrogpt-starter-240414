@@ -25,16 +25,15 @@ def html_gen(args):
     action_array = ""
     for action in actions_info:
         status = utils.action_info(config.session_user['package'], action)
-        obj = json.loads(status)
-        error = obj.get('error', '')
-        if error != '':
-            return f"the following action does not exists: {action}\n"
-        action_array += f"name: {obj['name']}\n"
-        annotations = obj['annotations']
-        for pair in annotations:
-            if pair['key'] == 'url' or pair['key'] == 'description':
-                action_array += f"{pair['key']}: {pair['value']}\n"
-        action_array += f"code: {obj['exec']['code']}\n"
+        if status.status_code == 200:
+            obj = status.json()
+            action_array += f"name: {obj['name']}\n"
+            annotations = obj['annotations']
+            for pair in annotations:
+                if pair['key'] == 'url' or pair['key'] == 'description':
+                    action_array += f"{pair['key']}: {pair['value']}\n"
+            action_array += f"code: {obj['exec']['code']}\n"
+        return f"the following action does not exists: {action}\n"
     if action_array != "":
         query = f"{description}\nHere the informations about the actions you have to call inside it: {action_array}"
     else:
@@ -52,7 +51,7 @@ def html_gen(args):
 def update_action(name, modifications):
     action_list = utils.get_actions()
     name_arr = []
-    for x in json.loads(action_list):
+    for x in action_list.json():
         name_arr.append(x['name'])
     if name in name_arr:
         requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': str(config.session_user['_id']), 'message': {"output": f"updating action '{name}', please wait"}})
@@ -60,13 +59,13 @@ def update_action(name, modifications):
         messages = [
             {"role": "system", "content": """You only answer in JSON format. You need to provide the following keys for the user: "name", "function", "description". Apply the user modifications to the action provided. function ALWAYS start with "def main(args):".
             Example: '{"name": "the action name", "function": "the function you generated based on the modifications asked", "description": "a description of the functions with the parameters needed. Example: 'description of function. Parameters: {'arg1': type, 'arg2': type}'"}'"""},
-            {"role": "user", "content": f"{modifications}, Action to modify:\n{action}\nYou need to modify the function inside the action. Take your time to answer"}
+            {"role": "user", "content": f"{modifications}, Action to modify:\n{action.text}\nYou need to modify the function inside the action. Take your time to answer"}
             ]
         response = config.AI.chat.completions.create(
                 model=MODEL,
                 messages=messages
             )
-        utils.delete_action(config.session_user['package'], name)
+        utils.delete_action(name, config.session_user['package'])
         comp = response.choices[0].message.content
         obj = json.loads(comp)
         config.html += "<h1>UPDATE:</h1><br />"
@@ -77,7 +76,7 @@ def update_action(name, modifications):
 
 def deploy_action(name, function, description):
     action_list = utils.get_actions()
-    obj = json.loads(action_list)
+    obj = action_list.json()
     name_arr = []
     for x in obj:
         name_arr.append({'name': x['name'], 'namespace': x['namespace']})
@@ -112,10 +111,10 @@ def deploy_action(name, function, description):
     #     """
     return f"statusCode: {response.status_code}, body: {response.text}"
 
-def create_action():
+def create_action(query):
     response = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/generate?blocking=true',
                             auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
-                            json={"request": config.QUERY, "token": config.session_user['JWT'], "test": True})
+                            json={"request": query, "token": config.session_user['JWT'], "test": True})
     return response.text
 
 def db_store(url, collection, format):
@@ -126,11 +125,14 @@ def db_store(url, collection, format):
         "user": config.session_user
     }).text
 
-def action_info(name):
-    action = requests.get('https://nuvolaris.dev/api/v1/web/gporchia/default/action/find?name=' + name, headers={'Authorization': 'Bearer ' + config.session_user['JWT']})
+def action_info(name, package = None):
+    if not package:
+        action = utils.action_info(name)
+    else:
+        action = utils.action_info(name, package)
     if action.status_code == 200:
         return f"""Display the following fields of the passed action: description, parameters, code, curl with the whole url, action URL with full path.\nAction:\n{action.json()}"""
-    return "The action you requested does not exists."
+    return "Non sono riuscito a trovare l'azione richiesta. Assicurati che il nome sia corretto e che sia specificato il package se appartiene ad uno"
 
 def delete_action(name_array):
     response = requests.get('https://nuvolaris.dev/api/v1/web/gporchia/default/action/delete', params={'actions': name_array}, headers={'Authorization': 'Bearer ' + config.session_user['JWT']})
@@ -142,7 +144,7 @@ def show_all_actions():
         return "tell the user there's no action under his package"
     name_arr = []
     for x in response.json():
-        if x['namespace'] != config.session_user['namespace']:
+        if x['namespace'] != config.session_user['namespace'] and config.session_user['role'] != 'admin':
             continue
         x.pop('limits')
         x.pop('publish')
@@ -213,7 +215,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "create_action",
-            "description": "the user wants to create an action. Redirect the user request to the correct API.",
+            "description": "generate an action based on user informations. Call this only when you have enought data to generate an action",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "all the informations about the action to create"},
+                },
+            },
             },
         },
         {
@@ -259,7 +267,8 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "name" : {"type": "string", "description": "the name of the action, it must be 1 word"}
+                    "name" : {"type": "string", "description": "the name of the action, it must be 1 word"},
+                    'package': {"type": "string", "description": "the package of the action"}
                 },
                     "required": ["name"],
                 },
@@ -317,6 +326,7 @@ tools = [
                 "type": "object",
                 "properties": {
                     "name": {"type": "string", "description": "the action name to test"},
+                    'package': {"type": "string", "description": "the package of the action"}
                     },
                     "required": ["name"]
                 }

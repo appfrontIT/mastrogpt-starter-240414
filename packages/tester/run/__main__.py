@@ -4,7 +4,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "a tester throught AI to test your actions"
 #--param JWT_SECRET $JWT_SECRET
-#--timeout 300000
+#--timeout 600000
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
@@ -18,38 +18,53 @@ from requests.auth import HTTPBasicAuth
 MODEL = "gpt-3.5-turbo"
 AI = None
 JWT = None
+TOKEN = None
 
 def general_test(test_array = []):
     if len(test_array) == 0:
         return "couldn't generate any test for the passed API"
-    ret = ""
+    ret = []
     for test in test_array:
+        print(test)
         response = ""
         url = test.get('url')
         headers = json.loads(test.get('headers', '{}').replace("'", '"'))
         body = json.loads(test.get('body', '{}').replace("'", '"'))
         if test.get('method') == 'GET':
-            response = requests.get(url)
+            try:
+                response = requests.get(url)
+                r = {"test": test, 'response': {"status": response.status_code, "body": response.text}}
+            except requests.exceptions.RequestException as e:
+                r = e
         elif test.get('method') == 'POST':
-            response = requests.post(url, headers=headers, json=body)
+            try:
+                response = requests.post(url, headers=headers, json=body)
+                r = {"test": test, 'response': {"status": response.status_code, "body": response.text}}
+            except requests.exceptions.RequestException as e:
+                r = e
         elif test.get('method') == 'PUT':
-            response = requests.put(url, headers=headers, json=body)
+            try:
+                response = requests.put(url, headers=headers, json=body)
+                r = {"test": test, 'response': {"status": response.status_code, "body": response.text}}
+            except requests.exceptions.RequestException as e:
+                r = e
         elif test.get('method') == 'DELETE':
-            response = requests.delete(url, headers=headers, json=body)
-        elif test.get('method') == 'HEAD':
-            response = requests.head(url)
-        result = f"test:'{test}', 'response': {response.json()}"
-        print(result)
+            try:
+                response = requests.delete(url, headers=headers, json=body)
+                r = {"test": test, 'response': {"status": response.status_code, "body": response.text}}
+            except requests.exceptions.RequestException as e:
+                r = e
+        result = r
         requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                     auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
-                    json={'id': JWT['id'], 'message': {"output": result}})
-        ret += result
-    return ret
+                    json={'id': JWT['id'], 'message': {"output": json.dumps(result)}})
+        ret.append(result)
+    return json.dumps(ret)
 
 def ask(query: str, AI: OpenAI, model: str = MODEL) -> str:
     messages = [
         {"role": "system", "content": config.ROLE},
-        {"role": "user", "content": query},
+        {"role": "user", "content": f"{query}\nToken for authentication: {TOKEN}"},
     ]
     for i in range(5):
         messages.append({"role": "user", "content": f"loop counter: {i + 1}"})
@@ -107,6 +122,7 @@ def ask(query: str, AI: OpenAI, model: str = MODEL) -> str:
                 })
         else:
             break
+    messages.append({'role': 'user', 'content': 'based on the test, provided the specifics errors and the improvement to fix them'})
     return AI.chat.completions.create(
                 model=model,
                 messages=messages,
@@ -115,13 +131,14 @@ def ask(query: str, AI: OpenAI, model: str = MODEL) -> str:
 def main(args):
     global AI
     global JWT
+    global TOKEN
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
-    token = args.get('token', False)
-    if not token:
+    TOKEN = args.get('token', False)
+    if not TOKEN:
         return {'statusCode': 401}
     secret = args.get('JWT_SECRET')
-    JWT = jwt.decode(token, key=secret, algorithms='HS256')
+    JWT = jwt.decode(TOKEN, key=secret, algorithms='HS256')
     action = args.get("action", "")
     output = ask(query=action, AI=AI, model=MODEL)
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",

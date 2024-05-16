@@ -32,6 +32,7 @@ def token(cookie):
             'shared_package': user['shared_package'],
             },
             SECRET, algorithm='HS256')
+    COLLECTION.update_one({'_id': user['_id']}, {"$set": {'JWT': encoded_jwt}})
     return {
         "statusCode": 200,
         "body": {'token': encoded_jwt},

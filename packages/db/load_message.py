@@ -22,10 +22,10 @@ def main(args):
     message = args.get('message', False)
     history = args.get('history', False)
     if message and history:
-        message['output'] = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/utility/formatter', json={"input": message['output']}).text
+        # message['output'] = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/utility/formatter', json={"input": message['output']}).text
         collection.update_one({'_id': ObjectId(id)}, {"$addToSet": {"chat": message, "history": history}})
     elif message and not history:
-        message['output'] = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/utility/formatter', json={"input": message['output']}).text
+        # message['output'] = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/utility/formatter', json={"input": message['output']}).text
         collection.update_one({'_id': ObjectId(id)}, {"$addToSet": {"chat": message}})
     elif history and not message:
         collection.update_one({'_id': ObjectId(id)}, {"$addToSet": {"history": history}})

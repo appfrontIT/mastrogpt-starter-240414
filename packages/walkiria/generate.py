@@ -29,8 +29,14 @@ The return is always: {"body": string}. Example: '{"body": text}', '{"body": res
 NEVER, EVER, BE LAZY! IF YOU NEED TIME TO UNDERSTAND THE TASK TAKE YOUR TIME, BUT ALWAYS ANSWER PROPERLY WITH ALL THE USER REQUESTS
 
 Mandatory: import the modules you use in the function.
+Always include authorizations in your code. Example:
+def main(args):
+    token = args['__ow_headers'].get('authorization', False)
+    if not token:
+        return {'statusCode': 401}
 
-If you have to store data inside a database you MUST use the following action: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/{operation}. How to use the database:
+If you have to store data inside a database you MUST use the following action: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/{operation}.
+How to use the database:
 You need to fill collection and  operation.
 Remember to set the path in the beginning of the code.
 {operation} can be one of the following: 'find_one', 'find_many', 'add', 'add_many', 'delete', 'update'.
@@ -41,33 +47,37 @@ Here's an example using model 'Book', wiht fields: 'title', 'author', 'pages', '
     import json
 
     def main(args):
+        # check for authorization token
+        token = args['__ow_headers'].get('authorization', False)
+        if not token:
+            return {'statusCode': 401}
         path = args.get('__ow_path', False)
         if not path:
             return {"statusCode": 500}
         
         # create an element using 'data'
         if path == '/create':
-            response = request.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/add", json={"data": {"title": args.get("title"), "author": args.get("author"), "pages": args.get("pages"), "year": args.get("year")}})
+            response = request.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/add", headers = {"Authorization": token}, json={"data": {"title": args.get("title"), "author": args.get("author"), "pages": args.get("pages"), "year": args.get("year")}})
             return {"statusCode": response.status_code, "body": response.text}
         
         # delete an element by id
         elif path == '/delete':
-            response = request.delete("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/delete?id=" + args.get('id'))
+            response = request.delete("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/delete?id=" + args.get('id'), headers = {"Authorization": token},)
             return {"statusCode": response.status_code, "body": response.text}
         
         # update an element by id using 'data'
         elif path == '/update':
-            response = request.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/update?id=" + args.get('id'), json={"data": {"title": args.get("title"), "author": args.get("author"), "pages": args.get("pages"), "year": args.get("year")}})
+            response = request.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/update?id=" + args.get('id'), headers = {"Authorization": token}, json={"data": {"title": args.get("title"), "author": args.get("author"), "pages": args.get("pages"), "year": args.get("year")}})
             return {"statusCode": response.status_code, "body": response.text}
         
         # find single element matching the filter
         elif path == '/find_one':
-            response = request.get("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/find_one?title=" + args.get('title') + "&author=" args.get('author'))
+            response = request.get("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/find_one?title=" + args.get('title') + "&author=" args.get('author'), headers = {"Authorization": token},)
             return {"statusCode": response.status_code, "body": response.text}
         
         # find all elements matching the filter
         elif path == '/find_many':
-            response = request.get("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/find_many")
+            response = request.get("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/find_many", headers = {"Authorization": token},)
             return {"statusCode": response.status_code, "body": response.text}
         return {"statusCode": 400}
 ```
@@ -158,6 +168,7 @@ def main(args):
     global TOKEN
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     request = args.get('request', False)
+    print(request)
     TOKEN = args.get('token', False)
     TEST = args.get('test', False)
     if not request or not TOKEN:

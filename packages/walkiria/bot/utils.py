@@ -7,14 +7,18 @@ import json
 from zipfile import ZipFile
 import config
 
-def delete_action(package, name):
-    return requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1])).text
+def delete_action(name, package):
+    if package == 'default':
+        return requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))    
+    return requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
 
-def action_info(package, name):
-    return requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1])).text
+def action_info(name, package = None):
+    if package and package != 'default':
+        return requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
+    return requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
 
 def get_actions():
-    return requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1])).text
+    return requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
 
 def crawl(url):
     response = requests.get(url)

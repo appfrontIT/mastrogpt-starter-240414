@@ -28,14 +28,14 @@ def main(args):
                             json={"input": args.get('input', ''), 'token': token,})
     elif path == '/admin':
         secret = args.get('JWT_SECRET')
-        decoded = jwt.decode(token.split(' ')[1], key=secret, algorithms='HS256')
+        decoded = jwt.decode(token, key=secret, algorithms='HS256')
         if decoded['role'] != 'admin':
             return{"statusCode": 403}
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/admin/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": args.get('input', ''), 'token': token,})
     elif path == '/test':
-        resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run",
+        resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
-                            json={"action": args.get('input', ''), 'token': token,})
+                            json={"input": args.get('input', ''), 'token': token,})
     return {"statusCode": resp.status_code, "body": resp.json()}

@@ -22,6 +22,8 @@ def create(args):
     role = args.get('role', False)
     if not username or not password or not role:
         return {"statusCode": 400}
+    if role != 'user' and role != 'admin':
+        return {'statusCode': 400, 'body': 'role invalid. Must be one of: user, admin'}
     if role == "admin":
         package = 'default'
     else:
@@ -42,7 +44,8 @@ servers:
         "package": package,
         "shared_package": [],
         "chat": [],
-        "yaml": yaml
+        "yaml": yaml,
+        "teams": []
     }
     package = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/default/package/add", json={"name": username})
     if package.status_code == 200:

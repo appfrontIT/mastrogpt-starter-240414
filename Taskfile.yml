@@ -67,7 +67,7 @@ tasks:
         desc: deploy actions
         cmds:
         - python -m util.deploy {{.FLAGS}}
-        - nuv web upload web
+        # - nuv web upload web
         - echo "Deployed on:" "$NUVDEV_HOST"
 
     undeploy:
