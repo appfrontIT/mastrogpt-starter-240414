@@ -93,6 +93,10 @@ def main(args):
     token = args['__ow_headers'].get('authorization', False)
     if not token:
         return {'statusCode': 401}
+    token = token.split(' ')
+    if len(token) != 2 and token[0] != 'Bearer':
+        return {'statusCode': 401}
+    token = token[1]
     connection_string = args.get('CONNECTION_STRING', False)
     path: str = args.get('__ow_path', False)
     path_spl = path[1:].split('/')

@@ -88,5 +88,8 @@ def main(args):
         return logout(args)
     if path == '/token' and args['__ow_method'] == 'get':
         headers = args['__ow_headers']
-        return token(headers.get('cookie', False))
+        cookie = headers.get('cookie', False)
+        if not cookie:
+            cookie = args.get('cookie', False)
+        return token(cookie)
     return {"statusCode": 404}

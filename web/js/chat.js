@@ -14,7 +14,7 @@ const msgerInput = document.querySelector(".msger-input");
 const msgerChat = document.querySelector(".msger-chat");
 // const titleChat = document.getElementById("chat-title");
 const areaChat = document.getElementById("chat-area");
-const display = parent.document.getElementById("display")
+var display = parent.document.getElementById("display")
 const displayWindow = window.parent.document.getElementById("display").contentWindow
 let base = location.href.replace(/chat\.html$/, "")
 
@@ -174,6 +174,6 @@ window.addEventListener('message', async function (ev) {
   }
   // titleChat.textContent = ev.data.name
   areaChat.innerHTML = ""
-  invoker.invoke("")
+  await invoker.invoke("")
   bot()
 })

@@ -57,7 +57,7 @@ def main(args):
     config.AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
     token = args.get('token', False)
-    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?JWT={token}", headers={'Authorization': token})
+    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?JWT={token}", headers={'Authorization': f"Bearer {token}"})
     if response.status_code != 200:
         return {"statusCode": 404}
     config.session_user = response.json()

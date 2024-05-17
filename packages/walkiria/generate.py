@@ -13,6 +13,7 @@ import json
 import jwt
 from openai import OpenAI
 
+SESSION_USER = None
 OW_KEY = os.getenv('__OW_API_KEY')
 OW_API_SPLIT = OW_KEY.split(':')
 AI: OpenAI = None
@@ -146,6 +147,8 @@ def create_action(args):
     #     return "there was an error generating the action, tell the user to try again"
     # if TEST:
     #     test_result = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"action": action, "token": TOKEN})
+    editor = {"function": function, "description": description, "name": NAME, "namespace": SESSION_USER['namespace'], "package": SESSION_USER['package']}
+    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/code_editor/add", json={'editor': editor, 'cookie': f"cookie={SESSION_USER['cookie']}"})
     return action
 
 def improve_action(args):
@@ -166,15 +169,19 @@ def main(args):
     global JWT
     global TEST
     global TOKEN
+    global SESSION_USER
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     request = args.get('request', False)
-    print(request)
     TOKEN = args.get('token', False)
     TEST = args.get('test', False)
     if not request or not TOKEN:
         return {"statusCode": 400}
     secret = args.get('JWT_SECRET')
     JWT = jwt.decode(TOKEN, key=secret, algorithms='HS256')
+    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?id={JWT['id']}", headers={'Authorization': f"Bearer {TOKEN}"})
+    if response.status_code != 200:
+        return {"statusCode": 404}
+    SESSION_USER = response.json()
     messages.append({"role": "user", "content": request})
     response = AI.chat.completions.create(
         model="gpt-3.5-turbo",

@@ -10,13 +10,6 @@ from bson.objectid import ObjectId
 from bson.json_util import dumps
 import time
 
-def format_el(element):
-    ret = {}
-    for key in element:
-        if key != '_id':
-            ret[key] = element[key]
-    return ret
-
 def main(args):
     connection_string = args.get('CONNECTION_STRING')
     client = MongoClient(connection_string)

@@ -51,19 +51,21 @@ def delete(args):
     return {'statusCode': 200, 'body': to_obj}
 
 def update(args):
+    namespace = args.get('namespace', False)
+    package = args.get('package', False)
     name = args.get('name', False)
     function = args.get('function', False)
     description = args.get('description', False)
-    if not function or not name or not description:
+    if not function or not name or not description or not namespace:
         return {'statusCode': 400}
-    if JWT['role'] == "admin":
-        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json={
+    if not package or package == "default":
+        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/{namespace}/actions/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json={
             "name": name,
             "exec":{"kind":"python:default", "code":function},
             "annotations":[{"key": "description", "value": description},]
         })
     else:
-        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{JWT['package']}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json={
+        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/{namespace}/actions/{package}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json={
             "name": name,
             "exec":{"kind":"python:default", "code":function},
             "annotations":[{"key": "description", "value": description},]

@@ -40,20 +40,19 @@ def main(args):
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
     token = args.get('token', False)
-    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?JWT={token}", headers={'Authorization': token})
+    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?JWT={token}", headers={'Authorization': f"Bearer {token}"})
     if response.status_code != 200:
         return {"statusCode": 404}
     config.session_user = response.json()
     
     input = args.get("input", "")
     if input == "":
-        users = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/find_many", json={"filter": {}}, headers={'Authorization': token})
-        print(users.text)
+        users = requests.get("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_many", json={"filter": {}}, headers={'Authorization': f"Bearer {token}"})
         res = {
             "output": f"Bentornato {config.session_user['username']}! Come posso aiutarti?",
             "title": "OpenAI Chat",
             "message": "You can chat with OpenAI.",
-            "html": f"<html><body><h1>In this section you can create, update, and delete an user!</h1><br><h2>Current users:</h2><br><pre><code><xmp>{users.text}</xmp></code></pre></code></html>"
+            "html": f"<html><body><h1>In this section you can create, update, and delete an user!</h1><br><h2>Current users:</h2><br><pre><code><xmp>{json.dumps(users.json(), indent=2)}</xmp></code></pre></code></html>"
         }
         requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'message': res, 'reset_history': True, 'history': {"role": "system", "content": config.ROLE}})
         return { "statusCode": 204, }

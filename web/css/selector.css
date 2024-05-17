@@ -31,25 +31,27 @@ html {
 }
 
 #top-area {
-    height: 10%;
+    /* height: 5%; */
+    width: 98%;
     display: flex;
     margin: 0;
     padding: 0;
     position: absolute;
     top: 0;
     left: 0;
-    align-items: center;
+    /* align-items: flex-end; */
+    border-radius: 10px;
 }
 
 #top-area > * {
-    margin: 10px; 
+    margin: 5px;
 }
 
 #iframe-container {
     position: absolute;
-    top: 10%;
+    top: 5%;
     left: 0;
-    height: 90%;
+    height: 95%;
     width: 100%;
     display: flex;
     margin: 0;

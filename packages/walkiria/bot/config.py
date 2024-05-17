@@ -9,6 +9,7 @@ from requests.auth import HTTPBasicAuth
 import os
 
 html = ""
+editor = ""
 session_user = None
 
 OW_KEY = os.getenv('__OW_API_KEY')

@@ -131,7 +131,14 @@ def action_info(name, package = None):
     else:
         action = utils.action_info(name, package)
     if action.status_code == 200:
-        return f"""Display the following fields of the passed action: description, parameters, code, curl with the whole url, action URL with full path.\nAction:\n{action.json()}"""
+        obj = action.json()
+        for an in obj['annotations']:
+            if an['key'] == 'description':
+                namespace = obj['namespace']
+                editor = {"function": obj['exec']['code'], "name": obj['name'], "description": an['value'], "namespace": namespace.split('/')[0], "package": package}
+                requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/code_editor/add", json={'editor': editor}, headers={"cookie": f"cookie={config.session_user['cookie']}"})
+                break
+        return f"""Display the following fields of the passed action: description, parameters, curl example with the full url without alias, action URL with full url.\nAction:\n{action.json()}"""
     return "Non sono riuscito a trovare l'azione richiesta. Assicurati che il nome sia corretto e che sia specificato il package se appartiene ad uno"
 
 def delete_action(name_array):
@@ -158,7 +165,7 @@ def show_all_actions():
         x['annotations'] = annotations
         name_arr.append(x)
     config.html = f"<html><body><pre><code><xmp>{json.dumps(name_arr, indent=2)}</xmp></code></pre></code></html>"
-    return f"""display each actions with the description.\nActions:\n{name_arr}"""
+    return f"""display each actions with the description.\nActions:\n{name_arr}\nYou must display the actions in this output: namespace: <namespace>\nname: <name>\ndescription; <description>"""
 
 def tools_func(
         tool_calls: List[ChatCompletionMessageToolCall],
