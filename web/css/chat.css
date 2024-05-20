@@ -6,9 +6,9 @@
     --right-msg-bg: #f574f1;
 }
 
-/* html {
+html {
     box-sizing: border-box;
-} */
+}
 
 *,
 *:before,
@@ -23,6 +23,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    width: 100%;
     background-image: var(--body-bg);
     font-family: Helvetica, sans-serif;
 }
@@ -147,7 +148,7 @@ body {
 }
 
 .msg-text {
-    overflow: auto;
+    overflow-y: auto;
     max-width: 100%;
 }
 

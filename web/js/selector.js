@@ -17,6 +17,15 @@ document.addEventListener("DOMContentLoaded", async function() {
     if (!token_response.ok) {
         document.cookie = 'appfront-sess-cookie=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
         return window.location.assign('/index.html')
+    } else {
+        token_obj = await token_response.json()
+        const user = await fetch(base + 'api/my/default/auth/user', {
+            method: 'GET',
+            headers: {"Authorization": "Bearer " + token_obj['token']}
+        })
+        if (user.status == 200) {
+            sessionStorage.setItem('user', JSON.stringify(await user.json()))
+        }
     }
     // retrieve index
     fetch(base+"api/my/mastrogpt/index")

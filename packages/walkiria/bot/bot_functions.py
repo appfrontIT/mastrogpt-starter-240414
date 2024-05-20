@@ -135,7 +135,7 @@ def action_info(name, package = None):
         for an in obj['annotations']:
             if an['key'] == 'description':
                 namespace = obj['namespace']
-                editor = {"function": obj['exec']['code'], "name": obj['name'], "description": an['value'], "namespace": namespace.split('/')[0], "package": package}
+                editor = {"function": obj['exec']['code'], "name": obj['name'], "description": an['value'], "namespace": namespace.split('/')[0], "package": package, "language": obj['exec']['kind'].split(':')[0]}
                 requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/code_editor/add", json={'editor': editor}, headers={"cookie": f"cookie={config.session_user['cookie']}"})
                 break
         return f"""Display the following fields of the passed action: description, parameters, curl example with the full url without alias, action URL with full url.\nAction:\n{action.json()}"""

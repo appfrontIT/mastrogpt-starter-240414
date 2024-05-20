@@ -17,6 +17,16 @@ import json
 SECRET = None
 COLLECTION = None
 
+def get_user(token):
+    split_token = token.split(' ')
+    if len(split_token) != 2 and split_token[0] != 'Bearer':
+        return {'statusCode': 404}
+    user = COLLECTION.find_one({'JWT': split_token[1]})
+    if user:
+        user['_id'] = str(user['_id'])
+        return {'statusCode': 200, 'body': user}
+    return {'statusCode': 404, 'body': 'user not found'}
+
 def token(cookie):
     if not cookie:
         return {"statusCode": 404, "body": "cookie not found"}
@@ -92,4 +102,9 @@ def main(args):
         if not cookie:
             cookie = args.get('cookie', False)
         return token(cookie)
+    if path == '/user' and args['__ow_method'] == 'get':
+        bearer = args['__ow_headers'].get('authorization', False)
+        if not bearer:
+            return {'statusCode': 401}
+        return get_user(bearer)
     return {"statusCode": 404}

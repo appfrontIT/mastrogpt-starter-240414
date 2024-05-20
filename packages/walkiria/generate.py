@@ -23,14 +23,14 @@ NAME = ""
 TEST = False
 ROLE ="""
 Your role is to create an action and test it. If the tester suggests improvements you must implement them and test again. If all tests are passed, don't call any function.
-You only code in Python.
+The available languages are: Python, Javascript, Go, Java, PHP.
 Take your time to answer and you must procede step by step.
-Function ALWAYS start with "def main(args):".
-The return is always: {"body": string}. Example: '{"body": text}', '{"body": response.text}.
+Actions must ALWAYS include the 'main' function, accepting '(args)' as parameters. This is mandatory.
+Always return a JSON with keys 'body' and 'statusCode'.
 NEVER, EVER, BE LAZY! IF YOU NEED TIME TO UNDERSTAND THE TASK TAKE YOUR TIME, BUT ALWAYS ANSWER PROPERLY WITH ALL THE USER REQUESTS
 
 Mandatory: import the modules you use in the function.
-Always include authorizations in your code. Example:
+Always include authorizations in your code. Example in python:
 def main(args):
     token = args['__ow_headers'].get('authorization', False)
     if not token:
@@ -82,18 +82,16 @@ Here's an example using model 'Book', wiht fields: 'title', 'author', 'pages', '
             return {"statusCode": response.status_code, "body": response.text}
         return {"statusCode": 400}
 ```
-Try to use a path to identify the type of operation.
-You can't use async.
+Use path to identify the operation.
 Each parameters must be extracter using 'args.get('param')'. Example: args.get("url") to get "url", args.get("name") to get "name" and so on
-You can use only the follow libraries: requests, re, json, BeatifulSoup. Remember to import the modules you use!
-ALWAYS IMPORT requests, re, json, and any library you're going to use inside the function
+You MUST import any library or module you use in the action.
 """
 
 messages = [
     {"role": "system", "content": ROLE}
 ]
 
-def deploy_action(name, function, description):
+def deploy_action(name, function, description, language, package):
     global AI
     global JWT
     action_list = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1])).json()
@@ -111,11 +109,19 @@ def deploy_action(name, function, description):
                 messages=messages
             ).choices[0].message.content
             break
-    url = f"https://nuvolaris.dev/api/v1/web/gporchia/{JWT['package']}/{name}"
+    url = f"https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}"
+    if language == 'python':
+        kind = 'python:default'
+    elif language == 'javascript':
+        kind = 'nodejs:20'
+    elif language == 'go':
+        kind = 'go:1.15'
+    elif language == 'php':
+        kind = 'php:7.4'
     body = {
-        "namespace": "gporchia/" + JWT['package'],
+        "namespace": "gporchia/" + package,
         "name": name,
-        "exec":{"kind":"python:default", "code":function},
+        "exec":{"kind":kind, "code":function},
         "annotations":[
             {"key":"web-export", "value":True},
             {"key":"raw-http","value":False},
@@ -127,28 +133,30 @@ def deploy_action(name, function, description):
     if JWT['role'] == "admin":
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
     else:
-        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{JWT['package']}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
+        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
     if resp.status_code != 200:
         return False
-    requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/walkiria/{JWT['package']}/add", json={"data": resp.json()})
+    requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/walkiria/{package}/add", json={"data": resp.json()})
+    editor = {"function": function, "description": description, "name": NAME, "namespace": SESSION_USER['namespace'], "package": SESSION_USER['package'], "language": language}
+    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/code_editor/add", json={'editor': editor}, headers={'cookie': f"appfront-sess-cookie={SESSION_USER['cookie']}"})
     return f"""url: https://nuvolaris.dev/api/v1/web/gporchia/{JWT['package']}/{name}\ndescription: {description}\nfunction: {function}"""
 
 def create_action(args):
     global NAME
     global TEST
     NAME = args.get('name', False)
+    package = args.get('package', 'default')
     function = args.get('function', False)
+    language = args.get('language', False)
     function = function.replace('```', '')
-    function = function.replace('python', '')
-    function = function.replace('Python', '')
+    function = function.replace(language, '')
+    function = function.replace(language, '')
     description = args.get('description', False)
-    action = deploy_action(NAME, function, description)
+    action = deploy_action(NAME, function, description, language, package)
     # if not action:
     #     return "there was an error generating the action, tell the user to try again"
     # if TEST:
     #     test_result = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"action": action, "token": TOKEN})
-    editor = {"function": function, "description": description, "name": NAME, "namespace": SESSION_USER['namespace'], "package": SESSION_USER['package']}
-    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/code_editor/add", json={'editor': editor, 'cookie': f"cookie={SESSION_USER['cookie']}"})
     return action
 
 def improve_action(args):
@@ -224,8 +232,10 @@ create_action_tool = [{
                         "type": "object",
                         "properties": {
                             "name": {"type": "string", "description": "action name"},
+                            "package": {"type": "string", "description": "the package where to deploy the action, Default: 'default'"},
                             "function": {"type": "string", "description": "the generated function. It must starts with 'def main(args):'"},
                             "description": {"type": "string", "description": "a description of the action you made. The description MUST includes the parameters the action needs such as: {key: type, key: type, ...}. Example: 'an action which add an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}, None'"},
+                            "language": {"type": "string", "description": "the language in which you wrote the function. It must be 1 word from the following: 'python', 'javascript', 'go', 'php'"}
                             },
                         },
                     },

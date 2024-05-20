@@ -49,6 +49,7 @@ class Invoker {
         headers: { 'Content-Type': 'application/json'},
       });
       document.cookie = 'appfront-sess-cookie=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
+      sessionStorage.clear()
       return window.parent.location.replace('/index.html')
     }
     // welcome message no input
