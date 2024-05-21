@@ -122,6 +122,8 @@ function appendMessage(name, img, side, text) {
 
 async function bot() {
   url = base+'api/my/db/chat'
+  const user = await sessionStorage.getItem('user')
+  user_obj = JSON.parse(user)
   while (true) {
     try {
       let r = await fetch(url, {method: 'GET', headers: {

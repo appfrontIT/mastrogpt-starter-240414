@@ -22,20 +22,19 @@ def add(args):
     destination_file = args.get('target', False)
     raw_file = args.get('raw', False)
     text = args.get('text', False)
-    source_file = args.get('source', False)
     if not bucket_name or not destination_file:
         return {'statusCode': 400}
     
     if raw_file:
         # with open(destination_file, 'w') as f:
         #         f.write(raw_file)
-        target = f"/{JWT['package']}/{destination_file}"
+        target = f"/{JWT['username']}/{destination_file}"
         CLIENT.put_object(
             bucket_name, target, io.BytesIO(raw_file), length=-1, part_size=10*1024*1024,
         )
         return {'statuCode': 204}
     elif text:
-        target = f"/{JWT['package']}/{destination_file}"
+        target = f"/{JWT['username']}/{destination_file}"
         CLIENT.put_object(
             bucket_name, target, io.BytesIO(str.encode(text)), len(text)
         )
@@ -81,7 +80,7 @@ def main(args):
     #     return delete(args)
     # elif path == '/update' and args['__ow_method'] == 'put':
     #     return update(args)
-    elif path == '/find' and args['__ow_method'] == 'get':
+    elif op == 'find' and args['__ow_method'] == 'get':
         return find(args)
     # elif path == '/find_all' and args['__ow_method'] == 'get':
     #     return find_all()

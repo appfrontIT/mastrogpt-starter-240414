@@ -94,21 +94,25 @@ messages = [
 def deploy_action(name, function, description, language, package):
     global AI
     global JWT
-    action_list = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1])).json()
+    if package == 'default':
+        package = SESSION_USER['username']
+    package_up = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages/{package}", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+    if package_up.status_code != 200:
+        return {'statusCode': package_up.status_code, 'body': package_up.json()}
+    action_list = package_up.json()['actions']
     # Generate a new name if needed
-    name_arr = ""
+    name_arr = []
     for x in action_list:
-        name_arr += (x['name']) + ", "
-        if x['namespace'] == f"gporchia/{JWT['package']}" and x['name'] == name:
-            messages = [
-                {"role": "system", "content": f"Generate an unique name base on the description passed. Only 1 word is allowed. You can't use the following words to generate a name:\n\n{name_arr}"},
-                {"role": "user", "content": description}
-            ]
-            name = AI.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=messages
-            ).choices[0].message.content
-            break
+        name_arr.append(x['name'])
+    if name in name_arr:
+        messages = [
+            {"role": "system", "content": f"Generate an unique name base on the description passed. Only 1 word is allowed. You can't use the following words to generate a name:\n\n{name_arr}"},
+            {"role": "user", "content": description}
+        ]
+        name = AI.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages
+        ).choices[0].message.content
     url = f"https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}"
     if language == 'python':
         kind = 'python:default'
@@ -118,32 +122,12 @@ def deploy_action(name, function, description, language, package):
         kind = 'go:1.15'
     elif language == 'php':
         kind = 'php:7.4'
-    body = {
-        "namespace": "gporchia/" + package,
-        "name": name,
-        "exec":{"kind":kind, "code":function},
-        "annotations":[
-            {"key":"web-export", "value":True},
-            {"key":"raw-http","value":False},
-            {"key": "final", "value": True},
-            {"key": "description", "value": description},
-            {"key": "url", "value": url}
-            ]
-        }
-    if JWT['role'] == "admin":
-        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
-    else:
-        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
-    if resp.status_code != 200:
-        return False
-    requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/walkiria/{package}/add", json={"data": resp.json()})
     editor = {"function": function, "description": description, "name": NAME, "namespace": SESSION_USER['namespace'], "package": SESSION_USER['package'], "language": language}
     requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/code_editor/add", json={'editor': editor}, headers={'cookie': f"appfront-sess-cookie={SESSION_USER['cookie']}"})
-    return f"""url: https://nuvolaris.dev/api/v1/web/gporchia/{JWT['package']}/{name}\ndescription: {description}\nfunction: {function}"""
+    return f"""url: https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}\ndescription: {description}\nfunction: {function}"""
 
 def create_action(args):
     global NAME
-    global TEST
     NAME = args.get('name', False)
     package = args.get('package', 'default')
     function = args.get('function', False)
@@ -153,35 +137,15 @@ def create_action(args):
     function = function.replace(language, '')
     description = args.get('description', False)
     action = deploy_action(NAME, function, description, language, package)
-    # if not action:
-    #     return "there was an error generating the action, tell the user to try again"
-    # if TEST:
-    #     test_result = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"action": action, "token": TOKEN})
     return action
-
-def improve_action(args):
-    function = args.get('function', False)
-    description = args.get('description', False)
-    if not function and not description:
-        return "error: data is missing"
-    if JWT['role'] == "admin":
-        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{NAME}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json={"exec":{"kind":"python:default", "code":function},})
-    else:
-        resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{JWT['package']}/{NAME}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json={"exec":{"kind":"python:default", "code":function},})
-    requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/walkiria/{JWT['package']}", json={"data": resp.json()})
-    action = f"url: https://nuvolaris.dev/api/v1/web/gporchia/{JWT['package']}/{NAME}\ndescription:{description}\nfunction:{function}\n\n"
-    test = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={"action": action, "token": JWT})
-    return test.text
 
 def main(args):
     global JWT
-    global TEST
     global TOKEN
     global SESSION_USER
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     request = args.get('request', False)
     TOKEN = args.get('token', False)
-    TEST = args.get('test', False)
     if not request or not TOKEN:
         return {"statusCode": 400}
     secret = args.get('JWT_SECRET')
@@ -212,9 +176,6 @@ def main(args):
             #     "name": function_name,
             #     "content": function_response
             # })
-            openapi = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/openAPI',
-                                    auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
-                                    json={'action': function_response, 'token': TOKEN})
             return {"body": function_response}
     print('no tool')
     return {"body": response.choices[0].message.content}
@@ -243,28 +204,3 @@ create_action_tool = [{
                 },
             },
         },]
-
-improve_action_tool = [
-        {
-            "type": "function",
-            "function": {
-                "name": "improve_action",
-                "description": "the tester suggests some improvement to the action",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "args": {
-                            "type": "object",
-                            "properties": {
-                                "function": {"type": "string", "description": "the function generated including the improvement suggested"},
-                                "description": {"type": "string", "description": "updated description of the action"},
-                            },
-                            "required": ["function", "description"]
-                        },
-                    },
-                    "required": ["args"]
-                        
-                }
-            }
-        }
-]

@@ -24,18 +24,15 @@ def create(args):
         return {"statusCode": 400}
     if role != 'user' and role != 'admin':
         return {'statusCode': 400, 'body': 'role invalid. Must be one of: user, admin'}
-    if role == "admin":
-        package = 'default'
-    else:
-        package = username
     yaml = f"""openapi: 3.1.0
 info:
-  title: {package} - OpenAPI 3.1
+  title: {username} - OpenAPI 3.1
   termsOfService: http://swagger.io/terms/
   version: 1.0.11
 servers:
   - url: https://nuvolaris.dev/api/v1/web
     """
+    package = [username]
     data = {
         "username": username,
         "password": hashlib.sha256(password.encode()).hexdigest(),

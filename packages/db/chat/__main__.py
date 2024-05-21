@@ -9,6 +9,7 @@ import json
 from bson.objectid import ObjectId
 from bson.json_util import dumps
 import time
+import requests
 
 def main(args):
     connection_string = args.get('CONNECTION_STRING')

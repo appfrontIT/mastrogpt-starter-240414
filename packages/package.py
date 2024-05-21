@@ -13,7 +13,7 @@ def find(args):
     if not name:
         return {"statusCode": 400}
     resp = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
-    return {"statusCode": 200, "body": resp.text}
+    return {"statusCode": resp.status_code, "body": resp.text}
 
 def delete(args):
     name = args.get('name', False)
@@ -55,6 +55,9 @@ def share(args):
     return {'statusCode': user.status_code}
 
 def main(args):
+    token = args['__ow_headers'].get('authorization', False)
+    if not token:
+        return {'statusCode': 401}
     path = args.get('__ow_path', False)
     if path == '/add' and args['__ow_method'] == 'post':
         return add(args)

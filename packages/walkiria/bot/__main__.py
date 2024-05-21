@@ -8,11 +8,8 @@
 from openai import OpenAI
 import config
 import bot_functions
-from secrets import token_urlsafe
-import utils
 import json
 import requests
-import os
 from requests.auth import HTTPBasicAuth
 
 MODEL = "gpt-4o"
@@ -38,25 +35,17 @@ def ask(
 def main(args):
     config.html = ""
     config.AI = OpenAI(api_key=args['OPENAI_API_KEY'])
-
-    token = args.get('token', False)
-    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?JWT={token}", headers={'Authorization': f"Bearer {token}"})
-    if response.status_code != 200:
-        return {"statusCode": 404}
-    config.session_user = response.json()
-
+    config.session_user = args.get('user', False)
+    if not config.session_user:
+        return {"statusCode": 404, "body": "failed to retrieve the user, please login again"}
     input = args.get("input", "")
     if input == "":
         res = {
             "output": f"Bentornato {config.session_user['username']}! Come posso aiutarti?",
-            "title": "OpenAI Chat",
-            "message": "You can chat with OpenAI.",
-            "html": config.HTML_INFO
-        }
+            }
         requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'message': res, 'reset_history': True, 'history': {"role": "system", "content": config.ROLE}})
         return { "statusCode": 204, }  
     else:
-        config.QUERY = input
         requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'history': {"role": "user", "content": input }})
         output = ask(query=input, model=MODEL)
         res = { "output": output}

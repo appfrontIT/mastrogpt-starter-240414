@@ -28,7 +28,7 @@ def add(args):
     elif language == 'javascript':
         kind = 'nodejs:20'
     elif language == 'go':
-        kind = 'go:1.15'
+        kind = 'go:1.22'
     elif language == 'php':
         kind = 'php:7.4'
     body = {
@@ -47,6 +47,9 @@ def add(args):
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
     else:
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
+    requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/openAPI',
+                auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
+                json={'action': f"""url: https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}\ndescription: {description}\nfunction: {function}""", 'token': JWT})
     return {'statusCode': resp.status_code, 'body': resp.json()}
 
 def delete(args):

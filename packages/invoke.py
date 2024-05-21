@@ -18,14 +18,19 @@ def main(args):
         return {'statusCode': 401}
     path = args['__ow_path']
     token = token.split(' ')[1]
+    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?JWT={token}", headers={'Authorization': f"Bearer {token}"})
+    if response.status_code != 200:
+        return {"statusCode": 404}
+    user = response.json()
+    input = args.get('input', '')
     if path == '/walkiria':
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
-                            json={"input": args.get('input', ''), 'token': token,})
+                            json={"input": input, 'token': token, 'user': user})
     elif path == '/lookinglass':
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/lookinglass/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
-                            json={"input": args.get('input', ''), 'token': token,})
+                            json={"input": input, 'token': token, 'user': user})
     elif path == '/admin':
         secret = args.get('JWT_SECRET')
         decoded = jwt.decode(token, key=secret, algorithms='HS256')
@@ -33,9 +38,9 @@ def main(args):
             return{"statusCode": 403}
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/admin/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
-                            json={"input": args.get('input', ''), 'token': token,})
+                            json={"input": input, 'token': token, 'user': user})
     elif path == '/test':
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
-                            json={"input": args.get('input', ''), 'token': token,})
+                            json={"input": input, 'token': token, 'user': user})
     return {"statusCode": resp.status_code, "body": resp.json()}
