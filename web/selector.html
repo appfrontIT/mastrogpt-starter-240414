@@ -9,12 +9,75 @@
 <body>
     <div id="top-area">
         <h2>Walkiria</h2>
+        <button id="profile" onclick="profile()">Profile</button>
+        <button id="lookinglass" onclick="lookinglass()">Lookinglass</button>
+        <button id="coder" onclick="coder()">coder</button>
+        <button id="admin" onclick="admin()">admin</button>
+        <button id="test" onclick="test()">tester</button>
+        <button id="logout" onclick="logout()">logout</button>
     </div>
     <div id="iframe-container" frameborder="0">
         <iframe id="chat" src="/chat.html" frameborder="0" width="40%" height="100%"></iframe>
         <iframe id="display" src="/display.html" frameborder="0" width="60%" height="100%"></iframe>
     </div>
     <script src="/js/selector.js"></script>
+    <script>
+        let chat = document.getElementById("chat").contentWindow
+        let display = document.getElementById("display").contentWindow
+        let base = location.href.replace(/selector\.html$/, "")
+        
+        document.addEventListener("DOMContentLoaded", async function(event) {
+            event.preventDefault()
+            let x = document.cookie;
+            if (!x) {
+                return window.location.assign('/index.html')
+            }
+            const token_response = await fetch(base + 'api/my/base/auth/token', {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json'},
+            })
+            if (!token_response.ok) {
+                document.cookie = 'appfront-sess-cookie=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
+                return window.location.assign('/index.html')
+            } else {
+                token_obj = await token_response.json()
+                const user = await fetch(base + 'api/my/base/auth/user', {
+                    method: 'GET',
+                    headers: {"Authorization": "Bearer " + token_obj['token']}
+                })
+                if (user.status == 200) {
+                    sessionStorage.setItem('user', JSON.stringify(await user.json()))
+                }
+            }
+        })
+
+        async function lookinglass() { await chat.postMessage({name: "Lookinglass", url: base + "api/my/base/invoke/lookinglass"}) }
+        
+        async function coder() { await chat.postMessage({name: "Coder", url: base + "api/my/base/invoke/walkiria"}) }
+        
+        async function admin() { await chat.postMessage({name: "Admin", url: base + "api/my/base/invoke/admin"}) }
+        
+        async function test() { await chat.postMessage({name: "Test", url: base + "api/my/base/invoke/test"}) }
+        
+        async function logout() {
+            const response = await fetch(this.url, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json'},
+            });
+            document.cookie = 'appfront-sess-cookie=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
+            sessionStorage.clear()
+            return window.parent.location.replace('/index.html')
+        }
+
+        async function profile() {
+            const user = sessionStorage.getItem('user');
+            user_obj = await JSON.parse(user);
+            let newWin = window.open("/profile.html", "profile", "popup=true");
+            newWin.document.write(html);
+        }
+    </script>
 </body>
 
 </html>

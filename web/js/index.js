@@ -14,7 +14,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
         const user = data.get('username');
         const password = data.get('password');
         try {
-            const response = await fetch(base+'api/my/default/auth/login', {
+            const response = await fetch(base+'api/my/base/auth/login', {
                 method: 'POST',
                 credentials: 'include',
                 body: JSON.stringify({'username': user, 'password': password}),

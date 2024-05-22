@@ -34,7 +34,6 @@
         border-radius: 10px;
     }
     .buttons {
-        display: flex;
         border-radius: 10px;
         background: #ffffff;
         position: relative;
@@ -76,20 +75,20 @@
 </head>
 <body>
 <section class="msger">
-        <form action="#" class="buttons">
-            <select name="package_selector" id="action_package" class="button">
-                <option disabled selected value>Package</option>
-            <input id="action_name" type="text" class="input" placeholder="name">
-            <input id="description" type="text" class="input" placeholder="description">
-            <select name="languages" id="lang" class="button">
-                <option disabled selected value>Language</option>
-                <option value="javascript">JavaScript</option>
-                <option value="php">PHP</option>
-                <option value="go">Golang</option>
-                <option value="python">Python</option>
-                <option value="html">HTML</option>
-              </select>
-        </form>
+    <form action="#" class="buttons" style="display: flex;">
+        <select name="package_selector" id="action_package" class="button">
+            <option disabled selected value>Package</option>
+        <input id="action_name" type="text" class="input" placeholder="name">
+        <input id="description" type="text" class="input" placeholder="description">
+        <select name="languages" id="lang" class="button">
+            <option disabled selected value>Language</option>
+            <option value="javascript">JavaScript</option>
+            <option value="php">PHP</option>
+            <option value="go">Golang</option>
+            <option value="python">Python</option>
+            <option value="html">HTML</option>
+        </select>
+    </form>
 <pre id="editor" class="editor-cl">Bot functionalities:
 The bot is able to interact directly with your nuvolaris environment.
 
@@ -124,235 +123,11 @@ The bot is able to interact directly with your nuvolaris environment.
     <button type="submit" class="button" id="verify" onclick="verify()">verify</button>
     <button type="submit" class="button" id="test" onclick="test()">test</button>
     <button type="submit" class="button" id="watch" onclick="watch()">watch</button>
+    <button type="submit" class="button" id="action-list" onclick="display_action()" style="float: right;">action list</button>
 </div>
 </section>
 <script src="/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 <script src="/ace-builds/src-noconflict/ext-language_tools.js"></script>
-<script>
-    var action_package = document.getElementById('action_package')
-    var action_name = document.getElementById('action_name')
-    var description = document.getElementById('description')
-    var lang = document.getElementById('lang')
-    let base = location.href.replace(/code-editor\.html$/, "");
-    let action = null;
-    lang.onchange = langListener;
-    
-    document.getElementById('editor').style.fontSize='12px';
-    ace.require("ace/ext/language_tools");
-    var editor = ace.edit("editor");
-    editor.setTheme("ace/theme/twilight");
-    editor.session.setMode("ace/mode/html");
-    editor.setOptions({
-        enableBasicAutocompletion: true,
-        enableSnippets: true,
-        enableLiveAutocompletion: false
-    });
-
-    function langListener() {
-        editor.session.setMode("ace/mode/" + this.value);
-        if (this.value === 'html') {
-            action_package.setAttribute("disabled","disabled");
-            action_package.style.display = 'none';
-            description.setAttribute("disabled","disabled");
-            description.style.display = 'none';
-            document.getElementById('test').setAttribute("disabled","disabled");
-            document.getElementById('test').style.display = 'none';
-        } else {
-            action_package.removeAttribute("disabled");
-            action_package.style.display = 'block';
-            description.removeAttribute("disabled");
-            description.style.display = 'block';
-            document.getElementById('test').removeAttribute("disabled");
-            document.getElementById('test').style.display = 'block';
-        }
-    }
-
-    async function get_function() {
-        const user = await sessionStorage.getItem('user')
-        var user_obj = await JSON.parse(user)
-        const packages = user_obj['package']
-        for (var i = 0; i < packages.length; i++) {
-            var opt = document.createElement('option');
-            opt.value = packages[i];
-            opt.innerHTML = packages[i];
-            action_package.appendChild(opt);
-        }
-        // package.value = user_obj['package']
-        while(true) {
-            try {
-                let response = await fetch(base+'api/my/db/code_editor/get', {
-                    headers: {"Content-Type": "application/json"},
-                    method: 'POST',
-                    credentials: 'include'
-                })
-                if (response.status == 200) {
-                    const data = await response.json();
-                    if (data['language'] === 'html') {
-                        action_name.value = data['name'];
-                        lang.value = 'html';
-                        editor.setValue(data['function']);
-                        this.langListener();
-                        return ;
-                    }
-                    action = data;
-                    action_package.value = data['package']
-                    action_name.value = data['name']
-                    description.value = data['description']
-                    if (data['language'] == 'nodejs') {
-                        data['language'] = 'javascript';
-                    }
-                    for(var i, j = 0; i = lang.options[j]; j++) {
-                        if(i.value == data['language']) {
-                            lang.selectedIndex = j;
-                            break;
-                        }
-                    }
-                    editor.session.setMode("ace/mode/" + data['language']);
-                    editor.setValue(data['function']);
-                }
-            } catch(error) {
-                console.log(error)
-                return `ERROR interacting with ${this.url}`
-            }
-        }
-    }
-
-    window.onload = get_function
-
-    async function deploy() {
-        const user = await sessionStorage.getItem('user')
-        user_obj = await JSON.parse(user)
-        token = user_obj['JWT'];
-        if (lang.value === "html") {
-            if (action_name.value === "") { alert('Provide a name for the page'); return; }
-            response = await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/add', {
-                method: "POST",
-                headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
-                body: JSON.stringify({"target": action_name.value, "text": editor.session.getValue()})
-            })
-            console.log(response.status)
-            return ;
-        }
-        if (action_name.value === "" || description.value === "" || lang.value === "Language" || action_package.value === "") {
-            alert('You must fill all fields before deploying an action')
-            return ;
-        }
-        var package = await fetch(base + 'api/my/default/package/find?name=' + action_package.value, {
-            method: 'GET',
-            headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
-        })
-        if (package.status != 200) {
-            var confirm_package = confirm(`The package ${await action_package.value} does not exist, do you wanna create it?`)
-            if (confirm_package) {
-                create_package = await fetch(base + 'api/my/default/package/add', {
-                    method: 'POST',
-                    headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
-                    body: JSON.stringify({"name": await action_package.value})
-                })
-                if (create_package.status != 200) {
-                    alert('there was an error while creating your package.')
-                    return;
-                }
-                const packages = user_obj['package']
-                action_package.reset();
-                for (var i = 0; i < packages.length; i++) {
-                    var opt = document.createElement('option');
-                    opt.value = packages[i];
-                    opt.innerHTML = packages[i];
-                    action_package.appendChild(opt);
-                }
-            } else {
-                return ;
-            }
-        }
-        const func = await editor.session.getValue()
-        upload = await fetch(base+'api/my/default/action/add', {
-            headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
-            method: "PUT",
-            body: JSON.stringify({
-                "name": action_name.value,
-                "function": func,
-                "description": description.value,
-                "namespace": "gporchia/" + package.value,
-                "package": action_package.value,
-                "language": lang.value
-            })
-        })
-        if (upload.status == 200) {
-            alert('action succesfully deployed!')
-        }
-    }
-
-    async function verify() {
-        const user = await sessionStorage.getItem('user')
-        user_obj = await JSON.parse(user)
-        token = user_obj['JWT'];
-        const func = await editor.session.getValue()
-        let query = "analizza il codice seguente e mostrami se e dove ci sono degli errori, in piú suggerisci dei miglioramenti se ne hai.\nCodice:\n" + func;
-        const r = await fetch(base + 'api/my/default/invoke/walkiria', {
-            headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
-            method: 'POST',
-            body: JSON.stringify({"input": query})
-        })
-    }
-
-    async function test() {
-        if (name.value === "" || action_package.value === "") {
-            alert('You must fill all fields before deploying an action');
-            return ;
-        }
-        const user = await sessionStorage.getItem('user');
-        user_obj = await JSON.parse(user);
-        token = user_obj['JWT'];
-        let query = `esegui i test sulla seguente azione: nome: ${action_name.value}, package: ${action_package.value}. Non chiedere conferma e comincia subito con i test`;
-        const r = await fetch(base + 'api/my/default/invoke/walkiria', {
-            headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
-            method: 'POST',
-            body: JSON.stringify({"input": query})
-        })
-    }
-
-    let watch_toggle = false;
-
-    async function watch() {
-        if (watch_toggle) {
-            watch_toggle = false;
-            btn = document.getElementById('watch');
-            btn.style.backgroundColor = "white";
-            btn.style.color = "violet";
-            const r = await fetch(base + 'api/my/default/invoke/walkiria', {
-                headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
-                method: 'POST',
-                body: JSON.stringify({"input": "grazie del supporto. Esci dalla modalitá 'watch'"})
-            })
-            return;
-        }
-        watch_toggle = true
-        btn = document.getElementById('watch');
-        btn.style.backgroundColor = "#e6e6e6";
-        btn.style.color = "white";
-        const user = await sessionStorage.getItem('user');
-        user_obj = JSON.parse(user);
-        token = user_obj['JWT'];
-        const func = await editor.session.getValue()
-        let query = "da ora in poi, considerati in modalitá 'watch', fintanto che non ti comunicheró di smettre. Ti invieró periodicamente dei frammenti di codice. Osserva il codice, e se necessario comunicami gli errori e suggeriscimi le modifiche. Rsipondi con messaggi sintetici e concisi. Se pensi che vada tutto bene, rispondi in pochissime parole che il codice sembra corretto. Comincia chiedendomi che tipo di azione voglio creare. Inoltre, leggi attentamente i commenti per capire cosa il codice dovrebbe fare.";
-        const r = await fetch(base + 'api/my/default/invoke/walkiria', {
-            headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
-            method: 'POST',
-            body: JSON.stringify({"input": query})
-        })
-        while (watch_toggle) {
-            await new Promise(r => setTimeout(r, 20000));
-            const func = await editor.session.getValue()
-            if (func === "") { continue; }
-            const r = await fetch(base + 'api/my/default/invoke/walkiria', {
-                headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
-                method: 'POST',
-                body: JSON.stringify({"input": func})
-            })
-        }
-    }
-
-</script>
+<script src="/js/code-editor.js"></script>
 </body>
 </html>

@@ -33,7 +33,7 @@ class Invoker {
       alert('error: session expired')
       window.parent.location.replace('/index.html')
     } else {
-      const response = await fetch(base + 'api/my/default/auth/token', {
+      const response = await fetch(base + 'api/my/base/auth/token', {
         method: 'GET',
         credentials: 'include'
       })
@@ -41,16 +41,6 @@ class Invoker {
         const obj = await response.json()
         token = obj['token']
       }
-    }
-    if (this.name == 'Logout') {
-      const response = await fetch(this.url, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json'},
-      });
-      document.cookie = 'appfront-sess-cookie=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
-      sessionStorage.clear()
-      return window.parent.location.replace('/index.html')
     }
     // welcome message no input
     if (msg == null) {
@@ -122,8 +112,9 @@ function appendMessage(name, img, side, text) {
 
 async function bot() {
   url = base+'api/my/db/chat'
-  const user = await sessionStorage.getItem('user')
-  user_obj = JSON.parse(user)
+  // const user = sessionStorage.getItem('user')
+  // user_obj = JSON.parse(user)
+  // appendMessage(BOT_NAME, BOT_IMG, "left", `Bentornato ${user_obj['username']}! Come posso aiutarti?`);
   while (true) {
     try {
       let r = await fetch(url, {method: 'GET', headers: {

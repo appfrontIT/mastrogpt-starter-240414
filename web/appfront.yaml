@@ -109,7 +109,7 @@ paths:
           description: bad request
         500:
           description: server internal error
-  /gporchia/default/action/add:
+  /gporchia/base/action/add:
     post:
       tags:
         - action
@@ -174,7 +174,7 @@ paths:
             allplication/json:
               schema:
                 $ref: '#/components/schemas/PackageError'
-  /gporchia/default/action/delete:
+  /gporchia/base/action/delete:
     delete:
       tags:
         - action
@@ -233,7 +233,7 @@ paths:
             allplication/json:
               schema:
                 $ref: '#/components/schemas/PackageError'
-  /gporchia/default/action/update:
+  /gporchia/base/action/update:
     post:
       tags:
         - action
@@ -298,7 +298,7 @@ paths:
             allplication/json:
               schema:
                 $ref: '#/components/schemas/PackageError'
-  /gporchia/default/action/find:
+  /gporchia/base/action/find:
     get:
       tags:
         - action
@@ -351,7 +351,7 @@ paths:
             allplication/json:
               schema:
                 $ref: '#/components/schemas/PackageError'
-  /gporchia/default/action/find_all:
+  /gporchia/base/action/find_all:
     get:
       tags:
         - action
@@ -381,7 +381,7 @@ paths:
             allplication/json:
               schema:
                 $ref: '#/components/schemas/PackageError'
-  /gporchia/default/action/activation:
+  /gporchia/base/action/activation:
     get:
       tags:
         - action
@@ -431,7 +431,7 @@ paths:
             allplication/json:
               schema:
                 $ref: '#/components/schemas/PackageError'
-  /gporchia/default/invoke/walkiria:
+  /gporchia/base/invoke/walkiria:
     post:
       tags:
         - invoke
@@ -459,7 +459,7 @@ paths:
                 $ref: '#/components/schemas/Activation'
         401:
           description: unautorized
-  /gporchia/default/invoke/lookinglass:
+  /gporchia/base/invoke/lookinglass:
     post:
       tags:
         - invoke
@@ -487,7 +487,7 @@ paths:
                 $ref: '#/components/schemas/Activation'
         401:
           description: unautorized
-  /gporchia/default/invoke/admin:
+  /gporchia/base/invoke/admin:
     post:
       tags:
         - invoke
@@ -517,7 +517,7 @@ paths:
           description: unautorized
         403:
           description: forbidden
-  /gporchia/default/auth/login:
+  /gporchia/base/auth/login:
     post:
       tags:
         - auth
@@ -553,7 +553,7 @@ paths:
           description: username or password are missing
         '404':
           description: user not found
-  /gporchia/default/auth/logout:
+  /gporchia/base/auth/logout:
     delete:
       tags:
         - auth
@@ -563,7 +563,7 @@ paths:
       responses:
         '200':
           description: user logout
-  /gporchia/default/auth/token:
+  /gporchia/base/auth/token:
     get:
       tags:
         - auth
@@ -588,7 +588,7 @@ paths:
               schema:
                 type: string
                 examples: ["'cookie not found' or 'user not found'"]
-  /gporchia/default/user/add:
+  /gporchia/base/user/add:
     post:
       tags:
         - user
@@ -625,7 +625,7 @@ paths:
           description: bad request
         405:
           description: method not allowed
-  /gporchia/default/user/delete:
+  /gporchia/base/user/delete:
     delete:
       tags:
         - user
@@ -648,7 +648,7 @@ paths:
           description: bad request
         405:
           description: method not allowed
-  /gporchia/default/user/update:
+  /gporchia/base/user/update:
     put:
       tags:
         - user
@@ -693,7 +693,7 @@ paths:
           description: unauthorized
         404:
           description: not found
-  /gporchia/default/user/find:
+  /gporchia/base/user/find:
     get:
       tags:
         - user
@@ -995,7 +995,7 @@ paths:
           description: unauthorized
         404:
           description: not found
-  /gporchia/default/package/add:
+  /gporchia/base/package/add:
     post:
       tags:
         - package
@@ -1055,7 +1055,7 @@ paths:
             allplication/json:
               schema:
                 $ref: '#/components/schemas/PackageError'
-  /gporchia/default/package/delete:
+  /gporchia/base/package/delete:
     delete:
       tags:
         - package
@@ -1109,7 +1109,7 @@ paths:
             allplication/json:
               schema:
                 $ref: '#/components/schemas/PackageError'
-  /gporchia/default/package/find:
+  /gporchia/base/package/find:
     get:
       tags:
         - package
@@ -1167,7 +1167,7 @@ paths:
             allplication/json:
               schema:
                 $ref: '#/components/schemas/PackageError'
-  /gporchia/default/package/share:
+  /gporchia/base/package/share:
     put:
       tags:
         - package

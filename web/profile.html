@@ -1,0 +1,54 @@
+<div class="container-fluid main" style="height:100vh;padding-left:0px;">
+    <div class="row align-items-center" style="height:100%">
+    
+    <div class="col-md-9">
+        <div class="container content clear-fix">
+        <h2 class="mt-5 mb-5">Profile Settings</h2>
+        <div class="row" style="height:100%">
+            <div class="col-md-3">
+                <div href=# class="d-inline"><img src="img/human.png" width=130px style="margin:0;"><br><p class="pl-2 mt-2"><a href="#" class="btn" style="color:#8f9096;font-weight:600">Edit Picture</a></p></div>
+            </div>
+            <div class="col-md-9">
+                <div class="container">
+                    <form>
+                        <div class="form-group">
+                            <label for=fullName>Full Name</label>
+                            <input type="text" class="form-control" id="fullName">
+                        </div>
+
+                    </form>                
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+</div>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
+<link rel="stylesheet" href="/css/profile.css">
+<script>
+    $(document).ready(function(){
+    
+    $('.menu').on('click', function() {
+		$('.bar').toggleClass('animate');
+        $('.expand-menu').toggleClass('animate');
+        $('.expand-menu .nav-link').toggleClass('animate');
+        setTimeout(function(){
+            $('.expand-menu .nav-link').toggleClass('animate-show');
+        },500)
+	})
+})
+
+document.addEventListener("DOMContentLoaded", async function() {
+    const user = sessionStorage.getItem('user')
+    var user_obj = await JSON.parse(user)
+    document.getElementById('fullName').placeholder = user_obj['username']
+})
+</script>

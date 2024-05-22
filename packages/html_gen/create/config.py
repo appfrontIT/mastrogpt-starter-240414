@@ -55,7 +55,7 @@ function create{model}() {
 const {model field 1} = document.getElementById('create{model field 1}').value;
 const {model field 2} = document.getElementById('create{model field 2}').value;
 const {model field 3} = document.getElementById('create{model field 3}').value;
-fetch({'https://nuvolaris.dev/api/v1/web/gporchia/default/example'}, {
+fetch({'https://nuvolaris.dev/api/v1/web/gporchia/base/example'}, {
 method: 'POST',
 body: JSON.stringify({{model field 1}: {model field 1}, {model field 2}: {model field 2}, {model field 3}: {model field 3}}),
 headers: { 'Content-type': 'application/json; charset=UTF-8' },
@@ -116,7 +116,7 @@ const {model field 2} = document.getElementById('create{model field 2}').value;
 const {model field 3} = document.getElementById('create{model field 3}').value;
 const {model field 4} = document.getElementById('create{model field 4}').value;
 const {model field 5} = document.getElementById('create{model field 5}').value;
-fetch('https://nuvolaris.dev/api/v1/web/gporchia/default/{action to create element}', {
+fetch('https://nuvolaris.dev/api/v1/web/gporchia/base/{action to create element}', {
 method: 'POST',
 body: JSON.stringify({ {model field 1}: {model field 1}, {model field 2}: {model field 2}, {model field 3}: {model field 3}, {model field 4}: {model field 4}, {model field 5}: {model field 5} }),
 headers: { 'Content-type': 'application/json; charset=UTF-8' },
@@ -140,7 +140,7 @@ const {model field 2} = document.getElementById('update{model field 2}').value;
 const {model field 3} = document.getElementById('update{model field 3}').value;
 const {model field 4} = document.getElementById('update{model field 4}').value;
 const {model field 5} = document.getElementById('update{model field 5}').value;
-fetch('https://nuvolaris.dev/api/v1/web/gporchia/default/{action to update element}', {
+fetch('https://nuvolaris.dev/api/v1/web/gporchia/base/{action to update element}', {
 method: 'PUT',
 body: JSON.stringify({ filter: {_id: id}, {model field 1}: {model field 1}, {model field 2}: {model field 2}, {model field 3}: {model field 3}, {model field 4}: {model field 4}, {model field 5}: {model field 5} }),
 headers: { 'Content-type': 'application/json; charset=UTF-8' },
@@ -159,7 +159,7 @@ document.getElementById('Response').innerHTML = to_display;
 }
 function delete{model}() {
 const id = document.getElementById('deleteFilter').value;
-fetch('https://nuvolaris.dev/api/v1/web/gporchia/default/{action to delete element}', {
+fetch('https://nuvolaris.dev/api/v1/web/gporchia/base/{action to delete element}', {
 method: 'DELETE',
 body: JSON.stringify({ filter: {_id: id}}),
 headers: { 'Content-type': 'application/json; charset=UTF-8' },
@@ -182,7 +182,7 @@ const {model field 2} = document.getElementById('filter{model field 2}').value;
 const {model field 3} = document.getElementById('filter{model field 3}').value;
 const {model field 4} = document.getElementById('filter{model field 4}').value;
 const {model field 5} = document.getElementById('filter{model field 5}').value;
-fetch('https://nuvolaris.dev/api/v1/web/gporchia/default/{action to find element}', {
+fetch('https://nuvolaris.dev/api/v1/web/gporchia/base/{action to find element}', {
 method: 'POST',
 body: JSON.stringify({ filter: {{model field 1}: {model field 1}, {model field 2}: {model field 2}, {model field 3}: {model field 3}, {model field 4}: {model field 4}, {model field 5}: {model field 5}} }),
 headers: { 'Content-type': 'application/json; charset=UTF-8' },
