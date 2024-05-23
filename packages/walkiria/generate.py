@@ -91,14 +91,13 @@ messages = [
     {"role": "system", "content": ROLE}
 ]
 
-def deploy_action(name, function, description, language, package):
+def deploy_action(name, function, description, language):
     global AI
     global JWT
-    if package == 'default':
-        package = SESSION_USER['username']
+    package = SESSION_USER['username']
     package_up = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages/{package}", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
     if package_up.status_code != 200:
-        return {'statusCode': package_up.status_code, 'body': package_up.json()}
+        return {'error: package not found'}
     action_list = package_up.json()['actions']
     # Generate a new name if needed
     name_arr = []
@@ -113,36 +112,29 @@ def deploy_action(name, function, description, language, package):
             model="gpt-3.5-turbo",
             messages=messages
         ).choices[0].message.content
-    url = f"https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}"
-    if language == 'python':
-        kind = 'python:default'
-    elif language == 'javascript':
-        kind = 'nodejs:20'
-    elif language == 'go':
-        kind = 'go:1.15'
-    elif language == 'php':
-        kind = 'php:7.4'
     editor = {"function": function, "description": description, "name": NAME, "namespace": SESSION_USER['namespace'], "package": SESSION_USER['package'], "language": language}
-    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/code_editor/add", json={'editor': editor}, headers={'cookie': f"appfront-sess-cookie={SESSION_USER['cookie']}"})
+    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+                auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
+                json={'id': SESSION_USER['_id'], 'message': {'editor': editor}})
+    # requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/code_editor/add", json={'editor': editor}, headers={'cookie': f"appfront-sess-cookie={SESSION_USER['cookie']}"})
     return f"""url: https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}\ndescription: {description}\nfunction: {function}"""
 
 def create_action(args):
     global NAME
     NAME = args.get('name', False)
-    package = args.get('package', 'default')
     function = args.get('function', False)
     language = args.get('language', False)
     function = function.replace('```', '')
     function = function.replace(language, '')
     function = function.replace(language, '')
     description = args.get('description', False)
-    action = deploy_action(NAME, function, description, language, package)
-    return action
+    return deploy_action(NAME, function, description, language)
 
 def main(args):
     global JWT
     global TOKEN
     global SESSION_USER
+    global AI
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     request = args.get('request', False)
     TOKEN = args.get('token', False)
@@ -193,7 +185,6 @@ create_action_tool = [{
                         "type": "object",
                         "properties": {
                             "name": {"type": "string", "description": "action name"},
-                            "package": {"type": "string", "description": "the package where to deploy the action, Default: 'default'"},
                             "function": {"type": "string", "description": "the generated function. It must starts with 'def main(args):'"},
                             "description": {"type": "string", "description": "a description of the action you made. The description MUST includes the parameters the action needs such as: {key: type, key: type, ...}. Example: 'an action which add an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}, None'"},
                             "language": {"type": "string", "description": "the language in which you wrote the function. It must be 1 word from the following: 'python', 'javascript', 'go', 'php'"}

@@ -3,6 +3,7 @@ import os
 OW_KEY = os.getenv('__OW_API_KEY')
 OW_API_SPLIT = OW_KEY.split(':')
 debug = ""
+frame = ""
 html = ""
 session_user = None
 query = ""

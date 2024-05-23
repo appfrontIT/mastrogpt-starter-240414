@@ -16,8 +16,5 @@ def find_man_page(page: str):
         "collection": 'crawl_appfront_operations__gitbook__io',
         'query': config.query
     })
-    print(page)
-    config.html = f"""
-    <iframe src="https://appfront-operations.gitbook.io/lookinglass-manuale-utente/{page.lower()}" width='100%' height='800'></iframe>
-    """
+    config.frame = f"""https://appfront-operations.gitbook.io/lookinglass-manuale-utente/{page.lower()}"""
     return query.text

@@ -103,7 +103,16 @@ def find(args):
     if response.status_code != 404:
         return {"statusCode": 200, "body": response.text}
     return {"statusCode": 404}
-    
+
+def find_all(args):
+    token = args['__ow_headers'].get('authorization', False)
+    if not token:
+        return {'statusCode': 401}
+    token = token.split(' ')[1]
+    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_many", headers={'Authorization': 'Bearer ' + token})
+    if response.status_code != 404:
+        return {"statusCode": 200, "body": response.json()}
+    return {"statusCode": 404}
 
 def main(args):
     path = args['__ow_path']
@@ -115,4 +124,6 @@ def main(args):
         return update(args)
     elif path == '/find'and args['__ow_method'] == 'get':
         return find(args)
+    elif path == '/find_all'and args['__ow_method'] == 'get':
+        return find_all(args)
     return {"statusCode": 404}

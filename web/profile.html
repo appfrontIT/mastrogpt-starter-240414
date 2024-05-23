@@ -1,54 +1,150 @@
-<div class="container-fluid main" style="height:100vh;padding-left:0px;">
-    <div class="row align-items-center" style="height:100%">
-    
-    <div class="col-md-9">
-        <div class="container content clear-fix">
-        <h2 class="mt-5 mb-5">Profile Settings</h2>
-        <div class="row" style="height:100%">
-            <div class="col-md-3">
-                <div href=# class="d-inline"><img src="img/human.png" width=130px style="margin:0;"><br><p class="pl-2 mt-2"><a href="#" class="btn" style="color:#8f9096;font-weight:600">Edit Picture</a></p></div>
-            </div>
-            <div class="col-md-9">
-                <div class="container">
-                    <form>
-                        <div class="form-group">
-                            <label for=fullName>Full Name</label>
-                            <input type="text" class="form-control" id="fullName">
-                        </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile Form</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* min-height: 100vh; */
+      width: 100%;
+      height: 100%;
+    }
 
-                    </form>                
-                </div>
-            </div>
-        </div>
-    </div>
-    </div>
-</div>
+    .form-container {
+      width: 80%;
+      height: 98%;
+      margin: 0 20px;
+    }
 
-</div>
+    form {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 20px;
+      display: flex;
+    }
 
-<!-- Optional JavaScript -->
-<!-- jQuery first, then Popper.js, then Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-<script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
-<link rel="stylesheet" href="/css/profile.css">
-<script>
-    $(document).ready(function(){
-    
-    $('.menu').on('click', function() {
-		$('.bar').toggleClass('animate');
-        $('.expand-menu').toggleClass('animate');
-        $('.expand-menu .nav-link').toggleClass('animate');
-        setTimeout(function(){
-            $('.expand-menu .nav-link').toggleClass('animate-show');
-        },500)
-	})
-})
+    .column-left {
+      flex: 1;
+      padding-right: 20px;
+    }
 
-document.addEventListener("DOMContentLoaded", async function() {
-    const user = sessionStorage.getItem('user')
-    var user_obj = await JSON.parse(user)
-    document.getElementById('fullName').placeholder = user_obj['username']
-})
-</script>
+    .column-right {
+      flex: 1;
+      padding-left: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: violet;
+      color: #fff;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: rgb(249, 62, 249);
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 16px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <form action="" id="profileForm">
+      <div class="column-left">
+        <!-- <label for="photo">Profile Picture:</label> -->
+        <input type="file" name="photo" id="photo" onchange="displayProfilePic()">
+        <img src="img/human-mini.png" alt="Profile Picture" id="profilePic" onclick="displayProfilePic()">
+
+        <div id="username"></div>
+        <div id="role"></div>
+        <div id="package"></div>
+
+        <label for="email">Email:</label>
+        <input type="email" name="email" id="email" required>
+
+        <label for="gender">Gender:</label>
+        <select name="gender" id="gender" required>
+          <option value="male">male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+
+        <button type="button" onclick="submitForm()">Submit</button>
+      </div>
+
+    </form>
+  </div>
+
+  <script>
+
+    document.addEventListener("DOMContentLoaded", async function(){
+      const user = sessionStorage.getItem('user');
+      user_obj = await JSON.parse(user);
+      document.getElementById('username').innerHTML = `<p>Username: ${user_obj['username']}</p>`
+      document.getElementById('role').innerHTML = `<p>Role: ${user_obj['role']}</p>`
+      document.getElementById('package').innerHTML = `<p>Package: ${user_obj['package']}</p>`
+    })
+
+    function displayProfilePic() {
+      const input = document.getElementById('photo');
+      const img = document.getElementById('profilePic');
+      
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          img.src = e.target.result;
+          img.style.display = 'block';
+        };
+
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function submitForm() {
+      const formData = new FormData(document.getElementById('profileForm'));
+
+      for (const pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+    }
+  </script>
+</body>
+</html>

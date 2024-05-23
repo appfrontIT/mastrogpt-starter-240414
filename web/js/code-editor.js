@@ -46,53 +46,43 @@ document.addEventListener("DOMContentLoaded", async function() {
         opt.innerHTML = packages[i];
         action_package.appendChild(opt);
     }
-    while(true) {
-        try {
-            let response = await fetch(base+'api/my/db/code_editor/get', {
-                headers: {"Content-Type": "application/json"},
-                method: 'POST',
-                credentials: 'include'
-            })
-            if (response.status == 200) {
-                const data = await response.json();
-                if (data['language'] === 'html') {
-                    for(var i, j = 0; i = lang.options[j]; j++) {
-                        if(i.value == data['language']) {
-                            lang.selectedIndex = j;
-                            break;
-                        }
-                    }
-                    action_name.value = data['name'];
-                    action_package.setAttribute("disabled","disabled");
-                    action_package.style.display = 'none';
-                    description.setAttribute("disabled","disabled");
-                    description.style.display = 'none';
-                    document.getElementById('test').setAttribute("disabled","disabled");
-                    document.getElementById('test').style.display = 'none';
-                    editor.setValue(data['function']);
-                    return ;
-                }
-                action = data;
-                action_package.value = data['package']
-                action_name.value = data['name']
-                description.value = data['description']
-                if (data['language'] == 'nodejs') {
-                    data['language'] = 'javascript';
-                }
-                for(var i, j = 0; i = lang.options[j]; j++) {
-                    if(i.value == data['language']) {
-                        lang.selectedIndex = j;
-                        break;
-                    }
-                }
-                editor.session.setMode("ace/mode/" + data['language']);
-                editor.setValue(data['function']);
-            } else { continue; }
-        } catch(error) {
-            console.log(error)
-            return `ERROR interacting with ${this.url}`
+})
+
+window.addEventListener('message', async function (ev) {
+    const data = ev.data.editor
+    if (!data) return ;
+    if (data['language'] === 'html') {
+        for(var i, j = 0; i = lang.options[j]; j++) {
+            if(i.value == data['language']) {
+                lang.selectedIndex = j;
+                break;
+            }
+        }
+        action_name.value = data['name'];
+        action_package.setAttribute("disabled","disabled");
+        action_package.style.display = 'none';
+        description.setAttribute("disabled","disabled");
+        description.style.display = 'none';
+        document.getElementById('test').setAttribute("disabled","disabled");
+        document.getElementById('test').style.display = 'none';
+        editor.setValue(data['function']);
+        return ;
+    }
+    action = data;
+    action_package.value = data['package']
+    action_name.value = data['name']
+    description.value = data['description']
+    if (data['language'] == 'nodejs') {
+        data['language'] = 'javascript';
+    }
+    for(var i, j = 0; i = lang.options[j]; j++) {
+        if(i.value == data['language']) {
+            lang.selectedIndex = j;
+            break;
         }
     }
+    editor.session.setMode("ace/mode/" + data['language']);
+    editor.setValue(data['function']);
 })
 
 async function deploy() {

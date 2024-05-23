@@ -4,6 +4,7 @@
 <head>
     <link rel="stylesheet" href="/css/almond.min.css" />
     <link rel="stylesheet" href="/css/selector.css" />
+    <link href="https://assets-global.website-files.com/5fb590162d25d5289824458f/5fb5a2895b6c6c97cc454ca8_icona.png" rel="shortcut icon" type="image/x-icon" data-cmp-ab="2" data-cmp-info="10">
 </head>
 
 <body>
@@ -15,6 +16,7 @@
         <button id="admin" onclick="admin()">admin</button>
         <button id="test" onclick="test()">tester</button>
         <button id="logout" onclick="logout()">logout</button>
+        <button id="swagger" onclick="swagger()">swagger</button>
     </div>
     <div id="iframe-container" frameborder="0">
         <iframe id="chat" src="/chat.html" frameborder="0" width="40%" height="100%"></iframe>
@@ -25,6 +27,8 @@
         let chat = document.getElementById("chat").contentWindow
         let display = document.getElementById("display").contentWindow
         let base = location.href.replace(/selector\.html$/, "")
+        let chat_frame = document.getElementById("chat")
+        let display_frame = document.getElementById("display")
         
         document.addEventListener("DOMContentLoaded", async function(event) {
             event.preventDefault()
@@ -52,13 +56,29 @@
             }
         })
 
-        async function lookinglass() { await chat.postMessage({name: "Lookinglass", url: base + "api/my/base/invoke/lookinglass"}) }
+        async function lookinglass() {
+            // sessionStorage.setItem('url', base + "api/my/base/invoke/lookinglass")
+            document.getElementById("display").src = 'https://appfront.cloud';
+            chat.postMessage({url: base + "api/my/base/invoke/lookinglass"})
+        }
         
-        async function coder() { await chat.postMessage({name: "Coder", url: base + "api/my/base/invoke/walkiria"}) }
+        async function coder() {
+            chat.postMessage({url: base + "api/my/base/invoke/walkiria"})
+            // sessionStorage.setItem('url', base + "api/my/base/invoke/walkiria")
+            document.getElementById("display").src = '/code-editor.html';
+        }
         
-        async function admin() { await chat.postMessage({name: "Admin", url: base + "api/my/base/invoke/admin"}) }
+        async function admin() {
+            chat.postMessage({url: base + "api/my/base/invoke/admin"})
+            // sessionStorage.setItem('url', base + "api/my/base/invoke/admin")
+            document.getElementById("display").src = '/admin.html';
+        }
         
-        async function test() { await chat.postMessage({name: "Test", url: base + "api/my/base/invoke/test"}) }
+        async function test() {
+            chat.postMessage({url: base + "api/my/base/invoke/test"})
+            // sessionStorage.setItem('url', base + "api/my/base/invoke/test")
+            document.getElementById("display").src = '/display.html';
+        }
         
         async function logout() {
             const response = await fetch(this.url, {
@@ -72,10 +92,11 @@
         }
 
         async function profile() {
-            const user = sessionStorage.getItem('user');
-            user_obj = await JSON.parse(user);
-            let newWin = window.open("/profile.html", "profile", "popup=true");
-            newWin.document.write(html);
+            document.getElementById("display").src = '/profile.html'
+        }
+
+        async function swagger() {
+            document.getElementById("display").src = '/swagger.html'
         }
     </script>
 </body>

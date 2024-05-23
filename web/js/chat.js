@@ -16,66 +16,32 @@ const msgerChat = document.querySelector(".msger-chat");
 const areaChat = document.getElementById("chat-area");
 var display = parent.document.getElementById("display")
 const displayWindow = window.parent.document.getElementById("display").contentWindow
+const displayFrame = window.parent.document.getElementById("display")
 let base = location.href.replace(/chat\.html$/, "")
+let g_url;
 
-// Classes
-class Invoker {
-
-  constructor(name, url) {
-    this.name = name
-    this.url = url
-  }
-
-
-  async invoke(msg) {
-    let cookie = document.cookie;
-    if (!cookie) {
-      alert('error: session expired')
-      window.parent.location.replace('/index.html')
-    } else {
-      const response = await fetch(base + 'api/my/base/auth/token', {
-        method: 'GET',
-        credentials: 'include'
-      })
-      if (response.ok) {
-        const obj = await response.json()
-        token = obj['token']
-      }
+async function forward_msg(msg) {
+  let json = { input: msg }
+  try {
+    let response = await fetch(g_url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token},
+      body: JSON.stringify(json),
+    });
+    switch (response.status) {
+      case 204: return response
+      case 403: alert("Non hai l'autorizzazione per accedere questa sezione"); return response;
+      case 404: {
+        const data = await response.json()
+        alert('error: session expired');
+        return window.parent.location.replace('/index.html');}
+      case 200: {};
+      default: break;
     }
-    // welcome message no input
-    if (msg == null) {
-      return "Welcome, you have selected " + this.name;
-    }
-    // no url 
-    if (this.url == null)
-      return "Welcome, please select the chat application you want to use by clicking a  button on top.";
-    // prepare a request
-    let json = {
-      input: msg,
-      // history: history
-    }
-    // send the request
-    try {
-      let response = await fetch(this.url, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token},
-        body: JSON.stringify(json),
-      });
-      switch (response.status) {
-        case 204: return response
-        case 403: alert("Non hai l'autorizzazione per accedere questa sezione"); return response;
-        case 404: {
-          const data = await response.json()
-          alert('error: session expired');
-          return window.parent.location.replace('/index.html');}
-        case 200: {};
-        default: break;
-      }
-      return response
-    } catch (error) {
-      console.log(error)
-    }
+    return response
+  } catch (error) {
+    console.log(error)
   }
 }
 
@@ -111,10 +77,10 @@ function appendMessage(name, img, side, text) {
 }
 
 async function bot() {
-  url = base+'api/my/db/chat'
-  // const user = sessionStorage.getItem('user')
-  // user_obj = JSON.parse(user)
-  // appendMessage(BOT_NAME, BOT_IMG, "left", `Bentornato ${user_obj['username']}! Come posso aiutarti?`);
+  const url = base+'api/my/db/chat'
+  const user = sessionStorage.getItem('user')
+  user_obj = JSON.parse(user)
+  appendMessage(BOT_NAME, BOT_IMG, "left", `Bentornato ${user_obj['username']}! Come posso aiutarti?`);
   while (true) {
     try {
       let r = await fetch(url, {method: 'GET', headers: {
@@ -128,12 +94,22 @@ async function bot() {
         const chat = await r.json()
         for (let j = 0; j < chat.length; j++) {
           let data = chat[j];
-          let output = data.output
-          delete data['output']
-          displayWindow.postMessage(data)
-          if (output != "") {
-            appendMessage(BOT_NAME, BOT_IMG, "left", output);
+          if ('frame' in data) {
+            displayFrame.src = data.frame
+            delete data['frame']
           }
+          if ('editor' in data) {
+            displayWindow.postMessage({'editor': data.editor})
+            delete data['editor']
+          }
+          if ('output' in data) {
+            output = data.output;
+            if (output != "") {
+              appendMessage(BOT_NAME, BOT_IMG, "left", output);
+            }
+            delete data['output'];
+          }
+          displayWindow.postMessage(data)
         }
       }
     } catch(error) {
@@ -155,19 +131,29 @@ msgerForm.addEventListener("submit", async event => {
   if (!input) return;
   
   human(input);
-
-  await invoker.invoke(input)
+  forward_msg(input)
 });
 
-window.addEventListener('message', async function (ev) {
-  invoker = new Invoker(ev.data.name, ev.data.url)
-  if (ev.data.name == "Coder") {
-    display.src = '/code-editor.html'
+window.addEventListener('message', load_chat)
+
+async function load_chat(ev) {
+  if (!ev.data.url || ev.data.url == undefined) return;
+  g_url = ev.data.url;
+  let cookie = document.cookie;
+  if (!cookie) {
+    alert('error: session expired')
+    window.parent.location.replace('/index.html')
   } else {
-    display.src = '/display.html'
+    const response = await fetch(base + 'api/my/base/auth/token', {
+      method: 'GET',
+      credentials: 'include'
+    })
+    if (response.ok) {
+      const obj = await response.json()
+      token = obj['token']
+    }
   }
-  // titleChat.textContent = ev.data.name
   areaChat.innerHTML = ""
-  await invoker.invoke("")
-  bot()
-})
+  forward_msg("");
+  bot();
+}
