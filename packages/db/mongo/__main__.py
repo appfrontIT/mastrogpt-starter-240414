@@ -91,8 +91,8 @@ def add_many(collection: Collection, data):
 
 def main(args):
     token = args['__ow_headers'].get('authorization', False)
-    if not token:
-        return {'statusCode': 401}
+    # if not token:
+    #     return {'statusCode': 401}
     token = token.split(' ')
     if len(token) != 2 and token[0] != 'Bearer':
         return {'statusCode': 401}

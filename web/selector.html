@@ -9,14 +9,22 @@
 
 <body>
     <div id="top-area">
-        <h2>Walkiria</h2>
+        <div id="mySidenav" class="sidenav">
+            <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+            <a href="#" id="username"></a>
+            <a href="#" id="namespace"></a>
+            <a href="#" id="packages"></a>
+            <a href="#" id="github"></a>
+        </div>
         <button id="profile" onclick="profile()">Profile</button>
         <button id="lookinglass" onclick="lookinglass()">Lookinglass</button>
         <button id="coder" onclick="coder()">coder</button>
         <button id="admin" onclick="admin()">admin</button>
-        <button id="test" onclick="test()">tester</button>
+        <!-- <button id="test" onclick="test()">tester</button> -->
         <button id="logout" onclick="logout()">logout</button>
         <button id="swagger" onclick="swagger()">swagger</button>
+        <button id="actions" onclick="actions()">actions</button>
+        <button id="crawled" onclick="crawled()">crawled</button>
     </div>
     <div id="iframe-container" frameborder="0">
         <iframe id="chat" src="/chat.html" frameborder="0" width="40%" height="100%"></iframe>
@@ -51,7 +59,11 @@
                     headers: {"Authorization": "Bearer " + token_obj['token']}
                 })
                 if (user.status == 200) {
-                    sessionStorage.setItem('user', JSON.stringify(await user.json()))
+                    const user_obj = await user.json();
+                    sessionStorage.setItem('user', JSON.stringify(user_obj));
+                    document.getElementById('username').innerHTML = `username:<br>${user_obj['username']}`;
+                    document.getElementById('namespace').innerHTML = `namespace:<br>${user_obj['namespace']}`;
+                    document.getElementById('packages').innerHTML = `packages:<br>${user_obj['package']}`;
                 }
             }
         })
@@ -92,11 +104,26 @@
         }
 
         async function profile() {
-            document.getElementById("display").src = '/profile.html'
+            document.getElementById("mySidenav").style.width = "250px";
+            document.getElementById("chat").style.marginLeft = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("mySidenav").style.width = "0";
+            document.getElementById("chat").style.marginLeft= "0";
         }
 
         async function swagger() {
             document.getElementById("display").src = '/swagger.html'
+        }
+
+        async function actions() {
+            chat.postMessage({url: base + "api/my/base/invoke/walkiria"})
+            document.getElementById("display").src = '/actions.html'
+        }
+
+        async function crawled() {
+            document.getElementById("display").src = '/crawled_pages.html'
         }
     </script>
 </body>

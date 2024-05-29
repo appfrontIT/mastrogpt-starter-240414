@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* { box-sizing: border-box; }
+#myInput {
+  background-image: url('/css/searchicon.png');
+  background-position: 10px 12px;
+  background-repeat: no-repeat;
+  width: 100%;
+  font-size: 16px;
+  padding: 12px 20px 12px 40px;
+  border: 1px solid #ddd;
+  margin-bottom: 12px;
+}
+#action_list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+details {
+  padding: 12px;
+  background-color: white;
+  border-radius: 5px;
+  border: 1px solid violet;
+}
+summary::marker {
+  color: violet;
+  font-size: 1.2em;
+}
+summary {
+  background-color: white;
+  color: violet;
+  padding: 10px;
+}
+.button {
+    background-color: white;
+    color: violet;
+    border: 1px solid violet;
+    transition-duration: 0.4s;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1em;
+    outline: none;
+    margin: 3px;
+}
+
+</style>
+</head>
+<body>
+
+<h2>Actions</h2>
+
+<input type="text" id="myInput" onkeyup="search()" placeholder="Search for names.." title="Type in a name">
+
+<div id="action_list">
+</div>
+
+<script>
+let base = location.href.replace(/actions\.html$/, "");
+let action_list = document.getElementById('action_list');
+let users;
+
+window.addEventListener("DOMContentLoaded", async function() {
+    const user = sessionStorage.getItem('user')
+    var user_obj = await JSON.parse(user)
+    const response = await fetch(base + 'api/my/base/action/find_all', {
+        method: 'GET',
+        headers: {"Authorization": "Bearer " + user_obj['JWT']}
+    })
+    if (response.status == 200) {
+        action = await response.json();
+        for (let i = 0; i < action.length; i++) {
+            const annotations = await action[i].annotations;
+            let annotations_list;
+            for (let j = 0; j < annotations.length; j++) {
+                annotations_list += ` ${annotations[j].key}: ${annotations[j].value}<br>`;
+            }
+            action_list.innerHTML += `<details><summary><a href="#" style="text-decoration:none;">${action[i].name}
+                <button class="button" style="float: right;" onclick="del('${action[i].name}', '${action[i].package}')">delete</button>
+                <button class="button" style="float: right;" onclick="info()">info</button>
+                <button class="button" style="float: right;" onclick="edit('${action[i].name}', '${action[i].package}')">edit</button></a></summary>
+            <div>Package: ${action[i].package}<br>Annotations: ${annotations_list}</div>
+            </details><br>`
+        }
+    }
+})
+
+function search() {
+    var input, filter, ul, li, a, i, txtValue;
+    input = document.getElementById("myInput");
+    filter = input.value.toUpperCase();
+    div = document.getElementById("action_list");
+    details = div.getElementsByTagName("details");
+    for (i = 0; i < details.length; i++) {
+        a = details[i].getElementsByTagName("a")[0];
+        txtValue = a.textContent || a.innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            details[i].style.display = "";
+        } else {
+            details[i].style.display = "none";
+        }
+    }
+}
+
+async function edit(name, package, description) {
+    const user = sessionStorage.getItem('user');
+    user_obj = await JSON.parse(user);
+    const response = await fetch(base + `api/my/base/action/find?name=${name}&package=${package}`, {
+            method: 'GET',
+            headers: {"Authorization": "Bearer " + user_obj['JWT']}
+        })
+    if (response.status == 200) {
+        const obj = await response.json();
+        const annotations = obj['annotations'];
+        let language = obj['exec']['kind'];
+        language = language.split(':')[0]
+        if (language === 'nodejs') {
+            language = 'javascript';
+        }
+        const description = () => { for (let i = 0; i < annotations.length; i++) { if (annotations[i].key == 'description') return annotations[i].value;}}
+        editor = JSON.stringify({'editor': {'function': obj['exec']['code'], 'description': description(), 'name': name, 'package': package, 'language': language}});
+        sessionStorage.setItem('editor', editor);
+        window.location.assign('/code-editor.html')
+    }
+}
+
+async function info() {
+
+}
+
+async function del(name, package) {
+    if (confirm('are you sure you want to delete this action?')) {
+        const user = sessionStorage.getItem('user')
+        var user_obj = await JSON.parse(user)
+        const response = await fetch(base + `api/my/base/action/delete?name=${name}&package=${package}`, {
+            method: 'DELETE',
+            headers: {"Authorization": "Bearer " + user_obj['JWT']}
+        })
+        if (response.status == '204') {
+            alert('Action succesfully deleted')
+        } else {
+            alert('There was an error deleting this action')
+        }
+    }
+}
+
+</script>
+
+</body>
+</html>

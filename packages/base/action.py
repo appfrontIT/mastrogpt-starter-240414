@@ -47,9 +47,8 @@ def add(args, token):
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
     else:
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
-    print('openapi upload')
-    requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/openAPI',
-                auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
+    requests.post('https://nuvolaris.dev/api/v1/web/gporchia/walkiria/openAPI/add',
+                headers={'Authorization': 'Bearer ' + token},
                 json={'action': f"""url: https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}\ndescription: {description}\nfunction: {function}""", 'token': token})
     return {'statusCode': resp.status_code, 'body': resp.json()}
 
@@ -62,7 +61,7 @@ def delete(args):
         return {'statusCode': 404}
     response = requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}",
                     auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
-    if response.status_code == 200:
+    if response.status_code == 204:
         return {'statusCode': response.status_code}
     return {'statusCode': response.status_code, 'body': response.json()}
 
@@ -74,7 +73,7 @@ def find(args):
     package = args.get('package', False)
     if not name or not package:
         return {'statusCode': 400}
-    if package not in JWT['package']:
+    if package not in JWT['package'] and JWT['role'] != 'admin':
         return {'statusCode': 404}
     action = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}",
                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))

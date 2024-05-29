@@ -46,6 +46,10 @@ document.addEventListener("DOMContentLoaded", async function() {
         opt.innerHTML = packages[i];
         action_package.appendChild(opt);
     }
+    const editor = sessionStorage.getItem('editor');
+    const editor_obj = await JSON.parse(editor);
+    window.postMessage(editor_obj);
+    sessionStorage.removeItem('editor')
 })
 
 window.addEventListener('message', async function (ev) {
@@ -165,13 +169,25 @@ async function verify() {
 }
 
 async function test() {
-    if (name.value === "" || action_package.value === "") {
-        alert('You must fill all fields before deploying an action');
+    if (action_name.value === "" || action_package.value === "") {
+        alert('I need the package and the action name to perform the tests');
         return ;
     }
     const user = sessionStorage.getItem('user');
     user_obj = await JSON.parse(user);
     token = user_obj['JWT'];
+    const action = await fetch(base + `api/my/base/action/find?package=${action_package.value}&name=${action_name.value}`, {
+        headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
+        method: 'GET'
+    })
+    if (action.status == 404) {
+        var confirm_deploy = confirm('The action must be deployed to perform the tests. Do you wanna deploy it?')
+        if (confirm_deploy) {
+            await this.deploy();
+        } else {
+            return ;
+        }
+    }
     let query = `esegui i test sulla seguente azione: nome: ${action_name.value}, package: ${action_package.value}. Non chiedere conferma e comincia subito con i test`;
     const r = await fetch(base + 'api/my/base/invoke/walkiria', {
         headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
@@ -247,7 +263,7 @@ async function display_action() {
         }
         html += `
         </body></html>`;
-        let newWin = window.open("about:blank", "hello", "popup=true");
+        let newWin = window.open("about:blank", "actions", "popup=true");
         newWin.document.write(html);
         
     }

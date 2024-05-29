@@ -44,8 +44,10 @@ def html_gen(args):
     if not output:
         return "failed to generate the HTML"
     editor = {"function": output, "description": description, "name": name, "namespace": config.session_user['namespace'], "package": config.session_user['username'], "language": 'html'}
-    requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/code_editor/add", json={'editor': editor}, headers={'cookie': f"appfront-sess-cookie={config.session_user['cookie']}"})
-    return f"{action}\nEverything is fine, don't call any other function"
+    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+                auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
+                json={'id': config.session_user['_id'], 'message': {'editor': editor}})
+    return f"Everything is fine, don't call any other function"
 
 def create_action(query):
     response = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/generate?blocking=true',
@@ -84,6 +86,9 @@ def delete_action(name = False, package = False):
     if package not in config.session_user['package'] and config.session_user['role'] != 'admin':
         return "Non sei autorizzato ad accedere a questa azione"
     response = utils.delete_action(name, package)
+    delete = requests.delete('https://nuvolaris.dev/api/v1/web/gporchia/walkiria/openAPI/delete',
+            headers={'Authorization': 'Bearer ' + config.session_user['JWT']},
+            json={'action': f"""url: https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}"""})
     return f"status: {response.status_code}, body: {response.json()}"
 
 def show_all_actions():
@@ -109,7 +114,6 @@ def show_all_actions():
                 annotations.append(an)
         x['annotations'] = annotations
         name_arr.append(x)
-    print(name_arr)
     return f"""display all the following actions.\nActions:\n{name_arr}\nYou must display the actions in this output: namespace: <namespace>\nname: <name>\ndescription; <description>"""
 
 def tools_func(
@@ -133,7 +137,10 @@ def tools_func(
             "name": function_name,
             "content": function_response
         })
-        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], "message": {"output": "Ho eseguito l'operazione, sto elaborando una risposta"}})
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+                    auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
+                    json={'id': config.session_user['_id'], "message": {"output": "Ho eseguito l'operazione, sto elaborando una risposta"}}
+                    )
     return config.AI.chat.completions.create(model=MODEL, messages=messages,).choices[0].message.content
 
 

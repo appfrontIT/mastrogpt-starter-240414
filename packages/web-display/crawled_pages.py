@@ -8,7 +8,10 @@ from bson.objectid import ObjectId
 import requests
 
 def main(args):
-    
+    token = args['__ow_headers'].get('authorization', False)
+    if not token:
+        return {'statusCode': 401}
+    token = token.split('=')[1]
     client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
     dbname = client['mastrogpt']
     collection_list = dbname.list_collection_names()
@@ -92,7 +95,7 @@ def main(args):
                 // Show the selected popup
                 fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/' + id + '/find_many', {{
                 method: 'GET',
-                headers: {{ 'Content-type': 'application/json; charset=UTF-8' }},
+                headers: {{ 'Content-type': 'application/json; charset=UTF-8', 'Authorizatino': 'Bearer {token}' }},
                 }})
                 .then(response => response.json())
                 .then(data => {{

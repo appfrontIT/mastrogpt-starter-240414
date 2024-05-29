@@ -40,13 +40,21 @@ def main(args):
         return {"statusCode": 404, "body": "failed to retrieve the user, please login again"}
     input = args.get("input", "")
     if input == "":
-        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'reset_history': True, 'history': {"role": "system", "content": config.ROLE}})
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+                    auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
+                    json={'id': config.session_user['_id'], 'reset_history': True, 'history': {"role": "system", "content": config.ROLE}}
+                    )
         return { "statusCode": 204, }  
     else:
-        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'history': {"role": "user", "content": input }})
-        output = ask(query=input, model=MODEL)
-        res = { "output": output}
+        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+                    auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
+                    json={'id': config.session_user['_id'], 'history': {"role": "user", "content": input }}
+                    )
+        res = { "output": ask(query=input, model=MODEL)}
     if config.html != "":
         res['html'] = config.html
-    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'message': res, 'history': {"role": "assistant", "content": res['output']}})
+    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+                auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
+                json={'id': config.session_user['_id'], 'message': res, 'history': {"role": "assistant", "content": res['output']}}
+                )
     return {"statusCode": 200, 'body': res['output']} 
