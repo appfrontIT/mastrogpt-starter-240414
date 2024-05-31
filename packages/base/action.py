@@ -4,6 +4,7 @@
 #--annotation description "use this endpoint to perform operations with action. You must specify the operation correspondig path: '/add', '/update', '/delete', '/find'"
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--param JWT_SECRET $JWT_SECRET
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/base/action
 
 import jwt
 import requests
@@ -95,7 +96,17 @@ def find_all():
             obj = response.json()
             actions = obj['actions']
             for action in actions:
-                ret.append({'package': obj['name'], 'name': action['name'], 'annotations': action['annotations']})
+                annotations = action['annotations']
+                url = ''
+                i = 0
+                for an in annotations:
+                    if an['key'] == 'url':
+                        url = an['value']
+                        annotations.pop(i)
+                        action['annotation'] = annotations
+                        break
+                    i += 1
+                ret.append({'package': obj['name'], 'name': action['name'], 'annotations': action['annotations'], 'url': url})
     if len(ret) == 0:
         return {'statusCode': 404}
     return {'statusCode': 200, 'body': ret}

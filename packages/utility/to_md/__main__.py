@@ -2,6 +2,7 @@
 #--kind python:default
 #--annotation description "This action convert a pdf into a markdown string"
 #--timeout 300000
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/utility/to_md
 
 import requests
 import urllib.request

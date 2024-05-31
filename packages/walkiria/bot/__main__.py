@@ -4,6 +4,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action which interact with a custom bot that generate actions"
 #--timeout 300000
+#--annotation url https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/bot
 
 from openai import OpenAI
 import config

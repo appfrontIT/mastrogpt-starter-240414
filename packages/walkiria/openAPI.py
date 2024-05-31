@@ -6,6 +6,7 @@
 #--param JWT_SECRET $JWT_SECRET
 #--param CONNECTION_STRING $CONNECTION_STRING
 #--timeout 300000
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/walkiria/openAPI
 
 from pymongo import MongoClient, errors
 from bson.objectid import ObjectId

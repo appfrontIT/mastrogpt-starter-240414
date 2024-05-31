@@ -3,6 +3,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "This action format the output to display in the chat"
 #--timeout 300000
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/utility/formatter
 
 from openai import OpenAI
 

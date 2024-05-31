@@ -2,6 +2,7 @@
 #--kind python:default
 #--annotation description "an action which perform operations to the database, suche as: add, update, delete, find. Required parameters: {'db': db name, 'collection': collection name, 'type of operation(add, find_one, find, delete, update)': True, 'data': required data as json. Example: 'name': name, 'role': role, 'password': password, ...}"
 #--param CONNECTION_STRING $CONNECTION_STRING
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/db/mongo
 
 from pymongo import MongoClient, errors
 from pymongo.collection import Collection

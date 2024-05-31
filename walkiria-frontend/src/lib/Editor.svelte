@@ -56,6 +56,12 @@
         lang={javascript()}
         theme={oneDark}
         class="col-span-10 max-h-[80vh] overflow-y-auto"
+        styles={{
+            "&": {
+                maxWidth: "100%",
+                height: "80vh",
+            },
+        }}
         />
         <div class="grid w-full grid-rows-10 space-y-2" style="height: 80vh;">
             <button class="btn"><img src={fullscreen_icon} alt="expand to fullscreen"></button>

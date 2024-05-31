@@ -4,9 +4,9 @@
 	</svelte:fragment>
 	<svelte:fragment slot="trail">
 		<ol class="breadcrumb">
-			<li class="crumb"><a class="anchor" href="/elements/breadcrumbs">docs</a></li>
+			<!-- <li class="crumb"><a class="anchor" href="/elements/breadcrumbs">docs</a></li> -->
 			<li class="crumb-separator" aria-hidden><span class="divider-vertical h-10" /></li>
-			<li class="crumb"><a class="anchor" href="/elements/breadcrumbs">actions</a></li>
+			<!-- <li class="crumb"><a class="anchor" href="/elements/breadcrumbs">actions</a></li> -->
 			<li class="crumb-separator" aria-hidden><span class="divider-vertical h-10" /></li>
 			<li><Avatar
 				initials="JD"
@@ -18,8 +18,9 @@
 </AppBar>
 <div class="chat w-full grid grid-cols-7 gap-3 space-y-2" style="height: 87vh;">
 	<div class="grid grid-rows-[1fr_auto] gap-1 col-span-3">
-		<section bind:this={elemChat} class="max-h-[80vh] p-4 overflow-y-auto space-y-4 col-span-3">
-			{#each messageFeed as bubble}
+		<div bind:this={elemChat} class="max-h-[80vh] p-4 overflow-y-auto space-y-4 col-span-3">
+			{#if selector != -1}
+			{#each chat_room[selector].messageFeed as bubble}
 				{#if bubble.host === false}
 					<div class="grid grid-cols-[auto_1fr] gap-2">
 						<Avatar src={hari} width="w-12" />
@@ -44,7 +45,11 @@
 					</div>
 				{/if}
 			{/each}
-		</section>
+			{#if loading_msg === true}
+				<ProgressRadial width="w-20"/>
+			{/if}
+			{/if}
+		</div>
 		<!-- Prompt -->
 		<div class="input-group input-group-divider grid-cols-[auto_1fr_auto] rounded-container-token col-span-3">
 			<button class="input-group-shim" on:click={trigger}>+</button>
@@ -64,12 +69,12 @@
 	</div>
 	<!-- Right column -->
 	<div class="col-span-4 h-full space-y-2" id="right_div">
-		{#if selector === 1}
-		<object title="appfront-page" type="text/html" data="https://appfront-operations.gitbook.io/lookinglass-manuale-utente" class="h-full w-full"/>
-		{:else if selector === 2}
+		{#if selector === 0}
+			<object title="appfront-page" type="text/html" data="https://appfront-operations.gitbook.io/lookinglass-manuale-utente" class="h-full w-full"/>
+		{:else if selector === 1}
 			<Editor />
-		{:else if selector === 3}
-			<div></div>
+		{:else if selector === 2}
+			<Admin />
 		{:else}
 			<object title="appfront-page" type="text/html" data="https://www.appfront.cloud/walkiria" class="h-full w-full"/>
 		{/if}
@@ -108,44 +113,71 @@
 	import manual_svg from '$lib/manual.svg'
 	import code_svg from '$lib/coding.svg'
 	import admin_svg from '$lib/admin.svg'
-	import Editor from '../components/Editor.svelte';
+	import Editor from '$lib/Editor.svelte';
+	import Admin from '$lib/Admin.svelte'
 	import { Avatar } from '@skeletonlabs/skeleton';
 	import { AppBar } from '@skeletonlabs/skeleton';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { Drawer } from '@skeletonlabs/skeleton';
+	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import { ProgressRadial } from '@skeletonlabs/skeleton';
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
+	import { user } from '../store'
+	
 	const drawerStore = getDrawerStore();
 
 	let messageFeed: string | any[] = [];
 	let currentMessage = '';
 	let elemChat: HTMLElement;
-	let open = false;
-	let selector: number = 0;
+	let loading_msg = false;
+	let selector: number = -1;
+	let chat_room = [
+		{
+			'url': 'api/my/base/invoke/lookinglass',
+			'history': new Array(),
+			'messageFeed': new Array()
+		},
+		{
+			'url': '/api/my/base/invoke/walkiria',
+			'history': new Array(),
+			'messageFeed': new Array()
+		},
+		{
+			'url': '/api/my/base/invoke/admin',
+			'history': new Array(),
+			'messageFeed': new Array()
+		},
+	]
 
 	function scrollChatBottom(behavior?: ScrollBehavior): void {
 		elemChat.scrollTo({ top: elemChat.scrollHeight, behavior });
 	}
 
 	function getCurrentTimestamp(): string {
-		return new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+		const date = new Date().toLocaleString('en-GB', { hour: 'numeric', minute: 'numeric', hour12: true });
+		return date;
 	}
 
-	function addMessage(): void {
+	async function addMessage(): Promise<void> {
 		const newMessage = {
-			id: messageFeed.length,
+			id: chat_room[selector].messageFeed.length,
 			host: true,
-			avatar: 48,
 			name: 'Jane',
 			timestamp: `Today @ ${getCurrentTimestamp()}`,
 			message: currentMessage,
 			color: 'variant-soft-primary'
 		};
-		// Append the new message to the message feed
-		messageFeed = [...messageFeed, newMessage];
-		// Clear the textarea message
+		chat_room[selector].messageFeed = [...chat_room[selector].messageFeed, newMessage];
+		chat_room[selector].history = [...chat_room[selector].history, {'role': 'user', 'content': currentMessage}]
+		const data = JSON.stringify({'input': currentMessage});
 		currentMessage = '';
-		// Smoothly scroll to the bottom of the feed
 		setTimeout(() => { scrollChatBottom('smooth'); }, 0);
+		loading_msg = true;
+		const response = await fetch(chat_room[selector].url, {
+			method: 'POST',
+			body: data,
+			headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + $user!['JWT']}
+		})
 	}
 
 	function onPromptKeydown(event: KeyboardEvent): void {
@@ -155,16 +187,57 @@
 		}
 	}
 
-	onMount(() => {
+	onMount(async () => {
+		let cookie = document.cookie;
+        if (!cookie) {
+            return window.location.assign('/login')
+        }
+        const token_response = await fetch('api/my/base/auth/token', {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json'},
+		})
+        if (!token_response.ok) {
+            document.cookie = 'appfront-sess-cookie=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
+            return window.location.assign('/login')
+        } else {
+            const token_obj = await token_response.json()
+            let r = await fetch('api/my/base/auth/user', {
+                method: 'GET',
+                headers: {"Authorization": "Bearer " + token_obj['token']}
+            })
+        if (r.status == 200) {
+            const user_obj = await r.json();
+            $user = user_obj;
+			}
+		}
 		scrollChatBottom();
+		const evtSource = new EventSource("/api/chat");
+
+		evtSource.onmessage = function(event) {
+			const obj = JSON.parse(event.data);
+			for (let i = 0; i < obj.length; i++) {
+				const newMessage = {
+					id: chat_room[selector].messageFeed.length,
+					host: false,
+					name: 'Hari',
+					timestamp: `Today @ ${getCurrentTimestamp()}`,
+					message: obj[i].output,
+					color: 'variant-soft-primary'
+				};
+				chat_room[selector].messageFeed = [...chat_room[selector].messageFeed, newMessage];
+				chat_room[selector].history = [...chat_room[selector].history, {'role': 'assistant', 'content': obj[i].output}]
+				setTimeout(() => { scrollChatBottom('smooth'); }, 0);
+			}
+			loading_msg = false;
+		}
 	});
+	
+	// onDestroy(() => clearInterval(interval));
 
-	function lookinglass() { selector = 1; }
-
-	function coder() { selector = 2; }
-
-	function admin() { selector = 3; }
-
+	function lookinglass() { selector = 0; }
+	function coder() { selector = 1; }
+	function admin() { selector = 2; }
 
 	function trigger() {
 		const drawerSettings: DrawerSettings = {

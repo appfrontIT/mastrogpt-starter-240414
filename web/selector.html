@@ -38,6 +38,12 @@
         let chat_frame = document.getElementById("chat")
         let display_frame = document.getElementById("display")
         
+        const evtSource = new EventSource("/api/my/events/events");
+        
+        evtSource.onmessage = (event) => {
+            console.log("New message", event.data);
+        };
+
         document.addEventListener("DOMContentLoaded", async function(event) {
             event.preventDefault()
             let x = document.cookie;

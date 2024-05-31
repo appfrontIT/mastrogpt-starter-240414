@@ -3,6 +3,7 @@
 #--annotation provide-api-key true
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action which generate an action returning an HTML page"
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/html_gen/create
 
 from openai import OpenAI
 import bot_functions

@@ -6,6 +6,7 @@
 #--param MINIO_HOST $MINIO_HOST
 #--param MINIO_PORT $MINIO_PORT
 #--param JWT_SECRET $JWT_SECRET
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/db/minio
 
 # file_uploader.py MinIO Python SDK example
 from minio import Minio

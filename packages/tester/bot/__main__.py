@@ -4,6 +4,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action to perform tests on different endpoints"
 #--timeout 300000
+#--annotation url https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/bot
 
 from openai import OpenAI
 import config

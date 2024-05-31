@@ -4,6 +4,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--param JWT_SECRET $JWT_SECRET
 #--param CONNECTION_STRING $CONNECTION_STRING
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/base/auth
 
 import jwt
 import requests

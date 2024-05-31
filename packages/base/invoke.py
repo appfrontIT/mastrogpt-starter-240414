@@ -3,6 +3,7 @@
 #--annotation provide-api-key true
 #--annotation description "This action is used invoke bots asynchronously"
 #--param JWT_SECRET $JWT_SECRET
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/base/invoke
 
 import requests
 from requests.auth import HTTPBasicAuth

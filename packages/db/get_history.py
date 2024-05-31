@@ -3,6 +3,7 @@
 #--annotation provide-api-key true
 #--annotation description "This action retrieve the user history"
 #--param CONNECTION_STRING $CONNECTION_STRING
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/db/get_history
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId

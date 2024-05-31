@@ -3,6 +3,7 @@
 #--annotation provide-api-key true
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description 'an action which let you interact with a custom assistant helping you in Lookinglass operations'
+#--annotation url https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/lookinglass/bot
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall

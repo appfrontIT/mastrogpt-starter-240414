@@ -1,6 +1,7 @@
 #--web true
 #--kind python:default
 #--param OPENAI_API_KEY $OPENAI_API_KEY
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/embedding/embed
 
 from openai import OpenAI
 import requests

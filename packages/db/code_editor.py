@@ -3,6 +3,7 @@
 #--annotation description "This action returns the function to load on the editor"
 #--param CONNECTION_STRING $CONNECTION_STRING
 #--timeout 300000
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/db/code_editor
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId

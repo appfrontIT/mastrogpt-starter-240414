@@ -5,6 +5,7 @@
 #--annotation description "a tester throught AI to test your actions"
 #--param JWT_SECRET $JWT_SECRET
 #--timeout 600000
+#--annotation url https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall

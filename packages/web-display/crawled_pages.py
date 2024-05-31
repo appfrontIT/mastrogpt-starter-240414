@@ -1,6 +1,7 @@
 #--web true
 #--kind python:default
 #--annotation description "This action returns an html page to display the crawled pages"
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/web-display/crawled_pages
 
 from pymongo import MongoClient
 import json

@@ -4,6 +4,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action that create and test an action asynchronously"
 #--timeout 600000
+#--annotation url https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/db_store_init
 
 import requests
 from requests.auth import HTTPBasicAuth

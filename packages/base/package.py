@@ -1,12 +1,19 @@
 #--web true
 #--kind python:default
 #--annotation provide-api-key true
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/base/package
 
 import os
 import requests
 from requests.auth import HTTPBasicAuth
 OW_KEY = os.getenv('__OW_API_KEY')
 SPLIT = OW_KEY.split(':')
+
+def find_all(args):
+    response = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
+    if response.status_code != 404:
+        return {"statusCode": 200, "body": response.json()}
+    return {"statusCode": 404}
 
 def find(args):
     name = args.get('name', False)
@@ -71,4 +78,6 @@ def main(args):
     #     return update(args)
     elif path == '/find' and args['__ow_method'] == 'get':
         return find(args)
+    elif path == '/find_all' and args['__ow_method'] == 'get':
+        return find_all(args)
     return {"statusCode": 404}

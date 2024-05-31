@@ -3,6 +3,7 @@
 #--annotation provide-api-key true
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action which interact with a custom bot to invoke administration tasks"
+#--annotation url https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/admin/bot
 
 from openai import OpenAI
 import config

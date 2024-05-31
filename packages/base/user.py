@@ -3,6 +3,7 @@
 #--annotation provide-api-key true
 #--annotation description "an action which add an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}"
 #--param JWT_SECRET $JWT_SECRET
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/base/user
 
 import requests
 import hashlib
@@ -44,7 +45,7 @@ servers:
         "yaml": yaml,
         "teams": []
     }
-    package = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/base/package/add", json={"name": username})
+    package = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/base/package/add", json={"name": username}, headers={'Authorization': 'Bearer ' + token})
     if package.status_code == 200:
         response = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/add", json={"data": data}, headers={'Authorization': 'Bearer ' + token})
         if response.status_code == 200:

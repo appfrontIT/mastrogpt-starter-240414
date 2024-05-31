@@ -4,6 +4,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action which generate an action returning an HTML page"
 #--timeout 300000
+#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/grapher/create
 
 from openai import OpenAI
 import requests

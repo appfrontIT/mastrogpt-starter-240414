@@ -5,6 +5,7 @@
 #--annotation description "an action that create and test an action asynchronously"
 #--param JWT_SECRET $JWT_SECRET
 #--timeout 300000
+#--annotation url https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/generate
 
 import requests
 from requests.auth import HTTPBasicAuth
