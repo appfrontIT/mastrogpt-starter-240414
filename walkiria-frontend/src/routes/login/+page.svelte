@@ -1,25 +1,31 @@
 <div>
   <img alt="walkiria logo" src={appfront_logo} />
-  <form id="login_form">
+  <label class="label">
     <input
+    class="input"
     type="text"
     bind:value="{username}"
     name="username"
-    placeholder="Enter your Username" required />
+    placeholder="Enter your Username" required
+    data-np-uid="prova"/>
+  </label>
 
+  <label class="label">
     <input
+    class="input"
     type="password"
     bind:value="{password}"
     name="password"
-    placeholder="Enter your Password" required />
-    
+    placeholder="Enter your Password" required
+    data-np-uid="prova"/>
+  </label>
+
     <div>
       <button
       type="button"
       style="width: 100%;"
       class="btn variant-filled" on:click|preventDefault={login}>Login</button>
     </div>
-  </form>
 </div>
 
 <script lang="ts">

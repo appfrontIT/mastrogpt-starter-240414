@@ -113,7 +113,7 @@ def deploy_action(name, function, description, language):
             model="gpt-3.5-turbo",
             messages=messages
         ).choices[0].message.content
-    editor = {"function": function, "description": description, "name": NAME, "namespace": SESSION_USER['namespace'], "package": SESSION_USER['package'], "language": language}
+    editor = {"function": function, "description": description, "name": NAME, "namespace": SESSION_USER['namespace'], "package": SESSION_USER['package'][0], "language": language}
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
                 json={'id': SESSION_USER['_id'], 'message': {'editor': editor}})

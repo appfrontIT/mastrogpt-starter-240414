@@ -38,7 +38,7 @@ servers:
         "username": username,
         "password": hashlib.sha256(password.encode()).hexdigest(),
         "role": role,
-        "namespace": f"gporchia/{package}",
+        "namespace": f"gporchia/{username}",
         "package": package,
         "shared_package": [],
         "chat": [],

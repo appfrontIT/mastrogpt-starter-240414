@@ -8,19 +8,23 @@
 			<li class="crumb-separator" aria-hidden><span class="divider-vertical h-10" /></li>
 			<!-- <li class="crumb"><a class="anchor" href="/elements/breadcrumbs">actions</a></li> -->
 			<li class="crumb-separator" aria-hidden><span class="divider-vertical h-10" /></li>
-			<li><Avatar
+			<li use:popup={popupFeatured}><Avatar
 				initials="JD"
 				border="border-4 border-surface-300-600-token hover:!border-primary-500"
 				cursor="cursor-pointer"
 			/></li>
+			<div class="card p-4 w-72 shadow-xl" data-popup="popupFeatured">
+				<div><button class="btn" on:click={logout}>Logout</button></div>
+				<div class="arrow bg-surface-100-800-token" />
+			</div>
 		</ol>
 	</svelte:fragment>
 </AppBar>
-<div class="chat w-full grid grid-cols-7 gap-3 space-y-2" style="height: 87vh;">
+<div class="chat grid grid-cols-7 gap-3 space-y-2" style="height: 87vh;">
 	<div class="grid grid-rows-[1fr_auto] gap-1 col-span-3">
 		<div bind:this={elemChat} class="max-h-[80vh] p-4 overflow-y-auto space-y-4 col-span-3">
-			{#if selector != -1}
-			{#each chat_room[selector].messageFeed as bubble}
+			{#if $selector != -1}
+			{#each $chat_room[$selector].messageFeed as bubble}
 				{#if bubble.host === false}
 					<div class="grid grid-cols-[auto_1fr] gap-2">
 						<Avatar src={hari} width="w-12" />
@@ -69,11 +73,11 @@
 	</div>
 	<!-- Right column -->
 	<div class="col-span-4 h-full space-y-2" id="right_div">
-		{#if selector === 0}
+		{#if $selector === 0}
 			<object title="appfront-page" type="text/html" data="https://appfront-operations.gitbook.io/lookinglass-manuale-utente" class="h-full w-full"/>
-		{:else if selector === 1}
-			<Editor />
-		{:else if selector === 2}
+		{:else if $selector === 1}
+			<Editor bind:editor />
+		{:else if $selector === 2}
 			<Admin />
 		{:else}
 			<object title="appfront-page" type="text/html" data="https://www.appfront.cloud/walkiria" class="h-full w-full"/>
@@ -122,32 +126,23 @@
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 	import { ProgressRadial } from '@skeletonlabs/skeleton';
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
-	import { user } from '../store'
+	import { popup } from '@skeletonlabs/skeleton';
+	import type { PopupSettings } from '@skeletonlabs/skeleton';
+	import { chat_room, selector, user } from '../store'
 	
 	const drawerStore = getDrawerStore();
 
+	const popupFeatured: PopupSettings = {
+		event: 'click',
+		target: 'popupFeatured',
+		placement: 'bottom',
+	};
+
+	let editor;
 	let messageFeed: string | any[] = [];
 	let currentMessage = '';
 	let elemChat: HTMLElement;
 	let loading_msg = false;
-	let selector: number = -1;
-	let chat_room = [
-		{
-			'url': 'api/my/base/invoke/lookinglass',
-			'history': new Array(),
-			'messageFeed': new Array()
-		},
-		{
-			'url': '/api/my/base/invoke/walkiria',
-			'history': new Array(),
-			'messageFeed': new Array()
-		},
-		{
-			'url': '/api/my/base/invoke/admin',
-			'history': new Array(),
-			'messageFeed': new Array()
-		},
-	]
 
 	function scrollChatBottom(behavior?: ScrollBehavior): void {
 		elemChat.scrollTo({ top: elemChat.scrollHeight, behavior });
@@ -160,20 +155,20 @@
 
 	async function addMessage(): Promise<void> {
 		const newMessage = {
-			id: chat_room[selector].messageFeed.length,
+			id: $chat_room[$selector].messageFeed.length,
 			host: true,
 			name: 'Jane',
 			timestamp: `Today @ ${getCurrentTimestamp()}`,
 			message: currentMessage,
 			color: 'variant-soft-primary'
 		};
-		chat_room[selector].messageFeed = [...chat_room[selector].messageFeed, newMessage];
-		chat_room[selector].history = [...chat_room[selector].history, {'role': 'user', 'content': currentMessage}]
-		const data = JSON.stringify({'input': currentMessage});
+		$chat_room[$selector].messageFeed = [...$chat_room[$selector].messageFeed, newMessage];
+		$chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'user', 'content': currentMessage}]
+		const data = JSON.stringify({'input': $chat_room[$selector].history});
 		currentMessage = '';
 		setTimeout(() => { scrollChatBottom('smooth'); }, 0);
 		loading_msg = true;
-		const response = await fetch(chat_room[selector].url, {
+		const response = await fetch($chat_room[$selector].url, {
 			method: 'POST',
 			body: data,
 			headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + $user!['JWT']}
@@ -217,17 +212,22 @@
 		evtSource.onmessage = function(event) {
 			const obj = JSON.parse(event.data);
 			for (let i = 0; i < obj.length; i++) {
-				const newMessage = {
-					id: chat_room[selector].messageFeed.length,
-					host: false,
-					name: 'Hari',
-					timestamp: `Today @ ${getCurrentTimestamp()}`,
-					message: obj[i].output,
-					color: 'variant-soft-primary'
-				};
-				chat_room[selector].messageFeed = [...chat_room[selector].messageFeed, newMessage];
-				chat_room[selector].history = [...chat_room[selector].history, {'role': 'assistant', 'content': obj[i].output}]
-				setTimeout(() => { scrollChatBottom('smooth'); }, 0);
+				console.log(obj[i]);
+				if ('editor' in obj[i]) {
+					editor = obj[i].editor
+				} else {
+					const newMessage = {
+						id: $chat_room[$selector].messageFeed.length,
+						host: false,
+						name: 'Hari',
+						timestamp: `Today @ ${getCurrentTimestamp()}`,
+						message: obj[i].output,
+						color: 'variant-soft-primary'
+					};
+					$chat_room[$selector].messageFeed = [...$chat_room[$selector].messageFeed, newMessage];
+					$chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'assistant', 'content': obj[i].output}]
+					setTimeout(() => { scrollChatBottom('smooth'); }, 0);
+				}
 			}
 			loading_msg = false;
 		}
@@ -235,9 +235,18 @@
 	
 	// onDestroy(() => clearInterval(interval));
 
-	function lookinglass() { selector = 0; }
-	function coder() { selector = 1; }
-	function admin() { selector = 2; }
+	async function empty_msg() {
+		const data = JSON.stringify({'input': ''});
+		const response = await fetch($chat_room[$selector].url, {
+			method: 'POST',
+			body: data,
+			headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + $user!['JWT']}
+		})
+	}
+
+	function lookinglass() { $selector = 0;}
+	function coder() { $selector = 1;}
+	function admin() { $selector = 2;}
 
 	function trigger() {
 		const drawerSettings: DrawerSettings = {
@@ -249,6 +258,18 @@
 			rounded: 'rounded-xl',
 		};
 		drawerStore.open(drawerSettings);
+	}
+
+	async function logout() {
+		const response = await fetch('api/my/base/auth/logout', {
+			method: 'DELETE',
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json'},
+		});
+		$user = null;
+		document.cookie = 'appfront-sess-cookie=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
+        sessionStorage.clear()
+        return window.parent.location.replace('/login')
 	}
 
 </script>
