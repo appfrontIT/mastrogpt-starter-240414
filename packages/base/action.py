@@ -48,7 +48,7 @@ def add(args, token):
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
     else:
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
-    requests.post('https://nuvolaris.dev/api/v1/web/gporchia/walkiria/openAPI/add',
+    requests.post('https://nuvolaris.dev/api/v1/web/gporchia/base/openAPI/add',
                 headers={'Authorization': 'Bearer ' + token},
                 json={'action': f"""url: https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}\ndescription: {description}\nfunction: {function}""", 'token': token})
     return {'statusCode': resp.status_code, 'body': resp.json()}

@@ -24,7 +24,7 @@ def html_gen(args):
     name: str = args.get('name', '')
     action_array = ""
     for action in actions_info:
-        status = utils.action_info(action['package'], action['name'])
+        status = utils.action_info(action['name'], action['package'])
         if status.status_code == 200:
             obj = status.json()
             action_array += f"name: {obj['name']}\n"
@@ -33,21 +33,41 @@ def html_gen(args):
                 if pair['key'] == 'url' or pair['key'] == 'description':
                     action_array += f"{pair['key']}: {pair['value']}\n"
             action_array += f"code: {obj['exec']['code']}\n"
-        return f"the following action does not exists: {action}\n"
+        else:
+            return f"the following action does not exists: {action}\n"
     if action_array != "":
         query = f"{description}\nHere the informations about the actions you have to call inside it: {action_array}"
     else:
         query = description
-    html = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/html_gen/create", json={"input": query})
-    html_obj = html.json()
-    output = html_obj.get('output', False)
-    if not output:
+    html = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/html_gen/bot", json={"input": query})
+    if html.status_code == 204:
         return "failed to generate the HTML"
+    output = html.json()
+    ret = {"body": output.get("output")}
+    function = f"""def main(args):\n\treturn {ret}"""
     editor = {"function": output, "description": description, "name": name, "namespace": config.session_user['namespace'], "package": config.session_user['username'], "language": 'html'}
+    deploy = requests.put("https://nuvolaris.dev/api/v1/web/gporchia/base/action/add",
+                        headers={"Content-Type": "application/json", "Authorization": "Bearer " + config.session_user['JWT']},
+                        json={
+                            "name": editor['name'],
+                            "function": function,
+                            "description": description,
+                            "namespace": config.session_user['namespace'],
+                            "package": config.session_user['username'],
+                            "language": 'python'})
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                 auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                 json={'id': config.session_user['_id'], 'message': {'editor': editor}})
     return f"Everything is fine, don't call any other function"
+
+def update_action(function = False, fix = False):
+    if function and fix:
+        query = f"apply this fix to the following function.\nfix: {fix}\n\nfunction:{function}"
+        response = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/generate?blocking=true',
+                            auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
+                            json={"request": query, "token": config.session_user['JWT']})
+        return response.text
+    return "there was an error performing this operation"
 
 def create_action(query):
     response = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/generate?blocking=true',
@@ -86,7 +106,7 @@ def delete_action(name = False, package = False):
     if package not in config.session_user['package'] and config.session_user['role'] != 'admin':
         return "Non sei autorizzato ad accedere a questa azione"
     response = utils.delete_action(name, package)
-    delete = requests.delete('https://nuvolaris.dev/api/v1/web/gporchia/walkiria/openAPI/delete',
+    delete = requests.delete('https://nuvolaris.dev/api/v1/web/gporchia/base/openAPI/delete',
             headers={'Authorization': 'Bearer ' + config.session_user['JWT']},
             json={'action': f"""url: https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}"""})
     return f"status: {response.status_code}, body: {response.json()}"
@@ -147,6 +167,7 @@ def tools_func(
 available_functions = {
     "show_all_actions": show_all_actions,
     "delete_action": delete_action,
+    "update_action": update_action,
     "action_info": action_info,
     "create_action": create_action,
     "html_gen": html_gen,
@@ -157,6 +178,21 @@ available_functions = {
 }
 
 tools = [
+        {
+        "type": "function",
+        "function": {
+            "name": "update_action",
+            "description": """You must update the provided code according to the user request""",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "function": {"type": "string", "description": "the full function code"},
+                    "fix": {"type": "string", "description": "one or more fix to apply on the code"}
+                    },
+                "required": ["function", "fix"],
+                },
+            }
+        },
         {
         "type": "function",
         "function": {

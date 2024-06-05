@@ -44,4 +44,8 @@ def main(args):
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": input, 'token': token, 'user': user})
+    elif path == '/html':
+        resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/html_gen/bot",
+                            auth=HTTPBasicAuth(split[0], split[1]),
+                            json={"input": input, 'token': token, 'user': user})
     return {"statusCode": resp.status_code, "body": resp.json()}

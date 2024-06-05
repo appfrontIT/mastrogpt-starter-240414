@@ -31,14 +31,10 @@ available_functions = {
     "find_man_page": man.find_man_page
 }
 
-messages = [{'role': 'system', 'content': config.ROLE}]
-
 def ask(
-    query: str,
+    messages,
     model: str = MODEL,
 ) -> str:
-    config.query = query
-    messages.extend(query)
     response = AI.chat.completions.create(
         model=model,
         messages=messages,
@@ -84,8 +80,10 @@ def main(args):
     if input == "":
         return { "statusCode": 204, }
     else:
-        output = ask(query=input, model=MODEL)
-        res = { "output": output }
+        config.query = input
+        messages = [{'role': 'system', 'content': config.ROLE}]
+        messages.extend(input)
+        res = { "output": ask(messages=messages, model=MODEL)}
     if config.frame != "":
         res['frame'] = config.frame
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",

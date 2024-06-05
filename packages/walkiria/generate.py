@@ -28,6 +28,7 @@ The available languages are: Python, Javascript, Go, Java, PHP.
 Take your time to answer and you must procede step by step.
 Actions must ALWAYS include the 'main' function, accepting '(args)' as parameters. This is mandatory.
 Always return a JSON with keys 'body' and 'statusCode'.
+
 NEVER, EVER, BE LAZY! IF YOU NEED TIME TO UNDERSTAND THE TASK TAKE YOUR TIME, BUT ALWAYS ANSWER PROPERLY WITH ALL THE USER REQUESTS
 
 Mandatory: import the modules you use in the function.
@@ -39,10 +40,10 @@ def main(args):
 
 If you have to store data inside a database you MUST use the following action: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/{operation}.
 How to use the database:
-You need to fill collection and  operation.
+You need to fill collection and operation.
 Remember to set the path in the beginning of the code.
 {operation} can be one of the following: 'find_one', 'find_many', 'add', 'add_many', 'delete', 'update'.
-Here's an example using model 'Book', wiht fields: 'title', 'author', 'pages', 'year':
+Here's an example using Python, with model 'Book', wiht fields: 'title', 'author', 'pages', 'year':
 ```python
 
     import requests
@@ -86,6 +87,7 @@ Here's an example using model 'Book', wiht fields: 'title', 'author', 'pages', '
 Use path to identify the operation.
 Each parameters must be extracter using 'args.get('param')'. Example: args.get("url") to get "url", args.get("name") to get "name" and so on
 You MUST import any library or module you use in the action.
+Pay attention to utilize the same language through all the code! Don't mix language, is bad and you're not stupid!
 """
 
 messages = [

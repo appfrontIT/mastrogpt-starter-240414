@@ -15,13 +15,10 @@ from requests.auth import HTTPBasicAuth
 
 MODEL = "gpt-4o"
 
-messages = [{'role': 'system', 'content': config.ROLE}]
-
 def ask(
-    query: str,
+    messages: str,
     model: str = MODEL,
 ) -> str:
-    messages.extend(query)
     response = config.AI.chat.completions.create(
         model=model,
         messages=messages,
@@ -31,7 +28,6 @@ def ask(
     if response.choices[0].finish_reason == "tool_calls":
         tool_calls = response.choices[0].message.tool_calls
         return bot_functions.tools_func(tool_calls, messages, response)
-    print("no tools")
     return response.choices[0].message.content
 
 def main(args):
@@ -44,7 +40,9 @@ def main(args):
     if input == "":
         return { "statusCode": 204, }  
     else:
-        res = { "output": ask(query=input, model=MODEL)}
+        messages = [{'role': 'system', 'content': config.ROLE}]
+        messages.extend(input)
+        res = { "output": ask(messages=messages, model=MODEL)}
     if config.html != "":
         res['html'] = config.html
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",

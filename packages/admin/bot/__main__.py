@@ -16,13 +16,10 @@ from requests.auth import HTTPBasicAuth
 AI = None
 MODEL = "gpt-3.5-turbo"
 
-messages = [{'role': 'system', 'content': config.ROLE}]
-
 def ask(
-    query: str,
+    messages,
     model: str = MODEL,
 ) -> str:
-    messages.extend(query)
     response = AI.chat.completions.create(
         model=model,
         messages=messages,
@@ -49,8 +46,9 @@ def main(args):
     if input == "":
         return { "statusCode": 204, }
     else:
-        output = ask(query=input, model=MODEL)
-        res = { "output": output}
+        messages = [{'role': 'system', 'content': config.ROLE}]
+        messages.extend(input)
+        res = { "output": ask(messages=messages, model=MODEL)}
     if config.html != "":
         res['html'] = config.html
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",

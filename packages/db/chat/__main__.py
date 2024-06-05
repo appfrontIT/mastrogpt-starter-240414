@@ -27,5 +27,5 @@ def main(args):
         chat = user.get('chat', False)
         if chat and len(chat) > 0:
             db_coll.update_one({'cookie': cookie}, {"$set": {"chat": []}})
-            return {"body": chat}
+            return {"statusCode": 200, "body": chat}
     return {"statusCode": 204}

@@ -30,6 +30,7 @@
 
 <script lang="ts">
 import appfront_logo from '$lib/appfront_logo.png'
+import { onMount } from 'svelte';
 let username: string;
 let password: string;
 
@@ -44,6 +45,16 @@ async function login() {
       return window.location.assign('/')
     }
 }
+
+onMount(() => {
+  let cookie = document.cookie;
+  if (cookie) {
+    const split_cookie = cookie.split('=');
+    if (split_cookie[0] === 'appfront-sess-cookie') {
+      return window.location.assign('/')
+    }
+  }
+})
 
 </script>
 

@@ -9,44 +9,35 @@ from openai import OpenAI
 import bot_functions
 import requests
 import config
+from requests.auth import HTTPBasicAuth
 
 AI = None
 MODEL = "gpt-3.5-turbo"
 
 def ask(
-    query: str,
+    messages,
     model: str = MODEL,
 ) -> str:
-    # expand = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/prefetch/html', json={"input": query})
-    # print(expand)
-    messages = [
-        {"role": "system", "content": config.ROLE},
-        {"role": "user", "content": f"create an HTML implementing the following request.\nRequest:\n{query}"},
-    ]
     response = AI.chat.completions.create(
         model=model,
         messages=messages,
     )
-    print(response.choices[0].message.content)
     return response.choices[0].message.content
 
 TUNED_MODEL = None
 
 def main(args):
     global AI
-
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
     input = args.get("input", "")
-    print(input)
-    output = ""
     if input == "":
-        output = "Please provide an action to generate the html"
+        return {"statusCode": 204, }  
     else:
-        output = ask(query=input, model=MODEL)
-        output = output.replace("```html", '')
-        output = output.replace("```", '')
-
-    res = { "output": output}
-    return {"body": res }
+        messages = [
+            {'role': 'system', 'content': config.ROLE},
+            {'role': 'user', 'content': input}
+            ]
+        res = { "output": ask(messages=messages, model=MODEL)}
+    return {"statusCode": 200, "body": res }
 

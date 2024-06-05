@@ -1,29 +1,35 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Walkiria Login page</title>
-    <link rel="stylesheet" href="/css/index.css">
-    <script src="/js/index.js"></script>
-</head>
+<html lang="en" class="dark">
+	<head>
+		<meta charset="utf-8" />
+		
+		<meta name="viewport" content="width=device-width" />
+		
+		<link rel="modulepreload" href="/_app/immutable/entry/start.DWchN1er.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/entry.CnJnoSE9.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/scheduler.Dl71syvz.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/index.zAek-70d.js">
+		<link rel="modulepreload" href="/_app/immutable/entry/app.BTe71HXu.js">
+		<link rel="modulepreload" href="/_app/immutable/chunks/index.BjiXwm8t.js">
+	</head>
+	<body data-sveltekit-preload-data="hover" data-theme="crimson">
+		<div style="display: contents">
+			<script>
+				{
+					__sveltekit_6h9irg = {
+						base: ""
+					};
 
-<body>
-    <div class="main">
-        <img src="/img/appfront_logo.png">
-        <form id="submit-form">
-            <label for="first">Username:</label>
-            <input type="text"
-                name="username"
-                placeholder="Enter your Username" required />
+					const element = document.currentScript.parentElement;
 
-            <label for="password">Password:</label>
-            <input type="password"
-                name="password"
-                placeholder="Enter your Password" required />
-
-            <div class="wrap">
-                <button type="submit">Submit</button>
-            </div>
-        </form>
-    </div>
-</body>
+					Promise.all([
+						import("/_app/immutable/entry/start.DWchN1er.js"),
+						import("/_app/immutable/entry/app.BTe71HXu.js")
+					]).then(([kit, app]) => {
+						kit.start(app, element);
+					});
+				}
+			</script>
+		</div>
+	</body>
 </html>

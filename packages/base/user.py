@@ -25,14 +25,16 @@ def create(args):
         return {"statusCode": 400}
     if role != 'user' and role != 'admin':
         return {'statusCode': 400, 'body': 'role invalid. Must be one of: user, admin'}
-    yaml = f"""openapi: 3.1.0
-info:
-  title: {username} - OpenAPI 3.1
-  termsOfService: http://swagger.io/terms/
-  version: 1.0.11
-servers:
-  - url: https://nuvolaris.dev/api/v1/web
-    """
+    openapi = f"""{{
+        "openapi": "3.1.0",
+        "info": {{
+            "title": "{username} - OpenAPI 3.1",
+    "termsOfService": "http://swagger.io/terms/",
+    "version": "1.0.11"
+    }},
+    "servers": [{{"url": "https://nuvolaris.dev/api/v1/web"}}],
+    "paths": {{}}
+    }}"""
     package = [username]
     data = {
         "username": username,
@@ -42,7 +44,7 @@ servers:
         "package": package,
         "shared_package": [],
         "chat": [],
-        "yaml": yaml,
+        "openapi": openapi,
         "teams": []
     }
     package = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/base/package/add", json={"name": username}, headers={'Authorization': 'Bearer ' + token})

@@ -50,7 +50,7 @@
 	}
 	</script>
 
-<div class=" overflow-x-auto space-y-2" style="height: 80vh;">
+<div class="overflow-x-auto space-y-2" style="height: 80vh;">
 	<header class="flex justify-between gap-4">
 		<input
 			class="input sm:w-64 w-36"
