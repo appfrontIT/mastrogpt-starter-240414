@@ -50,6 +50,7 @@ Here's an example using Python, with model 'Book', wiht fields: 'title', 'author
     import json
 
     def main(args):
+    
         # check for authorization token
         token = args['__ow_headers'].get('authorization', False)
         if not token:
@@ -88,11 +89,9 @@ Use path to identify the operation.
 Each parameters must be extracter using 'args.get('param')'. Example: args.get("url") to get "url", args.get("name") to get "name" and so on
 You MUST import any library or module you use in the action.
 Pay attention to utilize the same language through all the code! Don't mix language, is bad and you're not stupid!
-"""
 
-messages = [
-    {"role": "system", "content": ROLE}
-]
+It's very important that you fill your code with comments, in a way the user will be able to understand what you are doing and can perform some modifications
+"""
 
 def deploy_action(name, function, description, language):
     global AI
@@ -149,9 +148,12 @@ def main(args):
     if response.status_code != 200:
         return {"statusCode": 404}
     SESSION_USER = response.json()
-    messages.append({"role": "user", "content": request})
+    messages = [
+        {"role": "system", "content": ROLE},
+        {"role": "user", "content": request}
+    ]
     response = AI.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         messages=messages,
         tools=create_action_tool,
         tool_choice={"type": "function", "function": {"name": "create_action"}},

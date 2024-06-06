@@ -1,3 +1,4 @@
+<Toast />
 {#await promise then us}
 <AppBar>
 	<svelte:fragment slot="lead">
@@ -5,18 +6,20 @@
 	</svelte:fragment>
 	<svelte:fragment slot="trail">
 		<ol class="breadcrumb">
-			<!-- <li class="crumb"><a class="anchor" href="/elements/breadcrumbs">docs</a></li> -->
+			<li class="crumb"><a class="anchor" href="/scraped" target="_blank">Scraped</a></li>
 			<li class="crumb-separator" aria-hidden><span class="divider-vertical h-10" /></li>
-			<li class="crumb"><a class="anchor" href="/swagger-ui">swagger</a></li>
+			<li class="crumb"><a class="anchor" href="/display" target="_blank">My pages</a></li>
+			<li class="crumb-separator" aria-hidden><span class="divider-vertical h-10" /></li>
+			<li class="crumb"><a class="anchor" href="/swagger-ui" target="_blank">Swagger</a></li>
 			<li class="crumb-separator" aria-hidden><span class="divider-vertical h-10" /></li>
 			<li use:popup={popupFeatured}><Avatar
 				initials={us.username[0]}
 				border="border-4 border-surface-300-600-token hover:!border-primary-500"
 				cursor="cursor-pointer"
 			/></li>
-			<div class="card p-4 w-72 shadow-xl" data-popup="popupFeatured">
+			<div class="card p-4 w-72 shadow-xl z-10" data-popup="popupFeatured">
 				<div><button class="btn" on:click={logout}>Logout</button></div>
-				<!-- <div><button class="btn" on:click={swagger}>Swagger</button></div> -->
+				<div><button class="btn">Settings</button></div>
 				<div class="arrow bg-surface-100-800-token" />
 			</div>
 		</ol>
@@ -26,7 +29,7 @@
 	<div class="grid grid-rows-[1fr_auto] gap-1 col-span-3">
 		<section bind:this={elemChat} class="max-h-[80vh] p-4 overflow-y-auto space-y-4 col-span-3">
 			<div class="grid row-span-1 col-span-3 input-group input-group-divider grid-cols-[auto_1fr_auto]">
-				<button class="btn-sm variant-filled input-group-shim" on:click={trigger}>chatbot</button>
+				<button class="btn-sm variant-filled input-group-shim" on:click={bots_trigger}>chatbot</button>
 				<div>
 					{#if $selector == 0} Lookinglass
 					{:else if $selector == 1} Coder
@@ -144,14 +147,9 @@
 	import Admin from '$lib/Admin.svelte'
 	import Website from '$lib/Website.svelte';
 	import website_svg from '$lib/website.svg'
-	import { Avatar } from '@skeletonlabs/skeleton';
-	import { AppBar } from '@skeletonlabs/skeleton';
 	import { onMount, onDestroy } from 'svelte';
-	import { Drawer } from '@skeletonlabs/skeleton';
-	import { ProgressBar } from '@skeletonlabs/skeleton';
-	import { ProgressRadial } from '@skeletonlabs/skeleton';
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
-	import { popup } from '@skeletonlabs/skeleton';
+	import { Avatar, AppBar, Drawer, ProgressBar, ProgressRadial, popup, Toast } from '@skeletonlabs/skeleton';
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
 	import { chat_room, selector, user, editor } from '../store'
 	
@@ -245,27 +243,27 @@
 	}
 
 	onMount(async () => {
-		scrollChatBottom();
 		loading_msg = false;
 		let cookie = document.cookie;
         if (!cookie) {
-            return window.location.assign('/login')
+			return window.location.assign('/login')
         } else if (cookie) {
 			const split_cookie = cookie.split('=');
 			if (split_cookie[0] != 'appfront-sess-cookie') {
 				return window.location.assign('/login')
 			}
 		}
+		setTimeout(() => { scrollChatBottom('smooth'); }, 0);
 	});
 	
 	onDestroy(() => clearInterval(interval));
 
-	function lookinglass() { $selector = 0;}
-	function coder() { $selector = 1;}
-	function admin() { $selector = 2;}
-	function website() { $selector = 3;}
+	function lookinglass() { $selector = 0; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
+	function coder() { $selector = 1; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
+	function admin() { $selector = 2; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
+	function website() { $selector = 3; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
 
-	function trigger() {
+	function bots_trigger() {
 		const drawerSettings: DrawerSettings = {
 			// Provide your property overrides:
 			bgDrawer: 'bg-purple-900 text-white',

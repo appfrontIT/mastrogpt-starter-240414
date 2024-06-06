@@ -1,5 +1,6 @@
 #--web raw
 #--kind python:default
+#--param CONNECTION_STRING $CONNECTION_STRING
 #--annotation description "an action which perform operations to the database, suche as: add, update, delete, find. Required parameters: {'db': db name, 'collection': collection name, 'type of operation(add, find_one, find, delete, update)': True, 'data': required data as json. Example: 'name': name, 'role': role, 'password': password, ...}"
 #--annotation url https://nuvolaris.dev/api/v1/web/gporchia/db/mongo
 
@@ -90,7 +91,6 @@ def add_many(collection: Collection, data):
         return {"statusCode": 404, "body": f"{exc.code}: {exc.details}"}
 
 def main(args):
-    print(args)
     token = args['__ow_headers'].get('authorization', False)
     # if not token:
     #     return {'statusCode': 401}
@@ -128,7 +128,6 @@ def main(args):
         try:
             body: str = args['__ow_body']
             decoded = base64.b64decode(body).decode('utf-8')
-            print(decoded)
         except:
             return {"body": "Could not decode body from Base64."}
         return add(collection=db_coll, data=decoded)

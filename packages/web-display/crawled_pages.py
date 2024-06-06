@@ -1,5 +1,6 @@
 #--web true
 #--kind python:default
+#--param CONNECTION_STRING $CONNECTION_STRING
 #--annotation description "This action returns an html page to display the crawled pages"
 #--annotation url https://nuvolaris.dev/api/v1/web/gporchia/web-display/crawled_pages
 
@@ -13,7 +14,8 @@ def main(args):
     if not token:
         return {'statusCode': 401}
     token = token.split('=')[1]
-    client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
+    connection_string = args.get('CONNECTION_STRING', False)
+    client = MongoClient(connection_string)
     dbname = client['mastrogpt']
     collection_list = dbname.list_collection_names()
     crawled_pages = []
@@ -96,7 +98,7 @@ def main(args):
                 // Show the selected popup
                 fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/' + id + '/find_many', {{
                 method: 'GET',
-                headers: {{ 'Content-type': 'application/json; charset=UTF-8', 'Authorizatino': 'Bearer {token}' }},
+                headers: {{ 'Content-type': 'application/json; charset=UTF-8', 'Authorization': 'Bearer {token}' }},
                 }})
                 .then(response => response.json())
                 .then(data => {{

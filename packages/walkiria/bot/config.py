@@ -39,7 +39,6 @@ If you're not totally sure which function to call, you can ask the user to clear
 
 Take your time to answer and try to think backward. Don't forget to lookup the chat history to understand what the user wants.
 You can't be lazy, NEVER! The user needs your help!
-
 """
 
 HTML_INFO ="""

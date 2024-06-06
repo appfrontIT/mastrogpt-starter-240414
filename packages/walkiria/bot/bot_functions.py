@@ -42,19 +42,8 @@ def html_gen(args):
     html = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/html_gen/bot", json={"input": query})
     if html.status_code == 204:
         return "failed to generate the HTML"
-    output = html.json()
-    ret = {"body": output.get("output")}
-    function = f"""def main(args):\n\treturn {ret}"""
-    editor = {"function": output, "description": description, "name": name, "namespace": config.session_user['namespace'], "package": config.session_user['username'], "language": 'html'}
-    deploy = requests.put("https://nuvolaris.dev/api/v1/web/gporchia/base/action/add",
-                        headers={"Content-Type": "application/json", "Authorization": "Bearer " + config.session_user['JWT']},
-                        json={
-                            "name": editor['name'],
-                            "function": function,
-                            "description": description,
-                            "namespace": config.session_user['namespace'],
-                            "package": config.session_user['username'],
-                            "language": 'python'})
+    obj = html.json()
+    editor = {"function": obj['output'], "description": description, "name": name, "namespace": config.session_user['namespace'], "package": config.session_user['username'], "language": 'html'}
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                 auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                 json={'id': config.session_user['_id'], 'message': {'editor': editor}})

@@ -8,7 +8,7 @@
 #--param JWT_SECRET $JWT_SECRET
 #--annotation url https://nuvolaris.dev/api/v1/web/gporchia/db/minio
 
-# file_uploader.py MinIO Python SDK example
+from datetime import timedelta
 from minio import Minio
 from minio.error import S3Error
 import io
@@ -46,8 +46,29 @@ def find(args):
     name = args.get('name', False)
     if not name:
         return {'statusCode': 400}
-    
 
+def find_all():
+    # List objects information whose names starts with "my/prefix/".
+    objects = CLIENT.list_objects("gporchia-web", prefix=JWT['username'] + '/')
+    arr = []
+    for obj in objects:
+        arr.append(str(obj.object_name).replace(JWT['username'] + '/', ''))
+    print(arr)
+    return {'statusCode': 200, 'body': arr}
+
+def presigned_url(args):
+    name = args.get('name', None)
+    access = args.get('MINIO_ACCESS_KEY', None)
+    secret = args.get('MINIO_SECRET_KEY', None)
+    if name == None or access == None or secret == None:
+        return {'statusCode': 400}
+    client = Minio('s3.nuvolaris.dev',
+        access_key=access,
+        secret_key=secret,
+        secure=True,
+    )
+    url = client.presigned_put_object('gporchia-web', JWT['username'] + '/' + name, expires=timedelta(hours=2))
+    return {'statusCode': 200, 'body': url}
 
 def main(args):
     global CLIENT
@@ -60,12 +81,11 @@ def main(args):
     secret = args.get('JWT_SECRET')
     JWT = jwt.decode(token, key=secret, algorithms='HS256')
     endpoint = f"{args.get('MINIO_HOST')}:{args.get('MINIO_PORT')}"
-    CLIENT = Minio(endpoint,
+    CLIENT = Minio('s3.nuvolaris.dev',
         access_key=args.get('MINIO_ACCESS_KEY'),
         secret_key=args.get('MINIO_SECRET_KEY'),
-        secure=False,
+        secure=True,
     )
-
     path: str = args.get('__ow_path', False)
     path_spl = path[1:].split('/')
     if len(path_spl) != 2:
@@ -83,5 +103,8 @@ def main(args):
     #     return update(args)
     elif op == 'find' and args['__ow_method'] == 'get':
         return find(args)
-    # elif path == '/find_all' and args['__ow_method'] == 'get':
-    #     return find_all()
+    elif op == 'presignedUrl' and args['__ow_method'] == 'get':
+        return presigned_url(args)
+    elif op == 'find_all' and args['__ow_method'] == 'get':
+        return find_all()
+    return {'statusCode': 404}

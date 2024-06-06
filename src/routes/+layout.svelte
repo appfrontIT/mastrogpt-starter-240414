@@ -9,7 +9,7 @@
 	import css from 'highlight.js/lib/languages/css';
 	import javascript from 'highlight.js/lib/languages/javascript';
 	import typescript from 'highlight.js/lib/languages/typescript';
-	import { initializeStores, Drawer, Modal } from '@skeletonlabs/skeleton';
+	import { initializeStores, Drawer, Modal, Toast } from '@skeletonlabs/skeleton';
 	
 	initializeStores();
 

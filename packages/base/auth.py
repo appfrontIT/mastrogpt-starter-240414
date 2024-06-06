@@ -100,12 +100,12 @@ def main(args):
         headers = args['__ow_headers']
         cookie = headers.get('cookie', False)
         if not cookie:
-            cookie = args.get('cookie', False)
+            return {'statusCode': 404}
         return token(cookie)
     if path == '/user' and args['__ow_method'] == 'get':
         headers = args['__ow_headers']
         cookie = headers.get('cookie', False)
         if not cookie:
-            cookie = args.get('cookie', False)
+            return {'statusCode': 404}
         return get_user(cookie)
     return {"statusCode": 404}

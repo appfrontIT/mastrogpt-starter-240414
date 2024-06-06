@@ -11,8 +11,8 @@
     import {defaultKeymap} from "@codemirror/commands"
     import { chat_room, selector, user, editor } from '../store'
 	import { onMount } from 'svelte';
-    import { popup } from '@skeletonlabs/skeleton';
-    import type { PopupSettings } from '@skeletonlabs/skeleton';
+    import { getToastStore, popup } from '@skeletonlabs/skeleton';
+    import type { PopupSettings, ToastSettings } from '@skeletonlabs/skeleton';
     // import { Modal, type ModalComponent, type ModalSettings } from '@skeletonlabs/skeleton';
     // import ModalFs from './ModalFS.svelte';
     // import { getModalStore } from '@skeletonlabs/skeleton';
@@ -37,6 +37,8 @@
     let watch_toggle = false;
     let packages: string[] = [];
 
+    const toastStore = getToastStore();
+
     const languages_func = new Map<string, any>([
         ['go', go()],
         ['html', html()],
@@ -59,29 +61,7 @@
         nodebounce: false
     };
 
-    onMount(async () => {
-        let cookie = document.cookie;
-        const token_response = await fetch('api/my/base/auth/token', {
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json'},
-		})
-        if (!token_response.ok) {
-            document.cookie = 'appfront-sess-cookie=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
-            return window.location.assign('/login')
-        } else {
-            const token_obj = await token_response.json()
-            let r = await fetch('api/my/base/auth/user', {
-                method: 'GET',
-                headers: {"Authorization": "Bearer " + token_obj['token']}
-            })
-        if (r.status == 200) {
-            const user_obj = await r.json();
-            $user = user_obj;
-            packages = $user!['package'];
-			}
-		}
-    })
+    // onMount(async () => {})
 
     async function test() {
         if ($editor.name === "" || $editor.package === "") {
@@ -152,13 +132,25 @@
     async function deploy() {
         if ($editor.language === "html") {
             if ($editor.name === "") { alert('Provide a name for the page'); return; }
-            const response = await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/add', {
-                method: "POST",
-                headers: {"Content-Type": "application/json", "Authorization": "Bearer " + $user!['JWT']},
-                body: JSON.stringify({"target": $editor.name + ".html", "text": $editor.function})
+            let file = new File([$editor.function], $editor.name + '.html', {type: "text/html", endings: "native"})
+            const response = await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + file.name, {
+                method: "GET",
+                headers: {"Authorization": "Bearer " + $user!['JWT']},
             })
-            if (response.status == 204) {
-                alert('page succesfully uploaded!')
+            if (response.status == 200) {
+                const url = await response.text();
+                const upload_r = await fetch(url, {
+                    method: 'PUT',
+                    body: file
+                });
+                if (upload_r.ok) {
+                    const t: ToastSettings = {
+                        message: 'La tua pagina é stata caricata con successo! Per accederla visitare: ' + `https://gporchia.nuvolaris.dev/${$user.username}/${file.name}`,
+                        autohide: false,
+                        action: { label: 'Visit', response: () => window.open(`https://gporchia.nuvolaris.dev/${$user.username}/${file.name}`)}
+                    }
+                    toastStore.trigger(t);
+                }
             }
             return ;
         }
@@ -210,18 +202,20 @@
 
 </script>
 <div class="grid grid-cols-12 gap-4 space-y-1" style="height: 5vh;">
+    <input class="input col-span-4" title="Action name" type="text" placeholder="action name" bind:value={$editor.name}>
+    {#if $editor.language != 'html'}
+    <input class="input col-span-4" title="Description" type="text" placeholder="description" bind:value={$editor.description}/>
     <select class="select col-span-2" bind:value={$editor.package}>
         <option disabled selected value>Package</option>
         {#each packages as pack}
             <option value={pack}>{pack}</option>
         {/each}
     </select>
-    <input class="input col-span-4" title="Action name" type="text" placeholder="action name" bind:value={$editor.name}>
-    <input class="input col-span-4" title="Description" type="text" placeholder="description" bind:value={$editor.description}/>
+    {/if}
     <select class="select col-span-2" bind:value={$editor.language}>
         <option disabled selected value>Language</option>
         {#each languages as lang}
-            <option value={lang}>{lang}</option>
+        <option value={lang}>{lang}</option>
         {/each}
     </select>
 </div>
