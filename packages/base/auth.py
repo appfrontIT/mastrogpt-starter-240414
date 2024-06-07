@@ -68,6 +68,7 @@ def login(args):
         cookie = token_urlsafe(64)
         encoded_jwt = jwt.encode({
             'id': str(user['_id']),
+            'username': user['username'],
             'role': user['role'],
             'package': user['package'],
             'namespace': user['namespace'],

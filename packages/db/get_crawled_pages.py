@@ -28,5 +28,5 @@ def main(args):
                     if el != '_id':
                         obj[el] = item[el]
                 coll_els.append(obj)
-            crawled_pages.append({col: coll_els})
+            crawled_pages.append({'domain': col, 'data': coll_els})
     return {'statusCode': 200, 'body': crawled_pages}

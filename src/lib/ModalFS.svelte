@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { SvelteComponent } from 'svelte';
 	import { getModalStore } from '@skeletonlabs/skeleton';
-    import Editor from './Editor.svelte';
+    import EditorFS from './EditorFS.svelte';
 
 	export let parent: SvelteComponent;
 
@@ -12,10 +12,8 @@
 
 {#if $modalStore[0]}
 	<div class="modal-example-fullscreen {cBase}">
-		<div class="flex flex-col items-center space-y-4">
-			<h2 class="h2">Full Screen Modal</h2>
-			<p>This demonstrates a full screen modal dialog.</p>
-			<button class="btn variant-filled" on:click={parent.onClose}>× Close</button>
+		<div class="basis-full h-full items-center space-y-4">
+			<EditorFS bind:parent/>
 		</div>
 	</div>
 {/if}

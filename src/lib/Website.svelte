@@ -40,6 +40,16 @@
     function add_action(i: number) {
         if (actions && !action_arr.includes(actions[i])) {
             action_arr.push(actions[i]);
+            action_arr = action_arr;
+        }
+    }
+    function rm_action(i: number) {
+        if (actions && action_arr.includes(actions[i])) {
+            const index = action_arr.indexOf(actions[i]);
+            if (index > -1) {
+                action_arr.splice(index, 1);
+                action_arr = action_arr;
+            }
         }
     }
 
@@ -82,6 +92,7 @@
 			body: data,
 			headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + $user!['JWT']}
 		})
+        $selector = 1;
     }
 
 </script>
@@ -118,7 +129,7 @@
 <br>
 <p>Name</p>
 <div class="input-group input-group-divider grid-cols-[auto_1fr_auto]">
-  <div class="input-group-shim">display/</div>
+  <div class="input-group-shim">{$user.username}/</div>
   <input type="text" placeholder="https://nuvolaris.dev/api/v1/web/gporchia/display/..." bind:value={name}/>
 </div>
 <br>
@@ -156,8 +167,12 @@
         {#if $user && $user['package'].includes(action.package)}
         <div class="input-group input-group-divider grid-cols-[auto_1fr_auto] rounded-container-token col-span-3">
             <button class="input-group-shim" use:popup={{event: 'click', target: 'action-' + i, placement: 'top'}}>?</button>
-            <p> {action.name}</p>
-            <button class='input-group-shim' on:click={() => {add_action(i)}} id="action_{i}">+</button>
+            <p>{action.name}</p>
+            {#if action_arr.includes(action)}
+                <button class='variant-filled-primary' on:click={() => {rm_action(i)}} id="action_{i}">-</button>
+            {:else}
+                <button class='input-group-shim' on:click={() => {add_action(i)}} id="action_{i}">+</button>
+            {/if}
         </div>
         <div class="card p-4 w-72 shadow-xl" data-popup="action-{i}">
             {#each action.annotations as ann}

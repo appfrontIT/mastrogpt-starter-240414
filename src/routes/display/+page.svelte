@@ -7,7 +7,7 @@
     let user = data.user;
 
 </script>
-
+<div>
 <nav class="list-nav">
 	<ul>
         {#each pages as page}
@@ -17,3 +17,4 @@
         {/each}
 	</ul>
 </nav>
+</div>

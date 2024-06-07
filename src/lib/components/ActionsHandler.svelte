@@ -3,7 +3,8 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { DataHandler } from '@vincjo/datatables';
 	import type { Readable, Writable } from 'svelte/store';
-	
+	import { popup } from '@skeletonlabs/skeleton';
+
 	let actions: any[] | null = [];
 	let value: string;
 	let handler: DataHandler<any>;
@@ -136,6 +137,9 @@
 					</div>
 					url
 				</th>
+				<th>
+					opt
+				</th>
 				{/if}
 			</tr>
 		</thead>
@@ -151,8 +155,18 @@
                         {/each}
                     </td>
 					<td>
-                        {pack.url}<br>
+                        {pack.url}
                     </td>
+					<br>
+				<button class="btn-icon hover:variant-filled" use:popup={{event: 'click', target: 'action_opt', placement: 'left'}}><h3 class="h3">⋮</h3></button>
+				<div data-popup='action_opt'>
+					<div class="btn-group-vertical variant-filled">
+					<button>edit</button>
+					<button on:click={() => {
+						const conf = confirm('Sei sicuro di voler eliminare ')
+					}}>delete</button>
+				</div>
+				</div>
 				</tr>
 			{/each}
 			{/if}

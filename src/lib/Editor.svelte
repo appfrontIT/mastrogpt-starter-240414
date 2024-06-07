@@ -13,18 +13,19 @@
 	import { onMount } from 'svelte';
     import { getToastStore, popup } from '@skeletonlabs/skeleton';
     import type { PopupSettings, ToastSettings } from '@skeletonlabs/skeleton';
-    // import { Modal, type ModalComponent, type ModalSettings } from '@skeletonlabs/skeleton';
-    // import ModalFs from './ModalFS.svelte';
-    // import { getModalStore } from '@skeletonlabs/skeleton';
+    import { Modal, type ModalComponent, type ModalSettings } from '@skeletonlabs/skeleton';
+    import ModalFs from './ModalFS.svelte';
+    import { getModalStore } from '@skeletonlabs/skeleton';
+    import { TreeView, TreeViewItem, RecursiveTreeView, type TreeViewNode } from '@skeletonlabs/skeleton';
 			
-    // const modalStore = getModalStore();
+    const modalStore = getModalStore();
 
-    // const modalComponent: ModalComponent = { ref: ModalFs };
+    const modalComponent: ModalComponent = { ref: ModalFs };
 
-    // const modal: ModalSettings = {
-    //     type: 'component',
-    //     component: modalComponent,
-    // };
+    const modal: ModalSettings = {
+        type: 'component',
+        component: modalComponent,
+    };
 
     const popupFullscreen: PopupSettings = { event: 'hover', target: 'popupFullscreen', placement: 'left' };
     const popupTest: PopupSettings = { event: 'hover', target: 'popupTest', placement: 'left' };
@@ -197,7 +198,43 @@
     }
 
     async function fullscreen() {
-        console.log('fullscreen')
+        modalStore.trigger(modal);
+    }
+
+    const action_promise = action_list();
+
+    async function action_list() {
+        const r = await fetch('/api/my/base/action/find_all', {
+            method: "GET",
+            headers: {"Authorization": "Bearer " + $user['JWT']}
+        })
+        if (r.ok) {
+            const obj = await r.json();
+            return obj;
+        }
+        return null;
+    }
+
+    async function load_action(name: string, pack: string) {
+        const r = await fetch(`/api/my/base/action/find?name=${name}&package=${pack}`, {
+            method: "GET",
+            headers: {"Authorization": "Bearer " + $user['JWT']}
+        })
+        if (r.ok) {
+            const obj = await r.json();
+            $editor.name = obj.name;
+            $editor.package = obj.namespace.split('/')[1];
+            $editor.function = obj.exec.code;
+            for (let i = 0; i < obj.annotations.length; i++) {
+                if (obj.annotations[i].key === "description") {
+                    $editor.description = obj.annotations[i].value;
+                    break;
+                }
+            }
+            $editor.language = obj.exec.kind.split(':')[0];
+            return;
+        }
+        return null;
     }
 
 </script>
@@ -207,7 +244,7 @@
     <input class="input col-span-4" title="Description" type="text" placeholder="description" bind:value={$editor.description}/>
     <select class="select col-span-2" bind:value={$editor.package}>
         <option disabled selected value>Package</option>
-        {#each packages as pack}
+        {#each $user.package as pack}
             <option value={pack}>{pack}</option>
         {/each}
     </select>
@@ -235,11 +272,11 @@
         <div class="grid w-full grid-rows-10 space-y-2" style="height: 80vh;">
             <button class="btn [&>*]:pointer-events-none" on:click={fullscreen} use:popup={popupFullscreen}><img src={fullscreen_icon} alt="expand to fullscreen"></button>
             <div class="card p-4 variant-filled-secondary" data-popup="popupFullscreen">
-                <p>Questo bottone imposta l'$editor a schermo interno</p>
+                <p>Questo bottone imposta l'editor a schermo interno</p>
             </div>
             <button class="btn [&>*]:pointer-events-none" on:click={test} use:popup={popupTest}>Test</button>
             <div class="card p-4 variant-filled-secondary" data-popup="popupTest">
-                <p>Utilizza questo bottone per testare l'azione all'interno dell'$editor!<br>
+                <p>Utilizza questo bottone per testare l'azione all'interno dell'editor!<br>
                     Importante: per testare l'azione bisogna che sia prima fatto il deploy.<br>
                     L'azione viene testata utilizzando l'endpoint corrispettivo.
                 </p>
@@ -257,7 +294,46 @@
             <div class="card p-4 variant-filled-secondary" data-popup="popupVerify">
                 <p>Questo bottone invia il codice scritto al bot per avere feedback e suggerimenti</p>
             </div>
-            <button class="btn [&>*]:pointer-events-none">Actions</button>
+            <button class="btn [&>*]:pointer-events-none" use:popup={{event: 'click', target: 'actions_list', placement: 'left'}}>Actions</button>
+            <div class="card p-4 overflow-y-auto max-h-[70vh] shadow-xl" data-popup="actions_list">
+                {#await action_promise}
+                    <p>...loading actions</p>
+                {:then act}
+                {#if act}
+                    {#each act as a}
+                    <TreeView>
+                        <TreeViewItem>
+                        <div class="grid grid-cols-12 gap-4">
+                            <div class="grid col-span-11">{a.name}</div>
+                            <button class="btn btn-sm variant-filled self-end" on:click={() => {load_action(a.name, a.package)}}>edit</button>
+                        </div>
+                            <svelte:fragment slot="children">
+                                <TreeViewItem>
+                                    <svelte:fragment slot="lead">Package:</svelte:fragment>
+                                    <p>{a.package}</p>
+                                </TreeViewItem>
+                                <TreeViewItem>
+                                    <svelte:fragment slot="lead">Url:</svelte:fragment>
+                                    <p>{a.url}</p>
+                                </TreeViewItem>
+                                <TreeViewItem>
+                                    annotations:
+                                    <svelte:fragment slot="children">
+                                        {#each a.annotations as v}
+                                            <TreeViewItem>
+                                                <svelte:fragment slot="lead">{v.key}</svelte:fragment>
+                                                {v.value}
+                                                </TreeViewItem>
+                                            {/each}
+                                    </svelte:fragment>
+                                </TreeViewItem>
+                            </svelte:fragment>
+                        </TreeViewItem>
+                    </TreeView>
+                    {/each}
+                {/if}
+                {/await}
+            </div>
             <button class="btn row-start-10 [&>*]:pointer-events-none" on:click={deploy} use:popup={popupDeploy}>Deploy</button>
             <div class="card p-4 variant-filled-secondary" data-popup="popupDeploy">
                 <p>Questo bottone fa il Deploy l'action all'interno dell'ambiente serverless.<br>

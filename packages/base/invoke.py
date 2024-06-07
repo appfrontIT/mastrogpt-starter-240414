@@ -48,4 +48,13 @@ def main(args):
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/html_gen/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": input, 'token': token, 'user': user})
+    elif path == '/chat_lookinglass':
+        resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/lookinglass/bot?blocking=true",
+                            auth=HTTPBasicAuth(split[0], split[1]),
+                            json={"input": [{"role": "user", "content": input}], 'token': token, 'user': user})
+        if resp.ok:
+            obj = resp.json()
+            body = obj['response']['result']['body']
+            return {'statusCode': resp.status_code, 'body': {'answer': body['output'], 'url': body['frame']}}
+        return {'satusCode': resp.status_code}
     return {"statusCode": resp.status_code, "body": resp.json()}

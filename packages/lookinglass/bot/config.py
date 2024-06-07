@@ -112,7 +112,6 @@ Further, each chapter is splitted into sub sections. Here's the complete tree:
     |- appendice-a-teoria
 
 Output:
-    - format your output in Markdown style. This is mandatory.
     - Separate the section highlighting each title and each section.
     - use heading, newlines, bold letters, quoting text and lists
 

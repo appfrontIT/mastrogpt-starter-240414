@@ -53,7 +53,6 @@ def find_all():
     arr = []
     for obj in objects:
         arr.append(str(obj.object_name).replace(JWT['username'] + '/', ''))
-    print(arr)
     return {'statusCode': 200, 'body': arr}
 
 def presigned_url(args):

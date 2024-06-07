@@ -1,11 +1,14 @@
     import { error } from '@sveltejs/kit';
 
-    /** @type {import('./$types').PageServerLoad} */
+    /** @type {import('./$types').PageLoad} */
     export async function load({fetch}) {
         const res = await fetch('api/my/base/auth/user', {
             method: 'GET',
             credentials: 'include'
         })
+        if (!res.ok) {
+            throw error(404)
+        }
         const user = await res.json();
         const response = await fetch('api/my/db/minio/gporchia-web/find_all', {
             method: "GET",
@@ -15,6 +18,6 @@
             const obj = await response.json();
             return {'data': obj, 'user': user};
         }
-        
-        error(404, 'Not found');
+        throw error(404)
+
     }

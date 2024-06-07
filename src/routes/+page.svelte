@@ -201,7 +201,7 @@
 			}
 			loading_msg = false;
 		}
-	}, 2000)
+	}, 3000)
 	
 	function scrollChatBottom(behavior?: ScrollBehavior): void {
 		if (elemChat)
