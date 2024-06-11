@@ -1,9 +1,11 @@
 <script lang='ts'>
-	import { user } from '../../store'
+	import { user, editor, selector } from '../../store'
 	import { onMount, onDestroy } from 'svelte';
 	import { DataHandler } from '@vincjo/datatables';
 	import type { Readable, Writable } from 'svelte/store';
 	import { popup } from '@skeletonlabs/skeleton';
+	import { Toast, getToastStore } from '@skeletonlabs/skeleton';
+	import type { ToastSettings, ToastStore } from '@skeletonlabs/skeleton';
 
 	let actions: any[] | null = [];
 	let value: string;
@@ -24,9 +26,16 @@
 	let pages: Readable<number[]>;
     let rowsPerPage: Writable<number | null>;
 	let options = [5, 10, 20, 50, 100];
+
+	const toastStore = getToastStore();
+	const delete_ok: ToastSettings = {
+		message: 'Azione eliminata con successo!',
+	};
+	const delete_failure: ToastSettings = {
+		message: 'Un problema é accorso durante il processo di eliminazione, per favore riprovare',
+	};
 	
-	onMount(async () => {
-		await get_actions();
+	function handler_init() {
 		handler = new DataHandler(actions!, {rowsPerPage: 5});
 		rows = handler.getRows();
 		rowCount = handler.getRowCount();
@@ -36,8 +45,13 @@
 		pages = handler.getPages({ ellipsis: true });
         pages = handler.getPages({ ellipsis: true });
 		rowsPerPage = handler.getRowsPerPage();
+	}
+
+	onMount(async () => {
+		await get_actions();
+		handler_init();
 	})
-	
+
 	async function get_actions() {
 		const response = await fetch('api/my/base/action/find_all', {
 			method: 'GET',
@@ -161,9 +175,45 @@
 				<button class="btn-icon hover:variant-filled" use:popup={{event: 'click', target: 'action_opt', placement: 'left'}}><h3 class="h3">⋮</h3></button>
 				<div data-popup='action_opt'>
 					<div class="btn-group-vertical variant-filled">
-					<button>edit</button>
-					<button on:click={() => {
-						const conf = confirm('Sei sicuro di voler eliminare ')
+					<button on:click={async() => {
+						const r = await fetch(`/api/my/base/action/find?name=${pack.name}&package=${pack.package}`, {
+							method: "GET",
+							headers: {"Authorization": "Bearer " + $user['JWT']}
+						})
+						if (r.ok) {
+							const obj = await r.json();
+							$editor.name = obj.name;
+							$editor.package = obj.namespace.split('/')[1];
+							$editor.function = obj.exec.code;
+							for (let i = 0; i < obj.annotations.length; i++) {
+								if (obj.annotations[i].key === "description") {
+									$editor.description = obj.annotations[i].value;
+									break;
+								}
+							}
+							$editor.language = obj.exec.kind.split(':')[0];
+							if ($editor.language === 'nodejs') $editor.language = 'javascript';
+							$selector = 1;
+							return;
+						}
+						return null;
+					}}>edit</button>
+					<button on:click={async () => {
+						const conf = confirm('Sei sicuro di voler eliminare questa azione?');
+						if (conf) {
+							const response = await fetch(`api/my/base/action/delete?name=${pack.name}&package=${pack.package}`, {
+								method: 'DELETE',
+								headers: {"Authorization": "Bearer " + $user['JWT']}
+							})
+							if (response.ok) {
+								toastStore.trigger(delete_ok);
+								const index = actions.indexOf(pack);
+								actions.splice(index, 1);
+								handler_init();
+							} else {
+								toastStore.trigger(delete_failure);
+							}
+						}
 					}}>delete</button>
 				</div>
 				</div>

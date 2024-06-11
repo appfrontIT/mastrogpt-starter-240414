@@ -17,8 +17,9 @@ def grapher(type = None, request = None, name = None, description = None):
     graph = requests.post(
         'https://nuvolaris.dev/api/v1/web/gporchia/grapher/create',
         json={"input": f"request:\n{request}\n\ndata:\n{data}"})
-    config.html = f"<iframe src='https://nuvolaris.dev/api/v1/web/gporchia/{config.session_user['package']}/{name}' width='100%' height='800'></iframe>"
-    ret = {"body": graph.text}
-    function = f"""def main(args):\n\treturn {ret}"""
-    action = bot_functions.deploy_action(name, function, description)
-    return action
+    obj = graph.json()
+    editor = {"function": obj['output'], "description": description, "name": name, "namespace": config.session_user['namespace'], "package": config.session_user['username'], "language": 'html'}
+    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+                auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
+                json={'id': config.session_user['_id'], 'message': {'editor': editor}})
+    return f"Everything is fine, don't call any other function"

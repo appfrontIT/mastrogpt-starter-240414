@@ -33,6 +33,15 @@ def create(args):
     "version": "1.0.11"
     }},
     "servers": [{{"url": "https://nuvolaris.dev/api/v1/web"}}],
+    "components": {{
+    "securitySchemes": {{
+        "bearerAuth": {{
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT"
+            }}
+        }}
+    }},
     "paths": {{}}
     }}"""
     package = [username]

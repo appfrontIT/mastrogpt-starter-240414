@@ -8,8 +8,6 @@
 		<ol class="breadcrumb">
 			<li class="crumb"><a class="anchor" href="/scraped" target="_blank">Scraped</a></li>
 			<li class="crumb-separator" aria-hidden><span class="divider-vertical h-10" /></li>
-			<li class="crumb"><a class="anchor" href="/display" target="_blank">My pages</a></li>
-			<li class="crumb-separator" aria-hidden><span class="divider-vertical h-10" /></li>
 			<li class="crumb"><a class="anchor" href="/swagger-ui" target="_blank">Swagger</a></li>
 			<li class="crumb-separator" aria-hidden><span class="divider-vertical h-10" /></li>
 			<li use:popup={popupFeatured}><Avatar
@@ -19,9 +17,12 @@
 			/></li>
 			<div class="card p-4 w-72 shadow-xl z-10" data-popup="popupFeatured">
 				<div><button class="btn" on:click={logout}>Logout</button></div>
+				<div><button class="btn" on:click={() => window.open('/my-swagger')}>My Swagger</button></div>
+				<div><button class="btn" on:click={() => window.open('/display')}>My Pages</button></div>
 				<div><button class="btn">Settings</button></div>
 				<div class="arrow bg-surface-100-800-token" />
 			</div>
+			<!-- <LightSwitch /> -->
 		</ol>
 	</svelte:fragment>
 </AppBar>
@@ -139,6 +140,7 @@
 	{logout()}
 {/await}
 <script lang="ts">
+	import { LightSwitch } from '@skeletonlabs/skeleton';
 	import hari from '$lib/hari.png'
 	import manual_svg from '$lib/manual.svg'
 	import code_svg from '$lib/coding.svg'

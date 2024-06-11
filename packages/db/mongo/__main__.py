@@ -82,6 +82,7 @@ def add(collection: Collection, data = False):
 def add_many(collection: Collection, data):
     if not data:
         return {"statusCode": 400, "body": "error: 'data'"}
+    print(data)
     try:
         ins = collection.insert_many(data)
         if not ins.acknowledged:
@@ -132,7 +133,12 @@ def main(args):
             return {"body": "Could not decode body from Base64."}
         return add(collection=db_coll, data=decoded)
     elif op == 'add_many' and method == 'post':
-            return add_many(db_coll, args.get('data', False))
+            try:
+                body: str = args['__ow_body']
+                decoded = base64.b64decode(body).decode('utf-8')
+            except:
+                return {"body": "Could not decode body from Base64."}
+            return add_many(db_coll, data=json.loads(decoded)['data'])
     elif op == 'delete' and method == 'delete':
         return delete(db_coll, args['__ow_query'])
     elif op == 'update' and method == 'put':

@@ -10,7 +10,7 @@ import config, utils
 from chart import grapher
 from tester import tester
 
-MODEL="gpt-3.5-turbo"
+MODEL="gpt-4o"
 
 def crawler(url = '', embedding = False):
     if url == '':
@@ -85,8 +85,7 @@ def action_info(name = False, package = False):
                 namespace = obj['namespace']
                 editor = {"function": obj['exec']['code'], "name": obj['name'], "description": an['value'], "namespace": namespace.split('/')[0], "package": package, "language": obj['exec']['kind'].split(':')[0]}
                 requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/code_editor/add", json={'editor': editor}, headers={"cookie": f"cookie={config.session_user['cookie']}"})
-                break
-        return f"""Display the following fields of the passed action: description, parameters, curl example with the full url without alias, action URL with full url.\nAction:\n{action.json()}"""
+                return f"Action:\nfunction: {obj['exec']['code']}, name: {obj['name']}, description: {an['value']}, package: {package}"
     return "Non sono riuscito a trovare l'azione richiesta. Assicurati che il nome sia corretto e che sia specificato il package se appartiene ad uno"
 
 def delete_action(name = False, package = False):
@@ -99,6 +98,29 @@ def delete_action(name = False, package = False):
             headers={'Authorization': 'Bearer ' + config.session_user['JWT']},
             json={'action': f"""url: https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}"""})
     return f"status: {response.status_code}, body: {response.json()}"
+
+def get_actions():
+    actions_list = utils.get_actions().json()
+    action_arr = []
+    for action in actions_list:
+        action_arr.append(action)
+    name_arr = []
+    for x in action_arr:
+        x.pop('limits')
+        x.pop('publish')
+        x.pop('updated')
+        x.pop('version')
+        x.pop('exec')
+        annotations = []
+        for an in x['annotations']:
+            if an['key'] == 'description' or an['key'] == 'url':
+                annotations.append(an)
+        x['annotations'] = annotations
+        package = x['namespace'].split('/')[1]
+        x.pop('namespace')
+        x['package'] = package
+        name_arr.append(x)
+    return f"Here are all the available actions:\n{name_arr}"
 
 def show_all_actions():
     actions_list = utils.get_actions().json()
@@ -125,32 +147,44 @@ def show_all_actions():
         name_arr.append(x)
     return f"""display all the following actions.\nActions:\n{name_arr}\nYou must display the actions in this output: namespace: <namespace>\nname: <name>\ndescription; <description>"""
 
+def verify(analyses):
+    return analyses
+
+def send_message(message):
+    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+                auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
+                json={'id': config.session_user['_id'], "message": {"output": message}})
+
 def tools_func(
-        tool_calls: List[ChatCompletionMessageToolCall],
         messages: list[dict[str, str]],
         response: ChatCompletion
         ):
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], "message": {"output": "Certo, procedo subito con la tua richiesta"}})
-    messages.append(response.choices[0].message)
-    for tool_call in tool_calls:
-        print(tool_call.function.name)
-        function_name = tool_call.function.name
-        function_to_call = available_functions[function_name]
-        function_args = json.loads(tool_call.function.arguments)
-        function_response = function_to_call(
-            **function_args
-            )
-        messages.append({
-            "tool_call_id": tool_call.id,
-            "role": "tool",
-            "name": function_name,
-            "content": function_response
-        })
+    while True:
+        tool_calls = response.choices[0].message.tool_calls
+        messages.append(response.choices[0].message)
+        for tool_call in tool_calls:
+            print(tool_call.function.name)
+            function_name = tool_call.function.name
+            function_to_call = available_functions[function_name]
+            function_args = json.loads(tool_call.function.arguments)
+            function_response = function_to_call(
+                **function_args
+                )
+            messages.append({
+                "tool_call_id": tool_call.id,
+                "role": "tool",
+                "name": function_name,
+                "content": function_response
+            })
+        response = config.AI.chat.completions.create(model='gpt-4o', messages=messages, tools=tools, tool_choice="auto", temperature=0.1, top_p=0.1)
+        if response.choices[0].finish_reason != "tool_calls":
+            break
         requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                     auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
-                    json={'id': config.session_user['_id'], "message": {"output": "Ho eseguito l'operazione, sto elaborando una risposta"}}
+                    json={'id': config.session_user['_id'], "message": {"output": "Sto elaborando la tua richiesta, per favore attendi"}}
                     )
-    return config.AI.chat.completions.create(model=MODEL, messages=messages,).choices[0].message.content
+    return response.choices[0].message.content
 
 
 available_functions = {
@@ -164,6 +198,9 @@ available_functions = {
     "tester": tester,
     "grapher": grapher,
     "db_store": db_store,
+    "verify": verify,
+    "get_actions": get_actions,
+    "send_message": send_message
 }
 
 tools = [
@@ -198,14 +235,15 @@ tools = [
         "type": "function",
         "function": {
             "name": "create_action",
-            "description": "generate an action based on user informations. Call this only when you have enought data to generate an action",
+            "description": "create an action",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "query": {"type": "string", "description": "all the informations about the action to create"},
+                    },
+                    "required": ["query"],
                 },
-            },
-            },
+            }
         },
         {
         "type": "function",
@@ -241,7 +279,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "html_gen",
-            "description": "the user asks to create an action returning HTML, or the user wants an HTML page. Example: 'create an action returning an html page...', 'create an html ...', and so on",
+            "description": "the user asks to create an action returning HTML, or the user wants an HTML page",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -337,5 +375,45 @@ tools = [
                     "required": ["url", "collection", "format"]
                 }
             }
-        }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "verify",
+                "description": "verify the action generated. If you think the action is malformed or incorrect, update the action with your suggestions",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "analyses": {"type": "string", "description": "your feedbacks about the action"}
+                    },
+                    "required": ["analyses"],
+                },
+            }
+        },
+        {
+        "type": "function",
+        "function": {
+            "name": "get_actions",
+            "description": """You want to lookup to all the actions to check if there is one suitable to be incorporated in your code""",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                    "required": [],
+                },
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "send_message",
+                "description": "Message to send to the user",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "message": {"type": "string", "description": "an update on your making"}
+                    },
+                    "required": ["message"],
+                },
+            }
+        },
 ]

@@ -58,11 +58,12 @@ def delete(args):
     package = args.get('package', False)
     if not name or not package:
         return {'statusCode': 400}
-    if package not in JWT['package']:
+    if package not in JWT['package'] and JWT['role'] != 'admin':
         return {'statusCode': 404}
     response = requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}",
                     auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
     if response.status_code == 204:
+        
         return {'statusCode': response.status_code}
     return {'statusCode': response.status_code, 'body': response.json()}
 

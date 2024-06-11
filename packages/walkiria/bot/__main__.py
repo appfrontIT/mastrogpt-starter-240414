@@ -24,10 +24,11 @@ def ask(
         messages=messages,
         tools=bot_functions.tools,
         tool_choice="auto",
+        temperature=0.1,
+        top_p=0.1
     )
     if response.choices[0].finish_reason == "tool_calls":
-        tool_calls = response.choices[0].message.tool_calls
-        return bot_functions.tools_func(tool_calls, messages, response)
+        return bot_functions.tools_func(messages, response)
     return response.choices[0].message.content
 
 def main(args):

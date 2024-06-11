@@ -3,6 +3,17 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { DataHandler } from '@vincjo/datatables';
 	import type { Readable, Writable } from 'svelte/store';
+	import { getModalStore, getToastStore, popup } from '@skeletonlabs/skeleton';
+	import type { ToastSettings, ToastStore } from '@skeletonlabs/skeleton';
+	import { Modal, type ModalComponent, type ModalSettings } from '@skeletonlabs/skeleton';
+	import ModalAddUser from '../ModalAddUser.svelte';
+			
+	const modalStore = getModalStore();
+	const modalComponent: ModalComponent = { ref: ModalAddUser };
+	const modal: ModalSettings = {
+        type: 'component',
+        component: modalComponent,
+    };
 	
 	let users: any[] | null = [];
 	let value: string;
@@ -24,16 +35,29 @@
 	let rowsPerPage: Writable<number | null>;
 	let options = [5, 10, 20, 50, 100];
 	
-	onMount(async () => {
-		await get_users();
-		handler = new DataHandler(users!, {rowsPerPage: 13});
+	const toastStore = getToastStore();
+	const delete_ok: ToastSettings = {
+		message: 'Utente eliminata con successo!',
+	};
+	const delete_failure: ToastSettings = {
+		message: 'Un problema é accorso durante il processo di eliminazione, per favore riprovare',
+	};
+
+	function handler_init() {
+		handler = new DataHandler(users, {rowsPerPage: 5});
 		rows = handler.getRows();
 		rowCount = handler.getRowCount();
 		sorted = handler.getSort();
 		pageNumber = handler.getPageNumber();
 		pageCount = handler.getPageCount();
 		pages = handler.getPages({ ellipsis: true });
+        pages = handler.getPages({ ellipsis: true });
 		rowsPerPage = handler.getRowsPerPage();
+	}
+
+	onMount(async () => {
+		await get_users();
+		handler_init();
 	})
 	
 	async function get_users() {
@@ -47,6 +71,10 @@
 		users = await response.json();
 		return users;
 	}
+
+	async function addUser() {
+		modalStore.trigger(modal);
+	}
 	</script>
 
 <div class=" overflow-x-auto space-y-2" style="height: 80vh;">
@@ -58,6 +86,13 @@
 			bind:value
 			on:input={() => handler.search(value)}
 		/>
+		<button class="btn variant-ghost [&>*]:pointer-events-none" on:click={addUser}>Add</button>
+		<div class="card p-4 w-200" data-popup="add_user">
+			<label class="label">
+				<span>Input</span>
+				<input class="input" type="text" placeholder="Input" />
+			</label>
+		</div>
 		<aside class="flex place-items-center">
 			Show
 			{#if rowsPerPage}
@@ -120,16 +155,38 @@
 					</div>
 					role
 				</th>
+				<th>
+					opt
+				</th>
 				{/if}
 			</tr>
 		</thead>
 		<tbody>
 			{#if rows}
-			{#each $rows as user}
+			{#each $rows as usr}
 				<tr>
-					<td>{user.username}</td>
-					<td>{user.package}</td>
-					<td>{user.role}</td>
+					<td>{usr.username}</td>
+					<td>{usr.package}</td>
+					<td>{usr.role}</td>
+					<td>
+					<button class="btn btn-sm variant-ringed" on:click={async () => {
+						const conf = confirm('Sei sicuro di voler eliminare questo utente?');
+							if (conf) {
+								const response = await fetch(`/api/my/base/user/delete?id=${usr.id}`, {
+									method: 'DELETE',
+									headers: {"Authorization": "Bearer " + $user['JWT']}
+								})
+								if (response.ok) {
+									toastStore.trigger(delete_ok);
+									const index = users.indexOf(usr);
+									users.splice(index, 1);
+									handler_init();
+								} else {
+									toastStore.trigger(delete_failure);
+								}
+							}
+					}}>Delete</button>
+					</td>
 				</tr>
 			{/each}
 			{/if}

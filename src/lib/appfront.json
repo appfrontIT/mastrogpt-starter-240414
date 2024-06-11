@@ -627,6 +627,64 @@
         }
       }
     },
+    "/gporchia/default/invoke/chat_lookinglass": {
+      "post": {
+        "tags": [
+          "invoke"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "invoke Lookinglass bot and wait for answer",
+        "description": "this API will pass the input to the chat bot synchronously",
+        "operationId": "invokeLookinglassChat",
+        "requestBody": {
+          "description": "the query to pass to the bot",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "input": {
+                    "type": "string",
+                    "examples": [
+                      "how do you make a quotation?"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "bot answer",
+            "content": {
+              "application/json": {
+                "schema": {
+                "type": "object",
+                "properties": {
+                  "answer": {
+                    "type": "string",
+                    "examples": ["To make a quotation you must.."]
+                  },
+                  "url": {
+                    "type": "string",
+                    "example": ["https://appfront-operations.gitbook.io/lookinglass-manuale-utente/preventivi"]
+                  }
+                }
+              }
+              }
+            }
+          },
+          "401": {
+            "description": "unautorized"
+          }
+        }
+      }
+    },
     "/gporchia/default/invoke/lookinglass": {
       "post": {
         "tags": [

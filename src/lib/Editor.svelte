@@ -8,14 +8,16 @@
     import { go } from "@codemirror/lang-go";
     import { oneDark } from "@codemirror/theme-one-dark";
     import {EditorView, keymap} from "@codemirror/view"
-    import {defaultKeymap} from "@codemirror/commands"
+    // import {defaultKeymap} from "@codemirror/commands"
     import { chat_room, selector, user, editor } from '../store'
-	import { onMount } from 'svelte';
+    import { DataHandler } from '@vincjo/datatables';
+	// import { onMount } from 'svelte';
     import { getToastStore, popup } from '@skeletonlabs/skeleton';
     import type { PopupSettings, ToastSettings } from '@skeletonlabs/skeleton';
     import { Modal, type ModalComponent, type ModalSettings } from '@skeletonlabs/skeleton';
     import ModalFs from './ModalFS.svelte';
     import { getModalStore } from '@skeletonlabs/skeleton';
+    import type { Readable, Writable } from 'svelte/store';
     import { TreeView, TreeViewItem, RecursiveTreeView, type TreeViewNode } from '@skeletonlabs/skeleton';
 			
     const modalStore = getModalStore();
@@ -34,9 +36,9 @@
     const popupDeploy: PopupSettings = { event: 'hover', target: 'popupDeploy', placement: 'left' };
     
     let view: EditorView;
-    let value = "";
+    let handler: DataHandler<any>;
+    let value: string;
     let watch_toggle = false;
-    let packages: string[] = [];
 
     const toastStore = getToastStore();
 
@@ -202,7 +204,7 @@
     }
 
     const action_promise = action_list();
-
+    let rows: Readable<any[]>;
     async function action_list() {
         const r = await fetch('/api/my/base/action/find_all', {
             method: "GET",
@@ -210,6 +212,8 @@
         })
         if (r.ok) {
             const obj = await r.json();
+            handler = new DataHandler(obj);
+            rows = handler.getRows();
             return obj;
         }
         return null;
@@ -232,6 +236,7 @@
                 }
             }
             $editor.language = obj.exec.kind.split(':')[0];
+            if ($editor.language === 'nodejs') $editor.language = 'javascript';
             return;
         }
         return null;
@@ -300,7 +305,18 @@
                     <p>...loading actions</p>
                 {:then act}
                 {#if act}
-                    {#each act as a}
+                <header class="flex">
+                    <input
+                        class="input sm:w-64 w-36"
+                        type="search"
+                        placeholder="Search..."
+                        bind:value
+                        on:input={() => handler.search(value)} />
+                    </header>
+                    <table class="table table-hover table-compact table-auto w-full">
+                    <tbody>
+                    {#each $rows as a}
+                    <tr>
                     <TreeView>
                         <TreeViewItem>
                         <div class="grid grid-cols-12 gap-4">
@@ -330,7 +346,10 @@
                             </svelte:fragment>
                         </TreeViewItem>
                     </TreeView>
+                    </tr>
                     {/each}
+                </tbody>
+                </table>
                 {/if}
                 {/await}
             </div>

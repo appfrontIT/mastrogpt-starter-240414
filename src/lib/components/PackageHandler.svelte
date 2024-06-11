@@ -3,6 +3,8 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { DataHandler } from '@vincjo/datatables';
 	import type { Readable, Writable } from 'svelte/store';
+	import { getModalStore, getToastStore, popup } from '@skeletonlabs/skeleton';
+	import type { ToastSettings, ToastStore } from '@skeletonlabs/skeleton';
 	
 	let packages: any[] | null = [];
 	let value: string;
@@ -23,10 +25,18 @@
 	let pages: Readable<number[]>;
     let rowsPerPage: Writable<number | null>;
 	let options = [5, 10, 20, 50, 100];
+	let actions_list = [];
 	
-	onMount(async () => {
-		await get_packages();
-		handler = new DataHandler(packages!, {rowsPerPage: 10});
+	const toastStore = getToastStore();
+	const delete_ok: ToastSettings = {
+		message: 'Package eliminata con successo!',
+	};
+	const delete_failure: ToastSettings = {
+		message: 'Un problema é accorso durante il processo di eliminazione, per favore riprovare',
+	};
+
+	function handler_init() {
+		handler = new DataHandler(packages, {rowsPerPage: 5});
 		rows = handler.getRows();
 		rowCount = handler.getRowCount();
 		sorted = handler.getSort();
@@ -35,6 +45,11 @@
 		pages = handler.getPages({ ellipsis: true });
         pages = handler.getPages({ ellipsis: true });
 		rowsPerPage = handler.getRowsPerPage();
+	}
+
+	onMount(async () => {
+		await get_packages();
+		handler_init();
 	})
 	
 	async function get_packages() {
@@ -46,6 +61,7 @@
 			return null
 		}
 		packages = await response.json();
+		actions_list = await packages['actions'];
 		return packages;
 	}
 	</script>
@@ -121,6 +137,9 @@
 					</div>
 					actions
 				</th>
+				<th>
+					opt
+				</th>
 				{/if}
 			</tr>
 		</thead>
@@ -131,7 +150,39 @@
 					<td>{pack.name}</td>
 					<td>{pack.namespace}</td>
 					<td>
-						{pack.actions}
+						{#await fetch('api/my/base/package/find?name=' + pack.name, {
+							method: 'GET', headers: {'Authorization': `Bearer ${$user['JWT']}`}
+						})}
+							<p>fetching actions...</p>
+						{:then data} 
+							{#await data.json()}
+							<p>loading data...</p>
+							{:then obj}
+								{#each obj.actions as action}
+								{action.name}<br>
+								{/each}
+							{/await}
+						{/await}
+					</td>
+					<td>
+						<!-- svelte-ignore missing-declaration -->
+						<button class="btn btn-sm variant-ringed" on:click={async () => {
+							const conf = confirm('Sei sicuro di voler eliminare questo utente?');
+								if (conf) {
+									const response = await fetch(`/api/my/base/package/delete?name=${pack.name}`, {
+										method: 'DELETE',
+										headers: {"Authorization": "Bearer " + $user['JWT']}
+									})
+									if (response.ok) {
+										toastStore.trigger(delete_ok);
+										const index = packages.indexOf(pack);
+										packages.splice(index, 1);
+										handler_init();
+									} else {
+										toastStore.trigger(delete_failure);
+									}
+								}
+						}}>Delete</button>
 					</td>
 				</tr>
 			{/each}

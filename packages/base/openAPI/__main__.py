@@ -124,20 +124,15 @@ def add(path, function, openapi, COLLECTION):
     COLLECTION.update_one({'_id': ObjectId(JWT['id'])}, {"$set": {'openapi': openapi}})
     return {'statusCode': 200, 'body': openapi}
 
-def delete(path, yaml, COLLECTION, token):
-    start = yaml.find(path)
-    end = yaml.find('\n\n', start)
+def delete(path, openapi, COLLECTION, token):
+    start = openapi.find(path)
+    end = openapi.find('\n\n', start)
     if end == -1:
-        yaml = yaml.replace(yaml[start:], '')
+        openapi = openapi.replace(openapi[start:], '')
     else:
-        yaml = yaml.replace(yaml[start:end + 2], '')
-    upload = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/add', headers={'Authorization': f"Bearer {token}"}, json={
-        'text': yaml,
-        'target': "default.yaml",
-    })
-    if upload.status_code == 204:
-        COLLECTION.update_one({'_id': ObjectId(JWT['id'])}, {"$set": {'yaml': yaml}})
-    return {'statusCode': upload.status_code}
+        openapi = openapi.replace(openapi[start:end + 2], '')
+    COLLECTION.update_one({'_id': ObjectId(JWT['id'])}, {"$set": {'openapi': openapi}})
+    return {'statusCode': 204}
 
 def main(args):
     global AI

@@ -2,7 +2,7 @@
 #--kind python:default
 #--annotation provide-api-key true
 #--param OPENAI_API_KEY $OPENAI_API_KEY
-#--annotation description "an action that create and test an action asynchronously"
+#--annotation description "store a collection of data inside the database following a specific format"
 #--timeout 600000
 #--annotation url https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/db_store_init
 
