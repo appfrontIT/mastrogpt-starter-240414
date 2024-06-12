@@ -6,6 +6,7 @@ from requests.auth import HTTPBasicAuth
 import json
 from zipfile import ZipFile
 import config
+import tiktoken
 
 def delete_action(name, package):
     if package == 'default':
@@ -35,3 +36,8 @@ def load_zip(path):
         for file in file_list:
             content = str(myzip.read(file))
             requests.post('https://nuvolaris.dev/api/v1/web/gporchia/embedding/embed', json={"name": name, "data": content})
+
+def num_tokens(text: str, model: str = 'gtp-4o') -> int:
+    """Return the number of tokens in a string."""
+    encoding = tiktoken.encoding_for_model(model)
+    return len(encoding.encode(text))

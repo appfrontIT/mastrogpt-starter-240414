@@ -12,7 +12,7 @@ import config
 from requests.auth import HTTPBasicAuth
 
 AI = None
-MODEL = "gpt-3.5-turbo"
+MODEL = "gpt-4o"
 
 def ask(
     messages,

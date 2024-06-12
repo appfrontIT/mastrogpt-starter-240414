@@ -49,7 +49,7 @@
 								<p class="font-bold">Hari</p>
 								<small class="opacity-50">{bubble.timestamp}</small>
 							</header>
-							<p>{bubble.message}</p>
+							<SvelteMarkdown source={bubble.message} />
 						</div>
 					</div>
 				{:else}
@@ -140,6 +140,7 @@
 	{logout()}
 {/await}
 <script lang="ts">
+	import SvelteMarkdown from 'svelte-markdown'
 	import { LightSwitch } from '@skeletonlabs/skeleton';
 	import hari from '$lib/hari.png'
 	import manual_svg from '$lib/manual.svg'

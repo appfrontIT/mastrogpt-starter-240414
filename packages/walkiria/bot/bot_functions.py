@@ -9,14 +9,55 @@ import json
 import config, utils
 from chart import grapher
 from tester import tester
+import bs4
+import lxml
+from datetime import datetime
+import base64
 
 MODEL="gpt-4o"
 
-def crawler(url = '', embedding = False):
+def google_for_answers(url = None):
+    if url == None:
+        return "No url provided"
+    socs_cookie = base64.encodebytes(f"\b\x01\x12\x1C\b\x01\x12\x12gws_{datetime.today().strftime('%Y%m%d')}-0_RC3\x1A\x02en \x01\x1A\x06\b\x80º¦±\x06".encode())
+    max_token = 30000
+    headers = {
+        "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/123.0.2420.97",
+        "Cookie": f"SOCS={socs_cookie}",
+    }
+    response = requests.get(url + "&hl=it&filetype=HTML", headers=headers)
+    soup = bs4.BeautifulSoup(response.text, "lxml")
+    divTag = soup.find_all("div", {"id": "search"})
+    ret = []
+    for tag in divTag:
+        tdTags = tag.find_all('a', href=True)
+        for tag in tdTags:
+            if (tag['href'].find('https://www.youtube.com/')) == -1 and (tag['href'].find('https://www.amazon.it/')) == -1 and (tag['href'].find('https://transalte/')) == -1 and (tag['href'].find('/search?')) == -1:
+                # tmp = f"url: {tag['href']}\n" + single_page_scrape(tag['href'])
+                # tmp_token = utils.num_tokens(tmp)
+                # if (max_token - tmp_token) < 0:
+                #     break
+                # ret.append(tmp)
+                # max_token = max_token - tmp_token
+                ret.append(tag['href'])
+    if len(ret) > 0:
+        to_str = ', '.join(ret)
+        return f"Here a list of the page to scrape: {to_str}.\nScrape each page one at a time, than answer on everyone"
+    return "nessun risultato"
+
+def domain_scraping(url = '', embedding = False):
     if url == '':
         return "No url provided"
     resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/apify_scraper", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"url": url, "embedding": embedding})
     return resp.text
+
+def single_page_scrape(url = None):
+    if url == None:
+        return "no url provided"
+    response = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/utility/single_page_scrape',
+                            json={'url': url})
+    return response.text
 
 def html_gen(args):
     actions_info = args.get('actions_names', '')
@@ -154,6 +195,7 @@ def send_message(message):
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                 auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                 json={'id': config.session_user['_id'], "message": {"output": message}})
+    return 'message sent'
 
 def tools_func(
         messages: list[dict[str, str]],
@@ -194,13 +236,15 @@ available_functions = {
     "action_info": action_info,
     "create_action": create_action,
     "html_gen": html_gen,
-    "crawler": crawler,
+    "domain_scraping": domain_scraping,
     "tester": tester,
     "grapher": grapher,
     "db_store": db_store,
     "verify": verify,
     "get_actions": get_actions,
-    "send_message": send_message
+    "send_message": send_message,
+    "single_page_scrape": single_page_scrape,
+    "google_for_answers": google_for_answers
 }
 
 tools = [
@@ -310,8 +354,8 @@ tools = [
         {
         "type": "function",
         "function": {
-            "name": "crawler",
-            "description": "the user wants information about a web page or explicity ask to crawl a web page. Don't call this action if the user wants to store data inside the database",
+            "name": "domain_scraping",
+            "description": "the user wants information about a web page or explicity ask to crawl a domain. Don't call this action if the user wants to store data inside the database",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -416,4 +460,33 @@ tools = [
                 },
             }
         },
+        {
+            "type": "function",
+            "function": {
+                "name": "single_page_scrape",
+                "description": """scrape a single page skipping all sublinks and extract text. Use this if you the user ask for informations or summary about a page.
+                You can also use this function for yourself, by asking the user a webpage where you can gather informations to answer the question""",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "url": {"type": "string", "description": "the url to scrape"}
+                    },
+                    "required": ["url"],
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "google_for_answers",
+                "description": "Search Google with fully-formed http URL to enhance knowledge.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "url": {"type": "string", "description": "the whole google url plus the query parameter"}
+                    },
+                    "required": ["url"]
+                }
+            }
+        }
 ]

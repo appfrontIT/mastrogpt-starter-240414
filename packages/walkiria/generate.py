@@ -92,7 +92,8 @@ Mandatory:
     5 - You MUST import any library or module you use in the action.
     6 - Pay attention to utilize the same language through all the code! Don't mix language, is bad and you're not stupid!
     7 - It's very important that you fill your code with comments, in a way the user will be able to understand what you are doing and can perform some modifications
-    8 - You can't user async, but you can return a promise. Write the function accordingly
+    8 - NEVER use async, but you can return a promise. 
+    9 - axios, jsdom, node-html-parser are forbidden, you can't use them
 """
 
 def deploy_action(name, function, description, language):
@@ -148,7 +149,7 @@ def deploy_action(name, function, description, language):
     if deploy.ok:
         requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
-                json={'id': SESSION_USER['_id'], 'message': {'output': f"Deploy avvenuto correttamente. Ecco una sintesi dell'azione:\nurl: https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}\ndescription: {description}"}})
+                json={'id': SESSION_USER['_id'], 'message': {'output': "Deploy avvenuto correttamente"}})
     else:
         requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),

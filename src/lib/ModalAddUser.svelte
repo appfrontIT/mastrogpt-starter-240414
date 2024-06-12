@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { SvelteComponent } from 'svelte';
 	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { user } from '../store';
 
 	export let parent: SvelteComponent;
 	const modalStore = getModalStore();
@@ -11,9 +12,20 @@
 	};
 
 	// We've created a custom submit function to pass the response and close the modal.
-	function onFormSubmit(): void {
-		if ($modalStore[0].response) $modalStore[0].response(formData);
+	async function onFormSubmit() {
+		const r = await fetch('api/my/base/user/add', {
+			method: 'POST',
+			headers: {"Content-Type": "application/json", 'Authorization': 'Bearer ' + $user['JWT']},
+			body: JSON.stringify({'username': formData.username, 'password': formData.password, 'role': 'user'})
+		})
+		if (r.ok) {
+			alert('User creato con successo');
+			console.log(await r.json());
+		} else {
+			alert('Errore: ' + r.status);
+		}
 		modalStore.close();
+		return ;
 	}
 
 	// Base Classes

@@ -54,6 +54,7 @@
     "highlight.js": "11.9.0",
     "mongodb": "^6.7.0",
     "svelte-codemirror-editor": "^1.4.0",
+    "svelte-markdown": "^0.4.1",
     "swagger-ui": "^5.17.14"
   }
 }
