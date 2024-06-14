@@ -98,7 +98,7 @@ def main(args):
             {"role": "user", "content": md}
             ]
     response = AI.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         messages=messages,
         response_format={"type": "json_object"},
     )

@@ -5,14 +5,12 @@
 	import type { Readable, Writable } from 'svelte/store';
 	import { getModalStore, getToastStore, popup } from '@skeletonlabs/skeleton';
 	import type { ToastSettings, ToastStore } from '@skeletonlabs/skeleton';
-	import { Modal, type ModalComponent, type ModalSettings } from '@skeletonlabs/skeleton';
-	import ModalAddUser from '../ModalAddUser.svelte';
+	import { type ModalComponent, type ModalSettings } from '@skeletonlabs/skeleton';
 			
 	const modalStore = getModalStore();
-	const modalComponent: ModalComponent = { ref: ModalAddUser };
 	const modal: ModalSettings = {
         type: 'component',
-        component: modalComponent,
+        component: 'modalAddUser',
     };
 	
 	let users: any[] | null = [];

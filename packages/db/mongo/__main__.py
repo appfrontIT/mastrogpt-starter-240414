@@ -82,7 +82,6 @@ def add(collection: Collection, data = False):
 def add_many(collection: Collection, data):
     if not data:
         return {"statusCode": 400, "body": "error: 'data'"}
-    print(data)
     try:
         ins = collection.insert_many(data)
         if not ins.acknowledged:

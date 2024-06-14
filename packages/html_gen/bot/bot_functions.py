@@ -4,7 +4,7 @@ from typing import List
 import json
 import config
 
-MODEL="gpt-3.5-turbo"
+MODEL="gpt-4o"
 CLIENT = None
 
 def html_crud(args):

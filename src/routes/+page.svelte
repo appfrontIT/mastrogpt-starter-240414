@@ -164,6 +164,7 @@
 		placement: 'bottom',
 	};
 
+	const parser = new DOMParser();
 	let currentMessage = '';
 	let elemChat: HTMLElement;
 	let loading_msg = false;
@@ -188,18 +189,21 @@
 			const obj = await r.json();
 			for (let i = 0; i < obj.length; i++) {
 				if ('editor' in obj[i]) {
-					$editor = obj[i].editor
+					$editor = obj[i].editor;
 				} else {
-					if('frame' in obj[i]) { manPage = obj[i].frame }
-					const newMessage = {
-						host: false,
-						timestamp: `Today @ ${getCurrentTimestamp()}`,
-						message: obj[i].output,
-						color: 'variant-soft-primary'
-					};
-					$chat_room[$selector].messageFeed = [...$chat_room[$selector].messageFeed, newMessage];
-					$chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'assistant', 'content': obj[i].output}]
-					setTimeout(() => { scrollChatBottom('smooth'); }, 0);
+					if ('frame' in obj[i]) { manPage = obj[i].frame; }
+					if ('pdf' in obj[i]) { }
+					if ('output' in obj[i]) {
+						const newMessage = {
+							host: false,
+							timestamp: `Today @ ${getCurrentTimestamp()}`,
+							message: obj[i].output,
+							color: 'variant-soft-primary'
+						};
+						$chat_room[$selector].messageFeed = [...$chat_room[$selector].messageFeed, newMessage];
+						$chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'assistant', 'content': obj[i].output}]
+						setTimeout(() => { scrollChatBottom('smooth'); }, 0);
+					}
 				}
 			}
 			loading_msg = false;

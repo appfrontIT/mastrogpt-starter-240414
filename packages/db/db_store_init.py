@@ -32,6 +32,9 @@ def main(args):
     user = args.get('user', False)
     if not url or not format or not collection or not user:
         return {"statusCode": 400, "body": "data incomplete"}
+    token = args.get('token', False)
+    if not token:
+        return {'statusCode': 401}
     
     text = crawl(url)
     format_obj = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/md_to_json?blocking=true', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={
@@ -47,6 +50,7 @@ def main(args):
     The action must return the filled json.
     Use the following name for the action: {collection}_store
     remember to import the necessary libraries.
+    Don't put authorization inside the action.
     Example:
     {{
         "guidelines": {{
@@ -124,23 +128,20 @@ def main(args):
 
     Remember to keep the same keys as the guidelines, all lowercase and snake_case
     """
-    action = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/action/create?blocking=true',
+    action = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/generate?blocking=true',
                         auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
-                        json={"request": request, "user": user
-                            })
-    print(action.text)
+                        json={"request": request, "token": token}
+                        )
     action_obj = action.json()
     body = action_obj['response']['result']['body']
-    print(body)
     url = body.split("'")[1]
-    print(url)
     while True:
         lines = list(islice(split, 500))
         if not lines:
             break
         requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/db_store_exec',
                     auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
-                    json={"format": md, "collection": collection, "text": lines, "user": user, "url": url}
+                    json={"format": md, "collection": collection, "text": lines, "url": url}
                     )
         split = split[500:]
         time.sleep(1)

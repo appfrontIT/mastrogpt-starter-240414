@@ -89,12 +89,12 @@ quotation_functions = [
         "type": "function",
         "function": {
             "name": "quotation_by_birth",
-            "description": "Extract veichle plate and user date of birth. Store the data in DD-MM-YY",
+            "description": "The user wants to make a quotation using veichle plate and date of birth",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "plate" : {"type": "string", "description": "plate of veichle"},
-                    "date_of_birth": { "type": "string", "description": "user date of birth"},
+                    "date_of_birth": { "type": "string", "description": "date of birth of the veichle owner"},
                     },
                     "required": ["plate", "date_of_birth"],
                 },
@@ -104,12 +104,12 @@ quotation_functions = [
         "type": "function",
         "function": {
             "name": "quotation_by_cf",
-            "description": "Extract veichle plate and user Tax ID code ",
+            "description": "The user wants to make a quotation using veichle plate and Tax ID code ",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "plate" : {"type": "string", "description": "plate of veichle"},
-                    "cf": { "type": "string", "description": "user Tax ID code"},
+                    "cf": { "type": "string", "description": "tax ID of the veichle owner"},
                     },
                     "required": ["plate", "cf"],
                 },

@@ -4,8 +4,11 @@
 	import { DataHandler } from '@vincjo/datatables';
 	import type { Readable, Writable } from 'svelte/store';
 	import { popup } from '@skeletonlabs/skeleton';
-	import { Toast, getToastStore } from '@skeletonlabs/skeleton';
+	import { Toast, getToastStore, getModalStore } from '@skeletonlabs/skeleton';
+	import { type ModalSettings } from '@skeletonlabs/skeleton';
 	import type { ToastSettings, ToastStore } from '@skeletonlabs/skeleton';
+
+	const modalStore = getModalStore();
 
 	let actions: any[] | null = [];
 	let value: string;
@@ -176,6 +179,7 @@
 				<div data-popup='action_opt'>
 					<div class="btn-group-vertical variant-filled">
 					<button on:click={async() => {
+						modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: "Preparing the editor..." }});
 						const r = await fetch(`/api/my/base/action/find?name=${pack.name}&package=${pack.package}`, {
 							method: "GET",
 							headers: {"Authorization": "Bearer " + $user['JWT']}
@@ -193,24 +197,29 @@
 							}
 							$editor.language = obj.exec.kind.split(':')[0];
 							if ($editor.language === 'nodejs') $editor.language = 'javascript';
+							modalStore.close();
 							$selector = 1;
 							return;
 						}
+						modalStore.close();
 						return null;
 					}}>edit</button>
 					<button on:click={async () => {
 						const conf = confirm('Sei sicuro di voler eliminare questa azione?');
 						if (conf) {
+							modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: `deleting ${pack.name}...` }});
 							const response = await fetch(`api/my/base/action/delete?name=${pack.name}&package=${pack.package}`, {
 								method: 'DELETE',
 								headers: {"Authorization": "Bearer " + $user['JWT']}
 							})
 							if (response.ok) {
-								toastStore.trigger(delete_ok);
 								const index = actions.indexOf(pack);
 								actions.splice(index, 1);
 								handler_init();
+								modalStore.close();
+								toastStore.trigger(delete_ok);
 							} else {
+								modalStore.close();
 								toastStore.trigger(delete_failure);
 							}
 						}

@@ -9,8 +9,19 @@
 	import css from 'highlight.js/lib/languages/css';
 	import javascript from 'highlight.js/lib/languages/javascript';
 	import typescript from 'highlight.js/lib/languages/typescript';
-	import { initializeStores, Drawer, Modal, Toast } from '@skeletonlabs/skeleton';
-	
+	import { initializeStores, Drawer, Modal, Toast, type ModalComponent } from '@skeletonlabs/skeleton';
+	import ModalWaiting from '../lib/ModalWaiting.svelte';
+	import ModalFs from '../lib/ModalFS.svelte';
+	import ModalAddUser from '../lib/ModalAddUser.svelte';
+	import ModalConfirm from '../lib/ModalConfirm.svelte';
+
+	const modalRegistry: Record<string, ModalComponent> = {
+		modalWaiting: { ref: ModalWaiting },
+		modalFs: { ref: ModalFs },
+		modalAddUser: { ref: ModalAddUser },
+		modalConfirm: { ref: ModalConfirm }
+	};
+
 	initializeStores();
 
 	hljs.registerLanguage('xml', xml); // for HTML
@@ -24,5 +35,5 @@
 	import { storePopup } from '@skeletonlabs/skeleton';
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 </script>
-<Modal />
+<Modal components={modalRegistry} />
 <slot />

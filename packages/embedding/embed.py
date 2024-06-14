@@ -1,6 +1,7 @@
-#--web true
+#--web false
 #--kind python:default
 #--param OPENAI_API_KEY $OPENAI_API_KEY
+#--param CONNECTION_STRING $CONNECTION_STRING
 #--annotation url https://nuvolaris.dev/api/v1/web/gporchia/embedding/embed
 
 from openai import OpenAI
@@ -39,7 +40,6 @@ def embedding(name, data):
     df = pd.read_csv('temp.csv')
 
     # convert embeddings from CSV str type back to list type
-    
     df['embedding'] = df['embedding'].apply(ast.literal_eval)
     
     # df.reset_index(inplace=True)
@@ -49,29 +49,27 @@ def embedding(name, data):
 
 def main(args):
     global AI
-    name = args.get('name', '')
-    if name == '':
-        return {"body": "error: name is missing"}
-    client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
+    collection = args.get('collection', None)
+    token = args.get('token', None)
+    if collection == None:
+        return { "statusCode": 404, "body": "error: collection is missing"}
+    if token == None:
+        return {'statusCode': 401}
+    connection_string = args.get('CONNECTION_STRING', False)
+    client = MongoClient(connection_string)
     dbname = client['mastrogpt']
     collection_list = dbname.list_collection_names()
-    db_coll = ""
-    if name in collection_list:
-        db_coll = dbname[name]
-        # cursor = db_coll.find({}, {'_id': False})
-        # list_cur = list(cursor)
-        # json_data = dumps(list_cur)
-        # return {"body": json_data}
-    else:
-        db_coll = dbname.create_collection(name)
-    data = args.get('data', '')
-    if data == '':
-        return {"body": "error: data or name missing"}
+    if collection not in collection_list:
+        return {'statusCode': 400, 'body': 'collection not found'}
+    db_coll = dbname[collection]
+    el = db_coll.find_one()
+    if 'text' not in el:
+        return {'statusCode': 400, 'body': 'Collection must have key text for embedding'}
+    cursor = db_coll.find()
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
-    df = embedding(name, data)
-    db_coll.insert_many(df)
-    cursor = db_coll.find({}, {'_id': False})
-    list_cur = list(cursor)
-    json_data = dumps(list_cur)
-    return {"body": json_data}
+    for document in cursor:
+        embedded_response = AI.embeddings.create(model="text-embedding-3-small", input=document['text'])
+        embedded_data = embedded_response.data[0].embedding
+        db_coll.update_one({'_id': document['_id']}, {"$set": {"embedding": embedded_data}})
+    return {"statusCode": 204}
     

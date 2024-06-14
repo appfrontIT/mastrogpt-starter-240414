@@ -86,6 +86,8 @@ def main(args):
         res = { "output": ask(messages=messages, model=MODEL)}
     if config.frame != "":
         res['frame'] = config.frame
+    if config.base64_pdf != "":
+        res['pdf'] = config.base64_pdf
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                 auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                 json={'id': config.session_user['_id'], 'message': res, 'history': {"role": "assistant", "content": res['output']}})

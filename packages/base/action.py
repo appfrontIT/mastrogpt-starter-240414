@@ -62,8 +62,13 @@ def delete(args):
         return {'statusCode': 404}
     response = requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}",
                     auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
-    if response.status_code == 204:
-        
+    if response.ok:
+        del_from_openapi = requests.delete(
+            'https://nuvolaris.dev/api/v1/web/gporchia/base/openAPI/delete?action=' + f"/gporchia/{package}/{name}",
+            headers={'Authorization': args['__ow_headers'].get('authorization')}
+            )
+        if not del_from_openapi.ok:
+            return {'statusCode': 200, 'body': "action successfully deleted, but failed to remove it from openAPI"}
         return {'statusCode': response.status_code}
     return {'statusCode': response.status_code, 'body': response.json()}
 

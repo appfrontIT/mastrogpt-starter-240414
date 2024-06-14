@@ -20,6 +20,13 @@ from openai import OpenAI
 AI: OpenAI = None
 JWT = None
 
+def validateJSON(jsonData):
+    try:
+        json.loads(jsonData)
+    except ValueError as err:
+        return False
+    return True
+
 def add(path, function, openapi, COLLECTION):
     messages = [
         {"role": "system", "content": """Given an action, you must produce the correct openAPI spec. An action is an API endpoint. If the action needs authorization, you must specify it.
@@ -116,11 +123,20 @@ def add(path, function, openapi, COLLECTION):
     )
     content = response.choices[0].message.content
     openapi = openapi[:-3]
-    print(openapi)
     if openapi[len(openapi) - 2] == '}':
         openapi = openapi[:-1]
         openapi += ',\n'
     openapi += f'{content[1:]}\n' + '}'
+    if not validateJSON(openapi):
+        validate_json = AI.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "your job is to validate the correctness of an openapi json, and return the correct json. Only the openapi json must be returned, nothing else"},
+            {"role": "user", "content": "please, check and correct the following openapi spec:\n" + openapi }
+        ],
+        response_format={ "type": "json_object" }
+        )
+        openapi = validate_json.choices[0].message.content
     COLLECTION.update_one({'_id': ObjectId(JWT['id'])}, {"$set": {'openapi': openapi}})
     return {'statusCode': 200, 'body': openapi}
 
@@ -131,6 +147,16 @@ def delete(path, openapi, COLLECTION, token):
         openapi = openapi.replace(openapi[start:], '')
     else:
         openapi = openapi.replace(openapi[start:end + 2], '')
+    if not validateJSON(openapi):
+        validate_json = AI.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "your job is to validate the correctness of an openapi json, and return the correct json. Only the openapi json must be returned, nothing else"},
+            {"role": "user", "content": "please, check and correct the following openapi spec:\n" + openapi }
+        ],
+        response_format={ "type": "json_object" }
+        )
+        openapi = validate_json.choices[0].message.content
     COLLECTION.update_one({'_id': ObjectId(JWT['id'])}, {"$set": {'openapi': openapi}})
     return {'statusCode': 204}
 
@@ -164,10 +190,8 @@ def main(args):
     elif path == '/delete' and args['__ow_method'] == 'delete':
         action = args.get('action', False)
         if not action:
-            return {"statusCode": 401}
-        action_split = action.split("\n")
-        action_path = action_split[0].split('web')[1]
-        return delete(action_path, openapi, COLLECTION, token)
+            return {"statusCode": 404, "body": "'action' key not found"}
+        return delete(action, openapi, COLLECTION, token)
     elif path == '/get' and args['__ow_method'] == 'get':
         return {'statusCode': 200, 'body': openapi}
     return {'statusCode': 404}

@@ -4,13 +4,28 @@
 #--param APIFY_ACTOR $APIFY_ACTOR
 #--param APIFY_TOKEN $APIFY_TOKEN
 #--param OPENAI_API_KEY $OPENAI_API_KEY
+#--param JWT_SECRET $JWT_SECRET
+#--annotation provide-api-key true
 #--timeout 300000
 #--annotation url https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/apify_scraper
 
+import jwt
 from openai import OpenAI
 import requests
 import json
 import re
+from requests.auth import HTTPBasicAuth
+import os
+
+OW_KEY = os.getenv('__OW_API_KEY')
+OW_API_SPLIT = OW_KEY.split(':')
+DECODED = None
+
+def send_message(msg):
+    global DECODED
+    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+                auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
+                json={'id': DECODED['id'], "message": {"output": msg}})
 
 def extract_domain(url):
     # Define a regular expression pattern for extracting the domain
@@ -28,16 +43,16 @@ def extract_domain(url):
 def main(args):
     ACTOR = args.get('APIFY_ACTOR', '')
     TOKEN = args.get('APIFY_TOKEN', '')
-    token = args['__ow_headers'].get('authorization', False)
-    if not token:
-        return {'statusCode': 401}
+    token = args.get('token', False)
     embedding = args.get('embedding', False)
-    if ACTOR == '' or TOKEN == '':
+    if ACTOR == '' or TOKEN == '' or not token:
         return {'statuCode': 500, "body": "internal server error"}
     url = args.get('url', '')
     if url == '':
         return {'statuCode': 400, "body": "parameter 'url' not found"}
-    
+    secret = args.get('JWT_SECRET')
+    global DECODED
+    DECODED = jwt.decode(token, key=secret, algorithms='HS256')
     obj = {
         "aggressivePrune": False,
         "clickElementsCssSelector": "[aria-expanded=\"false\"]",
@@ -61,19 +76,19 @@ def main(args):
         }
     crawl = requests.post(f"https://api.apify.com/v2/acts/apify~website-content-crawler/run-sync-get-dataset-items",headers={"Content-Type": "application/json","Authorization": f"Bearer {TOKEN}"}, json=obj)
     if crawl.status_code != 201:
+        send_message(f"É avvenuto un problema durante lo scraping. L'errore é:\ncode: {crawl.status_code}\nbody: {crawl.text}\nRiprovare o consultare Apify per comprendere la natura del problema")
         return {'statusCode': crawl.status_code, "body": crawl.text}
     obj_list = []
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
-    ROLE = """You're job is just to explain the text received.
-    Format your output including a Title for each section and a description. Example: "**This is the title**\nHere you will put the desctiption.\n\n**Another title**\nAnother description" and so on.
-    Take your time to answer, it's very important that the text is outputted in a very smart and comprehensible way.
-    Answer only with the explaination text, nothing else must be returned."""
+    ROLE = """You're job is to summarize the text you receive.
+    Answer only with the summarized text, nothing else must be returned.
+    Don't write everything in the same row, format the output in a way is easier to read"""
     for dict in crawl.json():
         response = AI.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": ROLE},
-                {"role": "user", "content": f"explain me the following text:\n{dict['text']}"}
+                {"role": "user", "content": f"summarize the passed text:\n{dict['text']}"}
             ],
         )
         data = {
@@ -81,11 +96,22 @@ def main(args):
             "text": dict['text'],
             "summary": response.choices[0].message.content
             }
-        if embedding:
-            embedded_response = AI.embeddings.create(model="text-embedding-3-small", input=response.choices[0].message.content)
-            embedded_data = embedded_response.data[0].embedding
-            data['embedding'] = embedded_data
         obj_list.append(data)
     collection = f"crawl_{extract_domain(url).replace('-', '_').replace('.', '__')}"
-    response = requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/add_many", json={"data": obj_list})
-    return {'statusCode': 204}
+    send_message("Lo scraping é avvenuto con successo, procedo a salvare i dati nel database")
+    response = requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/add_many",
+                            headers={'Authorization': 'Bearer ' + token},
+                            json={"data": obj_list})
+    if response.ok:
+        send_message(f"Collection {collection} salvata all'interno del database")
+        if embedding:
+            send_message("Procedo ad eseguire l'embedding degli elementi salvati")
+            embed = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/embedding/embed',
+                                auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
+                                json={'collection': collection, 'token': token})
+            if embed.ok:
+                send_message("Embedding avvenuto correttamente")
+            else:
+                send_message("Errore: embedding non riuscito")
+        return {'statusCode': 204}
+    return {'statusCode': 500, 'body': "Could't store data in database"}

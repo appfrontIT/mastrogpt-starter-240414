@@ -4,12 +4,12 @@ import requests
 from typing import List
 import config
 import json
+import base64
 
 MODEL="gpt-3.5-turbo"
 
 form_validation = False
 AccessToken = None
-quotation_doc = None
 
 def make_quotation_birth(data):
     global AccessToken
@@ -69,28 +69,22 @@ def make_quotation_birth(data):
     if quot_req.status_code != 200:
         print("Error getting quotation")
         return False
-    quot_obj = json.loads(quot_req.text)
+    quot_obj = quot_req.json()
     file = requests.get(f"https://api.appfront.cloud/lookinglass/dev/dllbg/mtr/external/api/v2/quotations/{quot_obj['data']['id']}/download-pdf", headers={
         "Accept": "application/json",
         'ExternalAuthorization': AccessToken,
         "Authorization": "Bearer kKYdPYn3AwEO3eYMvR1pzPjXWTw4QBafuzy23hy5H4tmgxz8x1mLDHQZpmcz",
     })
-    pdf_api_key = "matcip@hotmail.com_TPQ0f19qKjQD5K03k7K9v7RR64JVlWkcjhmeCP72x1M68B06WZCFO3wnI1D7Ni0L"
-    get_upload_link = requests.get("https://api.pdf.co/v1/file/upload/get-presigned-url", headers={"x-api-key": pdf_api_key}).json()
-    # print(get_upload_link.text)
-    upload_file = requests.put(get_upload_link['presignedUrl'], headers={"x-api-key": pdf_api_key}, data=file.content)
-    print(upload_file.status_code)
-    get_html = requests.post("https://api.pdf.co/v1/pdf/convert/to/html", headers={"x-api-key": pdf_api_key}, json={"url": get_upload_link['url']})
-    print(get_html.text)
-    html_obj = json.loads(get_html.text)
-    config.html = f"""<iframe src="{html_obj['url']}" width='100%' height='800'></iframe>"""
-    global quotation_doc
-    quotation_doc = quot_req.text
+    presigned = requests.get('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + f"quotations/{quot_obj['data']['id']}",
+                            headers= {"Authorization": "Bearer " + config.session_user['JWT']})
+    if presigned.status_code == 200:
+        upload = requests.put(presigned.text, data=file.content)
+        if upload.ok:
+            config.frame = f"https://gporchia.nuvolaris.dev/" + f"quotations/{quot_obj['data']['id']}"
     return True
 
 def quotation_by_cf(plate, cf):
     global form_validation
-    print("Data collected, retrieving informantions")
     if make_quotation_birth({"targhe": {"targa_polizza_numero": plate, "codice_fiscale_atr": cf}}):
         form_validation = True
         return "quotation obtained"
@@ -98,7 +92,6 @@ def quotation_by_cf(plate, cf):
 
 def quotation_by_birth(plate, date_of_birth):
     global form_validation
-    print("Data collected, retrieving informantions")
     if make_quotation_birth({"targhe": {"targa_polizza_numero": plate, "data_nascita": date_of_birth}}):
         form_validation = True
         return "quotation obtained"

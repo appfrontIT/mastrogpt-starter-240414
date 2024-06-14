@@ -66,7 +66,7 @@ def presigned_url(args):
         secret_key=secret,
         secure=True,
     )
-    url = client.presigned_put_object('gporchia-web', JWT['username'] + '/' + name, expires=timedelta(hours=2))
+    url = client.presigned_put_object('gporchia-web', name, expires=timedelta(hours=2))
     return {'statusCode': 200, 'body': url}
 
 def main(args):

@@ -16,7 +16,6 @@ from bs4 import BeautifulSoup
 OW_KEY = os.getenv('__OW_API_KEY')
 OW_API_SPLIT = OW_KEY.split(':')
 AI: OpenAI = None
-USER = None
 NAME = ""
 ROLE = """You will get a link to some data and some instructions on how to store that data inside the database.
 You have to create the correct object to store inside the database.
@@ -30,11 +29,9 @@ def main(args):
     format = args.get('format', False)
     collection = args.get('collection', False)
     text = args.get('text', False)
-    user = args.get('user', False)
     url = args.get('url', False)
-    print(url)
 
-    if not format or not collection or not text or not user or not url:
+    if not format or not collection or not text or not url:
         return {"statusCode": 400}
 
     arr = []
@@ -42,7 +39,5 @@ def main(args):
         response = requests.post(url, json={'line': line})
         if response.status_code == 200:
             arr.append(response.json())
-    print(arr)
     insertion = requests.post(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/add_many", json={"data": arr})
-    print(insertion.text)
     return {"statusCode": 204}

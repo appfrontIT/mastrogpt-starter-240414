@@ -23,7 +23,7 @@ Take your time to answer and try to think backward. Don't forget to lookup the c
 You can't be lazy, NEVER! The user needs your help!
 `);
 
-function getCurrentTimestamp() {
+export function getCurrentTimestamp() {
     const date = new Date().toLocaleString('en-GB', { hour: 'numeric', minute: 'numeric', hour12: true });
     return date;
 }
@@ -70,7 +70,7 @@ export const chat_room = writable([
 		})
     },
     {
-        url: '/api/my/base/invoke/walkiria',
+        url: '/api/my/html_gen/bot',
         history: new Array(),
         messageFeed: new Array({host: false, name: 'Hari', timestamp: `Today @ ${getCurrentTimestamp()}`, message: `
         Ciao! In questa sezione ti aiuteró a creare un interfaccia per visualizzare quello di cui hai bisogno!
@@ -85,4 +85,4 @@ export const chat_room = writable([
     },
 ])
 
-export const selector = writable(-1)
+export const selector = writable(-1);

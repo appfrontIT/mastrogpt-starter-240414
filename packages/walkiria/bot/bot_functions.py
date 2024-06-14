@@ -13,14 +13,24 @@ import bs4
 import lxml
 from datetime import datetime
 import base64
+import chart
 
 MODEL="gpt-4o"
+
+def embed_collection(collection = None):
+    if collection == None:
+        return 'no collection provided'
+    embed = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/embedding/embed',
+                        auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
+                        json={'collection': collection, 'token': config.session_user['JWT']})
+    if embed.ok:
+        return "embedding succesfull on collection " + collection
+    return "embedding failed. Error: " + embed.text
 
 def google_for_answers(url = None):
     if url == None:
         return "No url provided"
     socs_cookie = base64.encodebytes(f"\b\x01\x12\x1C\b\x01\x12\x12gws_{datetime.today().strftime('%Y%m%d')}-0_RC3\x1A\x02en \x01\x1A\x06\b\x80º¦±\x06".encode())
-    max_token = 30000
     headers = {
         "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/123.0.2420.97",
@@ -49,8 +59,10 @@ def google_for_answers(url = None):
 def domain_scraping(url = '', embedding = False):
     if url == '':
         return "No url provided"
-    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/apify_scraper", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={"url": url, "embedding": embedding})
-    return resp.text
+    resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/apify_scraper",
+                        auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
+                        json={"url": url, "embedding": embedding, "token": config.session_user['JWT']})
+    return "the scraping is processing, it will be performed in background since it may takes some time"
 
 def single_page_scrape(url = None):
     if url == None:
@@ -62,6 +74,7 @@ def single_page_scrape(url = None):
 def html_gen(args):
     actions_info = args.get('actions_names', '')
     description: str = args.get('description', '')
+    print(description)
     name: str = args.get('name', '')
     action_array = ""
     for action in actions_info:
@@ -80,15 +93,11 @@ def html_gen(args):
         query = f"{description}\nHere the informations about the actions you have to call inside it: {action_array}"
     else:
         query = description
-    html = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/html_gen/bot", json={"input": query})
+    html = requests.post("https://nuvolaris.dev/api/v1/web/gporchia/html_gen/bot",
+                        json={"input": query, "name": name, 'id': config.session_user['id']})
     if html.status_code == 204:
         return "failed to generate the HTML"
-    obj = html.json()
-    editor = {"function": obj['output'], "description": description, "name": name, "namespace": config.session_user['namespace'], "package": config.session_user['username'], "language": 'html'}
-    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
-                auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
-                json={'id': config.session_user['_id'], 'message': {'editor': editor}})
-    return f"Everything is fine, don't call any other function"
+    return "Page created"
 
 def update_action(function = False, fix = False):
     if function and fix:
@@ -105,12 +114,12 @@ def create_action(query):
                             json={"request": query, "token": config.session_user['JWT']})
     return response.text
 
-def db_store(url, collection, format):
+def store_text_in_specific_format(url, collection, format):
     return requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/db_store_init', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
         "url": url,
         "collection": collection,
         "format": format,
-        "user": config.session_user
+        "token": config.session_user['JWT']
     }).text
 
 def action_info(name = False, package = False):
@@ -201,7 +210,7 @@ def tools_func(
         messages: list[dict[str, str]],
         response: ChatCompletion
         ):
-    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], "message": {"output": "Certo, procedo subito con la tua richiesta"}})
+    # requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], "message": {"output": "Certo, procedo subito con la tua richiesta"}})
     while True:
         tool_calls = response.choices[0].message.tool_calls
         messages.append(response.choices[0].message)
@@ -222,10 +231,10 @@ def tools_func(
         response = config.AI.chat.completions.create(model='gpt-4o', messages=messages, tools=tools, tool_choice="auto", temperature=0.1, top_p=0.1)
         if response.choices[0].finish_reason != "tool_calls":
             break
-        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
-                    auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
-                    json={'id': config.session_user['_id'], "message": {"output": "Sto elaborando la tua richiesta, per favore attendi"}}
-                    )
+        # requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+        #             auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
+        #             json={'id': config.session_user['_id'], "message": {"output": "Sto elaborando la tua richiesta, per favore attendi"}}
+        #             )
     return response.choices[0].message.content
 
 
@@ -238,13 +247,14 @@ available_functions = {
     "html_gen": html_gen,
     "domain_scraping": domain_scraping,
     "tester": tester,
-    "grapher": grapher,
-    "db_store": db_store,
+    "grapher": chart.grapher,
+    # "store_text_in_specific_format": store_text_in_specific_format,
     "verify": verify,
     "get_actions": get_actions,
     "send_message": send_message,
     "single_page_scrape": single_page_scrape,
-    "google_for_answers": google_for_answers
+    "google_for_answers": google_for_answers,
+    "embed_collection": embed_collection
 }
 
 tools = [
@@ -404,22 +414,22 @@ tools = [
                 }
             }
         },
-        {
-        "type": "function",
-        "function": {
-            "name": "db_store",
-            "description": "the user gives wants to store data inside the database from an url",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "url": {"type": "string", "description": "the url of the file to store in the database"},
-                    "collection": {"type": "string", "description": "the collection where to store the data inside the database in snake_case. This should't include the 'collection' prefix"},
-                    "format": {"type": "string", "description": "how the data must be stored in pair of key value. Must be in markdown format"},
-                    },
-                    "required": ["url", "collection", "format"]
-                }
-            }
-        },
+        # {
+        # "type": "function",
+        # "function": {
+        #     "name": "store_text_in_specific_format",
+        #     "description": "the user wants to store data from an url inside the database, following a specific format.",
+        #     "parameters": {
+        #         "type": "object",
+        #         "properties": {
+        #             "url": {"type": "string", "description": "the url of the file to store in the database"},
+        #             "collection": {"type": "string", "description": "the collection where to store the data inside the database in snake_case. This should't include the 'collection' prefix"},
+        #             "format": {"type": "string", "description": "how the data must be stored in pair of key value. Must be in markdown format"},
+        #             },
+        #             "required": ["url", "collection", "format"]
+        #         }
+        #     }
+        # },
         {
             "type": "function",
             "function": {
@@ -486,6 +496,20 @@ tools = [
                         "url": {"type": "string", "description": "the whole google url plus the query parameter"}
                     },
                     "required": ["url"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "embed_collection",
+                "description": "perform embedding on all elements of the collection",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "collection": {"type": "string", "description": "the name of the collection"}
+                    },
+                    "required": ["collection"]
                 }
             }
         }

@@ -1,10 +1,12 @@
 <script lang="ts">
-    import ActionsHandler from "./components/ActionsHandler.svelte";
     import { popup } from '@skeletonlabs/skeleton';
     import type { PopupSettings } from '@skeletonlabs/skeleton';
-    import { user, chat_room, selector } from "../store";
+    import { user, chat_room, selector, getCurrentTimestamp } from "../store";
     import { onMount } from "svelte";
     import { AppBar } from '@skeletonlabs/skeleton';
+    import { getModalStore } from '@skeletonlabs/skeleton';
+
+    const modalStore = getModalStore();
 
     let actions = new Array();
     let primaryColor: any = -1;
@@ -34,7 +36,7 @@
 		if (response.status != 200) {
 			return null
 		}
-		return response.json();
+		return await response.json();
 	}
 
     function add_action(i: number) {
@@ -55,6 +57,11 @@
 
     async function proceed() {
         if (name == '') { alert('Il campo "nome" non puó essere vuoto'); return;}
+        modalStore.trigger({
+            type: 'component',
+            component: 'modalWaiting',
+            meta: { msg: "Building your page..." }
+        });
         let query: string = 'user the following informations to generate an html page (call the html_gen function):\n';
         if (primaryColor != -1) {query += `- Primary color: ${primaryColor}\n`;}
         if (secondaryColor != -1) {query += `- Secondary color: ${secondaryColor}\n`;}
@@ -77,21 +84,29 @@
         if (action_arr.length > 0) {
             query += `- Include the following actions:\n`;
             for (let i = 0; i < action_arr.length; i++) {
-                console.log(action_arr[i].package)
-                query += `\t- Action:\n\t\tname: ${action_arr[i].name}\n\t\tpackage: ${action_arr[i].package}`
-                // const annotations = action_arr[i].annotations;
-                // for (let j = 0; j < annotations.length; j++) {
-                //     if (annotations[j].key === 'description') { query += `\n\t\tdescription: ${annotations[j].value}`; break;}
-                // }
+                query += `\t- Action:\n\t\t- name: ${action_arr[i].name}\n\t\t- package: ${action_arr[i].package}\n\t\t- url: ${action_arr[i].url}`
+                const annotations = action_arr[i].annotations;
+                for (let j = 0; j < annotations.length; j++) {
+                    if (annotations[j].key === 'description') { query += `\n\t\t- description: ${annotations[j].value}`; }
+                }
             }
         }
         $chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'user', 'content': query}]
-        const data = JSON.stringify({'input': $chat_room[$selector].history});
+        const data = JSON.stringify({'input': $chat_room[$selector].history, 'name': name, 'id': $user!['_id']});
         const response = await fetch($chat_room[$selector].url, {
 			method: 'POST',
 			body: data,
 			headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + $user!['JWT']}
 		})
+        $chat_room[1].messageFeed = new Array({
+			host: false,
+			name: 'Hari',
+			timestamp: `Today @ ${getCurrentTimestamp()}`,
+			message: `Ho generato la pagina che mi hai richiesto, se posso aiutarti con altro fammi sapere`,
+			color: 'variant-soft-primary'
+		})
+        $chat_room[1].history = [...$chat_room[1].history, {'role': 'user', 'content': query}]
+        modalStore.close();
         $selector = 1;
     }
 

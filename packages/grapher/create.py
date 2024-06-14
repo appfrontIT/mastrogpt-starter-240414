@@ -10,7 +10,7 @@ from openai import OpenAI
 import requests
 
 AI = None
-MODEL = "gpt-3.5-turbo"
+MODEL = "gpt-4o"
 
 def main(args):
     global AI
@@ -20,11 +20,12 @@ def main(args):
     if not input:
         return {"statusCode": "400", "body": "error: no input provided"}
     messages = [
-        {"role": "system", "content": "You're a master of creating charts using chart.js API. Follow the user request and create an amazing graph! You have all the time you need, don't rush. YOU MUST USER CHARTJS TO MAKE THE GRAPH. To use chart.js you must import it in the following way: <script src='https://cdn.jsdelivr.net/npm/chart.js'>. Answer only and directly with the full html (starting from <!DOCTYPE html>)"},
+        {"role": "system", "content": """You're a master of creating charts using chart.js API. Follow the user request and create an amazing graph! You have all the time you need, don't rush. YOU MUST USER CHARTJS TO MAKE THE GRAPH. To use chart.js you must import it in the following way: <script src='https://cdn.jsdelivr.net/npm/chart.js'>.
+        Answer only and directly with the full html (starting from <!DOCTYPE html>), don't include the codeblock (```html)"""},
         {"role": "user", "content": input},
     ]
     response = AI.chat.completions.create(
         model=MODEL,
         messages=messages,
     )
-    return {"body": response.choices[0].message.content }
+    return {"body": { "output": response.choices[0].message.content} }

@@ -1,5 +1,4 @@
 <script lang="ts">
-    import fullscreen_icon from '$lib/fullscreen.svg'
     import CodeMirror from "svelte-codemirror-editor";
     import { javascript } from "@codemirror/lang-javascript";
     import { python } from "@codemirror/lang-python";
@@ -9,8 +8,7 @@
     import { oneDark } from "@codemirror/theme-one-dark";
     import {EditorView, keymap} from "@codemirror/view"
     import {defaultKeymap} from "@codemirror/commands"
-    import { chat_room, selector, user, editor } from '../store'
-	import { onMount } from 'svelte';
+    import { editor } from '../store'
     import { getToastStore, popup } from '@skeletonlabs/skeleton';
     import type { SvelteComponent } from 'svelte';
     

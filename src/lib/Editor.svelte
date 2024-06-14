@@ -14,19 +14,16 @@
 	// import { onMount } from 'svelte';
     import { getToastStore, popup } from '@skeletonlabs/skeleton';
     import type { PopupSettings, ToastSettings } from '@skeletonlabs/skeleton';
-    import { Modal, type ModalComponent, type ModalSettings } from '@skeletonlabs/skeleton';
-    import ModalFs from './ModalFS.svelte';
+    import { type ModalSettings } from '@skeletonlabs/skeleton';
     import { getModalStore } from '@skeletonlabs/skeleton';
     import type { Readable, Writable } from 'svelte/store';
-    import { TreeView, TreeViewItem, RecursiveTreeView, type TreeViewNode } from '@skeletonlabs/skeleton';
+    import { TreeView, TreeViewItem } from '@skeletonlabs/skeleton';
 			
     const modalStore = getModalStore();
 
-    const modalComponent: ModalComponent = { ref: ModalFs };
-
-    const modal: ModalSettings = {
+    const modalFs: ModalSettings = {
         type: 'component',
-        component: modalComponent,
+        component: 'modalFs',
     };
 
     const popupFullscreen: PopupSettings = { event: 'hover', target: 'popupFullscreen', placement: 'left' };
@@ -121,7 +118,7 @@
             body: JSON.stringify({"input": $chat_room[$selector].history})
         })
         while (watch_toggle) {
-            await new Promise(r => setTimeout(r, 15000));
+            await new Promise(r => setTimeout(r, 20000));
             if ($editor.function === "") { continue; }
             $chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'user', 'content': $editor.function}]
             const r = await fetch('api/my/base/invoke/walkiria', {
@@ -135,8 +132,13 @@
     async function deploy() {
         if ($editor.language === "html") {
             if ($editor.name === "") { alert('Provide a name for the page'); return; }
+            modalStore.trigger({
+                type: 'component',
+                component: 'modalWaiting',
+                meta: { msg: "Sto caricando la tua pagina, per favore attendi" }
+            });
             let file = new File([$editor.function], $editor.name + '.html', {type: "text/html", endings: "native"})
-            const response = await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + file.name, {
+            const response = await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + `${$user.username}/${file.name}`, {
                 method: "GET",
                 headers: {"Authorization": "Bearer " + $user!['JWT']},
             })
@@ -155,19 +157,31 @@
                     toastStore.trigger(t);
                 }
             }
+            modalStore.close();
             return ;
         }
         if ($editor.name === "" || $editor.description === "" || $editor.language === "Language" || $editor.package === "") {
             alert('You must fill all fields before deploying an action')
             return ;
         }
+        modalStore.trigger({
+                type: 'component',
+                component: 'modalWaiting',
+                meta: { msg: "Ricerca del package in corso..." }
+            });
         const pack = await fetch('api/my/base/package/find?name=' + $editor.package, {
             method: 'GET',
             headers: {"Content-Type": "application/json", "Authorization": "Bearer " + $user!['JWT']},
         })
+        modalStore.close();
         if (pack.status != 200) {
             var confirm_package = confirm(`The package ${$editor.package} does not exist, do you wanna create it?`)
             if (confirm_package) {
+                modalStore.trigger({
+                    type: 'component',
+                    component: 'modalWaiting',
+                    meta: { msg: "Creazione del package in corso..." }
+                });
                 const create_package = await fetch('api/my/base/package/add', {
                     method: 'POST',
                     headers: {"Content-Type": "application/json", "Authorization": "Bearer " + $user!['JWT']},
@@ -177,11 +191,17 @@
                     alert('there was an error while creating your package.')
                     return;
                 }
+                modalStore.close();
             } else {
                 return ;
             }
         }
         const func = $editor.function
+        modalStore.trigger({
+                type: 'component',
+                component: 'modalWaiting',
+                meta: { msg: "Deploy dell'azione in corso..." }
+            });
         const upload = await fetch('api/my/base/action/add', {
             headers: {"Content-Type": "application/json", "Authorization": "Bearer " + $user['JWT']},
             method: "PUT",
@@ -194,13 +214,30 @@
                 "language": $editor.language
             })
         })
+        modalStore.close();
         if (upload.status == 200) {
-            alert('action succesfully deployed!')
+            toastStore.trigger({
+                message: 'Action succesfully deployed',
+                autohide: false,
+            });
+        } else {
+            toastStore.trigger({
+                message: 'An error occured while deploying your action: ' + upload.text(),
+                autohide: false,
+            });
         }
     }
 
+    function clear() {
+        $editor.description = '';
+        $editor.function = '';
+        $editor.language = '';
+        $editor.name = '';
+        $editor.package = ''
+    }
+
     async function fullscreen() {
-        modalStore.trigger(modal);
+        modalStore.trigger(modalFs);
     }
 
     const action_promise = action_list();
@@ -220,10 +257,16 @@
     }
 
     async function load_action(name: string, pack: string) {
+        modalStore.trigger({
+            type: 'component',
+            component: 'modalWaiting',
+            meta: { msg: "Recupero informazioni dell'action..." }
+        });
         const r = await fetch(`/api/my/base/action/find?name=${name}&package=${pack}`, {
             method: "GET",
             headers: {"Authorization": "Bearer " + $user['JWT']}
         })
+        modalStore.close();
         if (r.ok) {
             const obj = await r.json();
             $editor.name = obj.name;
@@ -353,6 +396,9 @@
                 {/if}
                 {/await}
             </div>
+            <button class="btn btn row-start-9" on:click={clear}>
+                Clear
+            </button>
             <button class="btn row-start-10 [&>*]:pointer-events-none" on:click={deploy} use:popup={popupDeploy}>Deploy</button>
             <div class="card p-4 variant-filled-secondary" data-popup="popupDeploy">
                 <p>Questo bottone fa il Deploy l'action all'interno dell'ambiente serverless.<br>
