@@ -9,6 +9,7 @@
 #--annotation url https://nuvolaris.dev/api/v1/web/gporchia/db/minio
 
 from datetime import timedelta
+from xmlrpc.client import ResponseError
 from minio import Minio
 from minio.error import S3Error
 import io
@@ -43,9 +44,15 @@ def add(args):
     return {'statusCode': 400}
 
 def find(args):
+    global BUCKET
     name = args.get('name', False)
     if not name:
         return {'statusCode': 400}
+    try:
+        data = CLIENT.get_object(BUCKET, name)
+    except ResponseError as err:
+        print(err)
+    return {"body": data.read()}
 
 def find_all():
     # List objects information whose names starts with "my/prefix/".

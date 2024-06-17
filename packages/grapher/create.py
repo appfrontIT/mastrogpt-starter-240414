@@ -1,4 +1,4 @@
-#--web true
+#--web false
 #--kind python:default
 #--annotation provide-api-key true
 #--param OPENAI_API_KEY $OPENAI_API_KEY

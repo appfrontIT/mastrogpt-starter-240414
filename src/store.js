@@ -83,6 +83,17 @@ export const chat_room = writable([
         Una volta che avrai finito di personalizzare tutto, inviami tutte le informazioni utilizzando il pulsante 'procedi'!
         `, color: 'variant-soft-primary'})
     },
+    {
+        url: '/api/my/base/invoke/chart',
+        history: new Array(),
+        messageFeed: new Array({
+			host: false,
+			name: 'Hari',
+			timestamp: `Today @ ${getCurrentTimestamp()}`,
+			message: `Benvenuto! Come posso aiutarti oggi?`,
+			color: 'variant-soft-primary'
+		})
+    },
 ])
 
 export const selector = writable(-1);

@@ -97,6 +97,8 @@
 			<Admin />
 		{:else if $selector === 3}
 			<Website />
+		{:else if $selector === 4}
+			<Chart />
 		{:else}
 			<object title="appfront-page" type="text/html" data="https://www.appfront.cloud/walkiria" class="h-full w-full"/>
 		{/if}
@@ -134,27 +136,36 @@
 				<dd>I will guide you step by step on how to build a small working interface to incorporate your actions!</dd>
 			</span>
 		</div>
+		<div class="w-full grid grid-cols-2 gap-3">
+			<button type="button" on:click={chart}><img alt="website img" src={chart_svg} width="140" height="140"/></button>
+			<span class="flex-auto">
+				<dt>Chart</dt>
+				<dd>Wanna build awsome charts to display any kind of data? I'm the right person for you!</dd>
+			</span>
+		</div>
 	</dl>
 </Drawer>
 {:catch}
 	{logout()}
 {/await}
 <script lang="ts">
-	import SvelteMarkdown from 'svelte-markdown'
+	import SvelteMarkdown from 'svelte-markdown';
 	import { LightSwitch } from '@skeletonlabs/skeleton';
-	import hari from '$lib/hari.png'
-	import manual_svg from '$lib/manual.svg'
-	import code_svg from '$lib/coding.svg'
-	import admin_svg from '$lib/admin.svg'
+	import hari from '$lib/hari.png';
+	import manual_svg from '$lib/manual.svg';
+	import code_svg from '$lib/coding.svg';
+	import admin_svg from '$lib/admin.svg';
 	import Editor from '$lib/Editor.svelte';
-	import Admin from '$lib/Admin.svelte'
+	import Admin from '$lib/Admin.svelte';
 	import Website from '$lib/Website.svelte';
-	import website_svg from '$lib/website.svg'
+	import website_svg from '$lib/website.svg';
+	import chart_svg from '$lib/chart.svg';
 	import { onMount, onDestroy } from 'svelte';
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
 	import { Avatar, AppBar, Drawer, ProgressBar, ProgressRadial, popup, Toast } from '@skeletonlabs/skeleton';
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
-	import { chat_room, selector, user, editor } from '../store'
+	import { chat_room, selector, user, editor } from '../store';
+	import Chart from '../lib/Chart.svelte';
 	
 	const drawerStore = getDrawerStore();
 
@@ -164,7 +175,6 @@
 		placement: 'bottom',
 	};
 
-	const parser = new DOMParser();
 	let currentMessage = '';
 	let elemChat: HTMLElement;
 	let loading_msg = false;
@@ -269,6 +279,7 @@
 	function coder() { $selector = 1; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
 	function admin() { $selector = 2; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
 	function website() { $selector = 3; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
+	function chart() { $selector = 4; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
 
 	function bots_trigger() {
 		const drawerSettings: DrawerSettings = {

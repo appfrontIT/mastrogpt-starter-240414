@@ -48,6 +48,10 @@ def main(args):
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/html_gen/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": input, 'token': token, 'user': user, 'name': args.get('name', '')})
+    elif path == '/chart':
+        resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/grapher/bot",
+                            auth=HTTPBasicAuth(split[0], split[1]),
+                            json={"input": input, 'token': token, 'user': user, 'name': args.get('name', ''), 'data': args.get('data', '')})
     elif path == '/chat_lookinglass':
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/lookinglass/bot?blocking=true",
                             auth=HTTPBasicAuth(split[0], split[1]),
