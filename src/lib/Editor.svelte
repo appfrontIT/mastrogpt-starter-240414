@@ -12,10 +12,9 @@
     import { chat_room, selector, user, editor } from '../store'
     import { DataHandler } from '@vincjo/datatables';
 	// import { onMount } from 'svelte';
-    import { getToastStore, popup } from '@skeletonlabs/skeleton';
+    import { getModalStore, getToastStore, popup } from '@skeletonlabs/skeleton';
     import type { PopupSettings, ToastSettings } from '@skeletonlabs/skeleton';
     import { type ModalSettings } from '@skeletonlabs/skeleton';
-    import { getModalStore } from '@skeletonlabs/skeleton';
     import type { Readable, Writable } from 'svelte/store';
     import { TreeView, TreeViewItem } from '@skeletonlabs/skeleton';
 			
@@ -34,7 +33,9 @@
     
     let view: EditorView;
     let handler: DataHandler<any>;
+    let page_handler: DataHandler<any>;
     let value: string;
+    let page_value: string;
     let watch_toggle = false;
 
     const toastStore = getToastStore();
@@ -64,11 +65,11 @@
     // onMount(async () => {})
 
     async function test() {
-        if ($editor.name === "" || $editor.package === "") {
+        if ($chat_room[$selector].editor.name === "" || $chat_room[$selector].editor.package === "") {
             alert('I need the package and the action name to perform the tests');
             return ;
         }
-        const action = await fetch(`api/my/base/action/find?package=${$editor.package}&name=${$editor.name}`, {
+        const action = await fetch(`api/my/base/action/find?package=${$chat_room[$selector].editor.package}&name=${$chat_room[$selector].editor.name}`, {
             headers: {"Content-Type": "application/json", "Authorization": "Bearer " + $user!['JWT']},
             method: 'GET'
         })
@@ -80,7 +81,7 @@
                 return ;
             }
         }
-        let query = `esegui i test sulla seguente azione: nome: ${$editor.name}, package: ${$editor.package}. Non chiedere conferma e comincia subito con i test`;
+        let query = `esegui i test sulla seguente azione: nome: ${$chat_room[$selector].editor.name}, package: ${$chat_room[$selector].editor.package}. Non chiedere conferma e comincia subito con i test`;
         const r = await fetch('api/my/base/invoke/walkiria', {
             headers: {"Content-Type": "application/json", "Authorization": "Bearer " + $user!['JWT']},
             method: 'POST',
@@ -89,7 +90,7 @@
     }
 
     async function verify() {
-        let query = `analizza il codice seguente e mostrami se e dove ci sono degli errori, in piú suggerisci dei miglioramenti se ne hai.\nCodice:\n${$editor.function}`;
+        let query = `analizza il codice seguente e mostrami se e dove ci sono degli errori, in piú suggerisci dei miglioramenti se ne hai.\nCodice:\n${$chat_room[$selector].editor.function}`;
         $chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'user', 'content': query}]
         const r = await fetch('api/my/base/invoke/walkiria', {
             headers: {"Content-Type": "application/json", "Authorization": "Bearer " + $user!['JWT']},
@@ -119,8 +120,8 @@
         })
         while (watch_toggle) {
             await new Promise(r => setTimeout(r, 20000));
-            if ($editor.function === "") { continue; }
-            $chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'user', 'content': $editor.function}]
+            if ($chat_room[$selector].editor.function === "") { continue; }
+            $chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'user', 'content': $chat_room[$selector].editor.function}]
             const r = await fetch('api/my/base/invoke/walkiria', {
                 headers: {"Content-Type": "application/json", "Authorization": "Bearer " + $user!['JWT']},
                 method: 'POST',
@@ -130,14 +131,14 @@
     }
 
     async function deploy() {
-        if ($editor.language === "html") {
-            if ($editor.name === "") { alert('Provide a name for the page'); return; }
+        if ($chat_room[$selector].editor.language === "html") {
+            if ($chat_room[$selector].editor.name === "") { alert('Provide a name for the page'); return; }
             modalStore.trigger({
                 type: 'component',
                 component: 'modalWaiting',
                 meta: { msg: "Sto caricando la tua pagina, per favore attendi" }
             });
-            let file = new File([$editor.function], $editor.name + '.html', {type: "text/html", endings: "native"})
+            let file = new File([$chat_room[$selector].editor.function], $chat_room[$selector].editor.name + '.html', {type: "text/html", endings: "native"})
             const response = await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + `${$user.username}/${file.name}`, {
                 method: "GET",
                 headers: {"Authorization": "Bearer " + $user!['JWT']},
@@ -160,7 +161,7 @@
             modalStore.close();
             return ;
         }
-        if ($editor.name === "" || $editor.description === "" || $editor.language === "Language" || $editor.package === "") {
+        if ($chat_room[$selector].editor.name === "" || $chat_room[$selector].editor.description === "" || $chat_room[$selector].editor.language === "Language" || $chat_room[$selector].editor.package === "") {
             alert('You must fill all fields before deploying an action')
             return ;
         }
@@ -169,13 +170,13 @@
                 component: 'modalWaiting',
                 meta: { msg: "Ricerca del package in corso..." }
             });
-        const pack = await fetch('api/my/base/package/find?name=' + $editor.package, {
+        const pack = await fetch('api/my/base/package/find?name=' + $chat_room[$selector].editor.package, {
             method: 'GET',
             headers: {"Content-Type": "application/json", "Authorization": "Bearer " + $user!['JWT']},
         })
         modalStore.close();
         if (pack.status != 200) {
-            var confirm_package = confirm(`The package ${$editor.package} does not exist, do you wanna create it?`)
+            var confirm_package = confirm(`The package ${$chat_room[$selector].editor.package} does not exist, do you wanna create it?`)
             if (confirm_package) {
                 modalStore.trigger({
                     type: 'component',
@@ -185,7 +186,7 @@
                 const create_package = await fetch('api/my/base/package/add', {
                     method: 'POST',
                     headers: {"Content-Type": "application/json", "Authorization": "Bearer " + $user!['JWT']},
-                    body: JSON.stringify({"name": $editor.package})
+                    body: JSON.stringify({"name": $chat_room[$selector].editor.package})
                 })
                 if (create_package.status != 200) {
                     alert('there was an error while creating your package.')
@@ -196,7 +197,7 @@
                 return ;
             }
         }
-        const func = $editor.function
+        const func = $chat_room[$selector].editor.function
         modalStore.trigger({
                 type: 'component',
                 component: 'modalWaiting',
@@ -206,34 +207,37 @@
             headers: {"Content-Type": "application/json", "Authorization": "Bearer " + $user['JWT']},
             method: "PUT",
             body: JSON.stringify({
-                "name": $editor.name,
+                "name": $chat_room[$selector].editor.name,
                 "function": func,
-                "description": $editor.description,
-                "namespace": "gporchia/" + $editor.package,
-                "package": $editor.package,
-                "language": $editor.language
+                "description": $chat_room[$selector].editor.description,
+                "namespace": "gporchia/" + $chat_room[$selector].editor.package,
+                "package": $chat_room[$selector].editor.package,
+                "language": $chat_room[$selector].editor.language
             })
         })
         modalStore.close();
-        if (upload.status == 200) {
+        if (upload.ok) {
             toastStore.trigger({
                 message: 'Action succesfully deployed',
                 autohide: false,
             });
         } else {
             toastStore.trigger({
-                message: 'An error occured while deploying your action: ' + upload.text(),
+                message: 'An error occured while deploying your action: ' + await upload.text(),
                 autohide: false,
             });
         }
     }
 
     function clear() {
-        $editor.description = '';
-        $editor.function = '';
-        $editor.language = '';
-        $editor.name = '';
-        $editor.package = ''
+        $chat_room[$selector].editor = {
+            'package': '',
+            'name': '',
+            'function': '',
+            'description': '',
+            'language': ''
+        }
+        $chat_room[$selector].showEditor = false;
     }
 
     async function fullscreen() {
@@ -256,6 +260,22 @@
         return null;
     }
 
+    const pages_promise = pages_list();
+    let page_rows: Readable<any[]>;
+    async function pages_list() {
+        const r = await fetch('/api/my/db/minio/gporchia-web/find_all', {
+            method: "GET",
+            headers: {"Authorization": "Bearer " + $user['JWT']}
+        })
+        if (r.ok) {
+            const obj = await r.json();
+            page_handler = new DataHandler(obj);
+            page_rows = page_handler.getRows();
+            return obj;
+        }
+        return null;
+    }
+
     async function load_action(name: string, pack: string) {
         modalStore.trigger({
             type: 'component',
@@ -269,17 +289,39 @@
         modalStore.close();
         if (r.ok) {
             const obj = await r.json();
-            $editor.name = obj.name;
-            $editor.package = obj.namespace.split('/')[1];
-            $editor.function = obj.exec.code;
+            $chat_room[$selector].editor.name = obj.name;
+            $chat_room[$selector].editor.package = obj.namespace.split('/')[1];
+            $chat_room[$selector].editor.function = obj.exec.code;
             for (let i = 0; i < obj.annotations.length; i++) {
                 if (obj.annotations[i].key === "description") {
-                    $editor.description = obj.annotations[i].value;
+                    $chat_room[$selector].editor.description = obj.annotations[i].value;
                     break;
                 }
             }
-            $editor.language = obj.exec.kind.split(':')[0];
-            if ($editor.language === 'nodejs') $editor.language = 'javascript';
+            $chat_room[$selector].editor.language = obj.exec.kind.split(':')[0];
+            if ($chat_room[$selector].editor.language === 'nodejs') $chat_room[$selector].editor.language = 'javascript';
+            return;
+        }
+        return null;
+    }
+
+    async function load_page(name: string) {
+        modalStore.trigger({
+            type: 'component',
+            component: 'modalWaiting',
+            meta: { msg: "Recupero informazioni della pagina..." }
+        });
+        const response = await fetch('api/my/db/minio/gporchia-web/find?name=' + $user['username'] + '/' + name, {
+            method: "GET",
+            headers: {"Authorization": "Bearer " + $user['JWT']},
+        })
+        modalStore.close();
+        if (response.ok) {
+            const obj = await response.json();
+            $chat_room[$selector].editor.name = name.replace('.html', '');
+            $chat_room[$selector].editor.package = $user['username'];
+            $chat_room[$selector].editor.function = obj.data;
+            $chat_room[$selector].editor.language = 'html';
             return;
         }
         return null;
@@ -287,17 +329,17 @@
 
 </script>
 <div class="grid grid-cols-12 gap-4 space-y-1" style="height: 5vh;">
-    <input class="input col-span-4" title="Action name" type="text" placeholder="action name" bind:value={$editor.name}>
-    {#if $editor.language != 'html'}
-    <input class="input col-span-4" title="Description" type="text" placeholder="description" bind:value={$editor.description}/>
-    <select class="select col-span-2" bind:value={$editor.package}>
+    <input class="input col-span-4" title="Action name" type="text" placeholder="action name" bind:value={$chat_room[$selector].editor.name}>
+    {#if $chat_room[$selector].editor.language != 'html'}
+    <input class="input col-span-4" title="Description" type="text" placeholder="description" bind:value={$chat_room[$selector].editor.description}/>
+    <select class="select col-span-2" bind:value={$chat_room[$selector].editor.package}>
         <option disabled selected value>Package</option>
         {#each $user.package as pack}
             <option value={pack}>{pack}</option>
         {/each}
     </select>
     {/if}
-    <select class="select col-span-2" bind:value={$editor.language}>
+    <select class="select col-span-2" bind:value={$chat_room[$selector].editor.language}>
         <option disabled selected value>Language</option>
         {#each languages as lang}
         <option value={lang}>{lang}</option>
@@ -306,8 +348,8 @@
 </div>
 <div class="grid h-full w-full grid-rows-[1fr_auto] grid-cols-11" style="height: 80vh;">
     <CodeMirror
-        bind:value={$editor.function}
-        lang={languages_func.get($editor.language)}
+        bind:value={$chat_room[$selector].editor.function}
+        lang={languages_func.get($chat_room[$selector].editor.language)}
         theme={oneDark}
         class="col-span-10 max-h-[80vh] overflow-y-auto"
         styles={{
@@ -322,6 +364,7 @@
             <div class="card p-4 variant-filled-secondary" data-popup="popupFullscreen">
                 <p>Questo bottone imposta l'editor a schermo interno</p>
             </div>
+            {#if $selector == 2}
             <button class="btn [&>*]:pointer-events-none" on:click={test} use:popup={popupTest}>Test</button>
             <div class="card p-4 variant-filled-secondary" data-popup="popupTest">
                 <p>Utilizza questo bottone per testare l'azione all'interno dell'editor!<br>
@@ -392,6 +435,38 @@
                     </tr>
                     {/each}
                 </tbody>
+                </table>
+                {/if}
+                {/await}
+            </div>
+            {/if}
+            <button class="btn [&>*]:pointer-events-none" use:popup={{event: 'click', target: 'page_list', placement: 'left'}}>Pages</button>
+            <div class="card p-4 overflow-y-auto max-h-[70vh] shadow-xl" data-popup="page_list">
+                {#await pages_promise}
+                    <p>...loading pages</p>
+                {:then pages}
+                {#if pages}
+                <header class="flex">
+                    <input
+                        class="input sm:w-64 w-36"
+                        type="search"
+                        placeholder="Search..."
+                        bind:value
+                        on:input={() => page_handler.search(value)} />
+                </header>
+                <table class="table table-hover table-compact table-auto w-full">
+                    <tbody>
+                    {#each $page_rows as page}
+                    {#if page.endsWith(".html")}
+                    <tr>
+                    <div class="grid grid-cols-12 gap-4 p-4">
+                        <div class="grid col-span-11">{page}</div>
+                        <button class="btn btn-sm variant-filled self-end" on:click={() => {load_page(page)}}>edit</button>
+                    </div>
+                    </tr>
+                    {/if}
+                    {/each}
+                    </tbody>
                 </table>
                 {/if}
                 {/await}

@@ -13,6 +13,7 @@ import os
 import json
 import jwt
 from openai import OpenAI
+import urllib.parse
 
 SESSION_USER = None
 OW_KEY = os.getenv('__OW_API_KEY')
@@ -99,6 +100,7 @@ Mandatory:
 def deploy_action(name, function, description, language):
     global AI
     global JWT
+    global SESSION_USER
     package = SESSION_USER['username']
     package_up = requests.get(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/packages/{package}", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
     if package_up.status_code != 200:
@@ -181,7 +183,7 @@ def main(args):
         return {"statusCode": 400}
     secret = args.get('JWT_SECRET')
     JWT = jwt.decode(TOKEN, key=secret, algorithms='HS256')
-    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?id={JWT['id']}", headers={'Authorization': f"Bearer {TOKEN}"})
+    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?filter=" + urllib.parse.quote(json.dumps({'JWT': TOKEN})), headers={'Authorization': f"Bearer {TOKEN}"})
     if response.status_code != 200:
         return {"statusCode": 404}
     SESSION_USER = response.json()
@@ -228,7 +230,7 @@ create_action_tool = [{
                         "properties": {
                             "name": {"type": "string", "description": "action name"},
                             "function": {"type": "string", "description": "the generated function. It must starts with 'def main(args):'"},
-                            "description": {"type": "string", "description": "a description of the action you made. The description MUST includes the parameters the action needs such as: {key: type, key: type, ...}. Example: 'an action which add an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}, None'"},
+                            "description": {"type": "string", "description": "a description of the action you made. The description MUST includes the parameters the action needs such as: {key: type, key: type, ...}. Example: 'an action which add an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}, None'. Also you MUST specify the exact return of the action. Example: The action returns 404 in case of ... in case of success, returns 200 and the body as: {'body': <body>}. Be explicit about the return body!"},
                             "language": {"type": "string", "description": "the language in which you wrote the function. It must be 1 word from the following: 'python', 'javascript', 'go', 'php'"}
                             },
                         },

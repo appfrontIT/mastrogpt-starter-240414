@@ -1,7 +1,11 @@
 import { writable } from 'svelte/store';
 
+export const logged = writable(false)
+
 export const user = writable(null)
+
 export const JWT = writable(null)
+
 export const walkiria_role = writable(`
 Act as a software Architect. You're specialized in working with OpenWhisk and Nuvolaris platform.
 You will work as a bridge between the user and the platform. To do so, you must be collect informations about your client request.
@@ -38,6 +42,16 @@ export let editor = writable({
 
 export const chat_room = writable([
     {
+        url: 'api/my/base/invoke/general',
+        history: new Array(),
+        messageFeed: new Array({
+			host: false,
+			timestamp: `Today @ ${getCurrentTimestamp()}`,
+			message: `Benvenuto! Come posso aiutarti oggi?`,
+			color: 'variant-soft-primary'
+		})
+    },
+    {
         url: 'api/my/base/invoke/lookinglass',
         history: new Array(),
         messageFeed: new Array({
@@ -48,7 +62,26 @@ export const chat_room = writable([
 		})
     },
     {
-        url: '/api/my/base/invoke/walkiria',
+        url: 'api/my/base/invoke/walkiria',
+        history: new Array(),
+        messageFeed: new Array({
+			host: false,
+			name: 'Hari',
+			timestamp: `Today @ ${getCurrentTimestamp()}`,
+			message: `Benvenuto! Come posso aiutarti oggi?`,
+			color: 'variant-soft-primary'
+		}),
+        editor: {
+            'package': '',
+            'name': '',
+            'function': '',
+            'description': '',
+            'language': ''
+        },
+        showEditor: false
+    },
+    {
+        url: 'api/my/base/invoke/admin',
         history: new Array(),
         messageFeed: new Array({
 			host: false,
@@ -59,32 +92,37 @@ export const chat_room = writable([
 		})
     },
     {
-        url: '/api/my/base/invoke/admin',
-        history: new Array(),
-        messageFeed: new Array({
-			host: false,
-			name: 'Hari',
-			timestamp: `Today @ ${getCurrentTimestamp()}`,
-			message: `Benvenuto! Come posso aiutarti oggi?`,
-			color: 'variant-soft-primary'
-		})
-    },
-    {
-        url: '/api/my/html_gen/bot',
+        url: 'api/my/html_gen/bot',
         history: new Array(),
         messageFeed: new Array({host: false, name: 'Hari', timestamp: `Today @ ${getCurrentTimestamp()}`, message: `
-        Ciao! In questa sezione ti aiuteró a creare un interfaccia per visualizzare quello di cui hai bisogno!
-        L'interfaccia verrá creata sottoforma di pagina HTML, e verrá deployata come parte di una tua azione.
-        Utilizza il menu di destra per personalizzare la tua pagina e darmi indicazioni su come costruirla!
-        Il mio consiglio é quello di essere piú specifico possibile! Se ad esempio vuoi visualizzare una tabella,
-        dimmi quale azione ritorna la tabella cosí che possa incorporarla all'interno della pagina.
-        Puoi personalizzare lo stile e il layout, cosí puoi aiutarmi a visualizzare i dati nella maniera che preferisci!
-        Ti consiglio inoltre di fornirmi una descrizione dettagliata della pagina che vuoi creare.
-        Una volta che avrai finito di personalizzare tutto, inviami tutte le informazioni utilizzando il pulsante 'procedi'!
-        `, color: 'variant-soft-primary'})
+        Ciao! In questa sezione ti aiuteró a creare un interfaccia
+        per visualizzare quello di cui hai bisogno!
+        L'interfaccia verrá creata sottoforma di pagina HTML,
+        e verrá deployata come parte di una tua azione.
+        Utilizza il menu di destra per personalizzare la tua pagina
+        e darmi indicazioni su come costruirla!
+        Il mio consiglio é quello di essere piú specifico possibile!
+        Se ad esempio vuoi visualizzare una tabella,
+        dimmi quale azione ritorna la tabella cosí che possa incorporarla
+        all'interno della pagina.
+        Puoi personalizzare lo stile e il layout, cosí puoi aiutarmi
+        a visualizzare i dati nella maniera che preferisci!
+        Ti consiglio inoltre di fornirmi una descrizione
+        dettagliata della pagina che vuoi creare.
+        Una volta che avrai finito di personalizzare tutto,
+        inviami tutte le informazioni utilizzando il pulsante 'procedi'!
+        `, color: 'variant-soft-primary'}),
+        editor: {
+            'package': '',
+            'name': '',
+            'function': '',
+            'description': '',
+            'language': ''
+        },
+        showEditor: false
     },
     {
-        url: '/api/my/base/invoke/chart',
+        url: 'api/my/base/invoke/chart',
         history: new Array(),
         messageFeed: new Array({
 			host: false,
@@ -92,8 +130,21 @@ export const chat_room = writable([
 			timestamp: `Today @ ${getCurrentTimestamp()}`,
 			message: `Benvenuto! Come posso aiutarti oggi?`,
 			color: 'variant-soft-primary'
-		})
+		}),
+        editor: {
+            'package': '',
+            'name': '',
+            'function': '',
+            'description': '',
+            'language': ''
+        },
+        showEditor: false
     },
 ])
 
-export const selector = writable(-1);
+export const selector = writable(0);
+
+export function set_dark_mode() {
+    const e=document.documentElement.classList,t=localStorage.getItem("modeUserPrefers")==="false",n=!("modeUserPrefers"in localStorage),r=window.matchMedia("(prefers-color-scheme: dark)").matches;
+    t||n&&r?e.add("dark"):e.remove("dark")
+}

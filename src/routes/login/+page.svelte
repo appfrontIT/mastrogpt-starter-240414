@@ -31,6 +31,7 @@
 <script lang="ts">
 import appfront_logo from '$lib/appfront_logo.png'
 import { onMount } from 'svelte';
+import { user } from '../../store';
 let username: string;
 let password: string;
 
@@ -42,16 +43,26 @@ async function login() {
       headers: { 'Content-Type': 'application/json' },
     })
     if (response.status == 200) {
-      return window.location.assign('/')
+      const res = await fetch('api/my/base/auth/user', {
+                method: 'GET',
+                credentials: 'include'
+            })
+      if (res.ok) { const obj = await res.json(); $user = obj; return window.location.assign('/'); }
+      else { throw new Error('failed to get user') };
     }
 }
 
-onMount(() => {
+onMount(async () => {
   let cookie = document.cookie;
   if (cookie) {
     const split_cookie = cookie.split('=');
     if (split_cookie[0] === 'appfront-sess-cookie') {
-      return window.location.assign('/')
+      const res = await fetch('api/my/base/auth/user', {
+                method: 'GET',
+                credentials: 'include'
+            })
+      if (res.ok) { const obj = await res.json(); $user = obj; return window.location.assign('/'); }
+      else { throw new Error('failed to get user') };
     }
   }
 })

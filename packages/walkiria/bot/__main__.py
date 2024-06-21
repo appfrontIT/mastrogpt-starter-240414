@@ -16,7 +16,7 @@ from requests.auth import HTTPBasicAuth
 MODEL = "gpt-4o"
 
 def ask(
-    messages: str,
+    messages,
     model: str = MODEL,
 ) -> str:
     response = config.AI.chat.completions.create(
@@ -48,5 +48,5 @@ def main(args):
         res['html'] = config.html
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                 auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
-                json={'id': config.session_user['_id'], 'cookie': config.session_user['cookie'], 'message': res})
+                json={'id': config.session_user['_id'], 'message': res})
     return {"statusCode": 200, 'body': res['output']} 

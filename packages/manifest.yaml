@@ -1,0 +1,127 @@
+packages:
+    admin:
+        actions:
+            bot:
+                function: admin/undefined
+                runtime: python:default
+                web: true
+    base:
+        actions:
+            action:
+                function: base/action.py
+                web: true
+            auth:
+                function: base/auth.py
+                web: true
+            invoke:
+                function: base/invoke.py
+                web: true
+            openAPI:
+                function: base/undefined
+                runtime: python:default
+                web: true
+            package:
+                function: base/package.py
+                web: true
+            user:
+                function: base/user.py
+                web: true
+    db:
+        actions:
+            chat:
+                function: db/undefined
+                runtime: python:default
+                web: true
+            db_store_exec:
+                function: db/db_store_exec.py
+                web: true
+            db_store_init:
+                function: db/db_store_init.py
+                web: true
+            get_crawled_pages:
+                function: db/get_crawled_pages.py
+                web: true
+            get_history:
+                function: db/get_history.py
+                web: true
+            load_message:
+                function: db/load_message.py
+                web: true
+            minio:
+                function: db/minio.py
+                web: true
+            mongo:
+                function: db/undefined
+                runtime: python:default
+                web: true
+    embedding:
+        actions:
+            embed:
+                function: embedding/embed.py
+                web: true
+            retrieve:
+                function: embedding/retrieve.py
+                web: true
+    grapher:
+        actions:
+            bot:
+                function: grapher/undefined
+                runtime: python:default
+                web: true
+            create:
+                function: grapher/create.py
+                web: true
+    html_gen:
+        actions:
+            bot:
+                function: html_gen/undefined
+                runtime: python:default
+                web: true
+    lookinglass:
+        actions:
+            bot:
+                function: lookinglass/undefined
+                runtime: python:default
+                web: true
+    tester:
+        actions:
+            bot:
+                function: tester/undefined
+                runtime: python:default
+                web: true
+            run:
+                function: tester/undefined
+                runtime: python:default
+                web: true
+    utility:
+        actions:
+            apify_scraper:
+                function: utility/apify_scraper.py
+                web: true
+            formatter:
+                function: utility/formatter.py
+                web: true
+            md_to_json:
+                function: utility/md_to_json.py
+                web: true
+            single_page_scrape:
+                function: utility/single_page_scrape.py
+                web: true
+            to_md:
+                function: utility/undefined
+                runtime: python:default
+                web: true
+    walkiria:
+        actions:
+            bot:
+                function: walkiria/undefined
+                runtime: python:default
+                web: true
+            generate:
+                function: walkiria/generate.py
+                web: true
+    web-display:
+        actions:
+            crawled_pages:
+                function: web-display/crawled_pages.py
+                web: true

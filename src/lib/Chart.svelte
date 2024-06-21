@@ -1,7 +1,9 @@
 <script lang="ts">
     import { user, chat_room, selector, getCurrentTimestamp } from "../store";
     import { onMount } from "svelte";
-    import { AppBar, getModalStore, FileButton } from '@skeletonlabs/skeleton';
+    import { AppBar, getModalStore, FileButton, popup } from '@skeletonlabs/skeleton';
+	import { DataHandler } from "@vincjo/datatables";
+    import type { Readable, Writable } from 'svelte/store';
 
     const modalStore = getModalStore();
     const reader = new FileReader();
@@ -12,41 +14,73 @@
     let footer_check: Boolean = false;
     let footer_description: string = '';
     let files: FileList = null;
-    let file = null;
     let url = null;
     let text_data = null;
+    let collections_promise;
+    let handler: DataHandler<any>;
+    let rows: Readable<any[]>;
+    let value: string;
+
 
     onMount(async () => {
     })
     
+    let col_name: string = null;
     async function onChangeHandler(e: Event) {
-        // const response = await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + `${$user.username}/${files[0].name}`, {
-        //     method: "GET",
-        //     headers: {"Authorization": "Bearer " + $user!['JWT']},
+        // var data = new FormData()
+        // data.append('file', files[0])
+        // const r = await fetch('https://tmpfiles.org/api/v1/upload', {
+        //     method: 'POST',
+        //     body: data
         // })
-        // if (response.status == 200) {
-        //     const url = await response.text();
-        //     const upload_r = await fetch(url, {
-        //         method: 'PUT',
-        //         body: files[0]
-        //     });
-        // if (upload_r.ok) {
-        //         alert(`file uploaded at https://gporchia.nuvolaris.dev/${$user.username}/${files[0].name}`)
-        //     }
-        // }
-        // reader.readAsText(files[0])
-        // while(reader.readyState == 1) {
-        //     await new Promise(r => setTimeout(r, 1000));
-        // }
-        // console.log(reader.result)
-        var data = new FormData()
-        data.append('file', files[0])
-        const r = await fetch('https://tmpfiles.org/api/v1/upload', {
-            method: 'POST',
-            body: data
+        // const obj = await r.json()
+        // file = obj.data['url']
+        reader.readAsText(files[0])
+        col_name = files[0].name + '-' + new Date().toLocaleString();
+        col_name = col_name.replaceAll(' ', '-').replaceAll(':', '-').replaceAll('/', '_');
+        modalStore.trigger({
+            type: 'component',
+            component: 'modalWaiting',
+            meta: { msg: "uploading file..." }
+        });
+        while(reader.readyState == 1) {
+            await new Promise(r => setTimeout(r, 1000));
+        }
+        const result = reader.result.toString();
+        const split_res = result.split('\n');
+        const header = split_res[0];
+        for (let n = 1; n < files[0].size; n += 10000) {
+            const slice = split_res.slice(n, n + 10000);
+            if (slice.length == 0) { break; }
+            const data = header + '\n' + slice.join('\n');
+            const r = await fetch('/api/my/db/mongo/mastrogpt/' + col_name + '/add_csv', {
+                method: "POST",
+                headers: {"Authorization": "Bearer " + $user['JWT'], "Content-Type": "application/json"},
+                body: JSON.stringify({'data': data})
+            })
+            if (slice.length < 10000) { break; }
+            if (!r.ok) {
+                alert('something went wrong during update');
+                modalStore.close();
+                return;
+            }
+        }
+        modalStore.close();
+        alert('collection creata con successo!');
+    }
+
+    async function get_collections() {
+        const r = await fetch('/api/my/db/mongo/mastrogpt/get_collections', {
+            method: "GET",
+            headers: {"Authorization": "Bearer " + $user['JWT']}
         })
-        const obj = await r.json()
-        file = obj.data['url']
+        if (r.ok) {
+            const obj = await r.json();
+            handler = new DataHandler(obj);
+            rows = handler.getRows();
+            return obj;
+        }
+        return null;
     }
 
     async function proceed() {
@@ -61,9 +95,14 @@
         if (!type) { alert("Devi selezionare un tipo di grafico!"); return ;}
         if (name === '') { alert('Nome mancante'); return ;}
         if (description === '') { alert('Descrizione mancante'); return ;}
-        if (!files && !url && !text_data) {
+        if (!col_name && !url && !text_data) {
             alert("Devi specificare uno o piú dati da visualizzare nel grafico"); return ;
         }
+        modalStore.trigger({
+            type: 'component',
+            component: 'modalWaiting',
+            meta: { msg: "Sto generando il grafico, per favore attendi" }
+        });
         let query = "create a chart using the following guidelines:"
         query += `\nChart type: ${type}\n Page name: ${name}\nDescription: ${description}`;
         if (header_check) {
@@ -73,18 +112,43 @@
             query += `\nPage footer: ${footer_description}`
         }
         $chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'user', 'content': query}]
-        const data = JSON.stringify({'input': $chat_room[$selector].history, 'name': name, 'id': $user!['_id'], 'data': {'file': file, 'text': text_data, 'url': url}});
-        const response = await fetch($chat_room[$selector].url, {
+        const data = JSON.stringify({'input': $chat_room[$selector].history, 'name': name, 'id': $user!['_id'], 'data': {'collection': col_name, 'text': text_data, 'url': url}});
+        const response = await fetch(`api/my/grapher/graph_from_interface`, {
 			method: 'POST',
 			body: data,
 			headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + $user!['JWT']}
 		})
-        $selector = 1;
+        $chat_room[$selector].messageFeed = new Array({
+			host: false,
+			name: 'Hari',
+			timestamp: `Today @ ${getCurrentTimestamp()}`,
+			message: `Ho generato la pagina che mi hai richiesto, se posso aiutarti con altro fammi sapere`,
+			color: 'variant-soft-primary'
+		})
+        modalStore.close();
+        $chat_room[$selector].showEditor = true;
+    }
+
+    async function check_dataset(name) {
+        const r = await fetch('/api/my/db/mongo/mastrogpt/' + name + '/find_many?n_results=200&fields=' + encodeURIComponent(JSON.stringify({'_id': 0})), {
+            method: "GET",
+            headers: {"Authorization": "Bearer " + $user['JWT']}
+        })
+        if (r.ok) {
+            const obj = await r.json();
+            modalStore.trigger({
+                type: 'component',
+                component: 'modalData',
+                meta: { msg: JSON.stringify(obj, null, "\t"), title: name }
+            });
+            return obj;
+        }
+        return null;
     }
 
 </script>
-<div class="space-y-4" style="height: 80vh;">
-<p class="h4">Chart type:</p>
+<div class="space-y-2" style="height: 80vh;">
+<p class="h5">Chart type:</p>
 <AppBar background="0x44000000">
     <svelte:fragment slot="lead">
         <div class="flex">
@@ -114,14 +178,14 @@
         <button type="button" class="btn btn-md variant-filled" on:click={proceed}>procedi</button>
     </svelte:fragment>
 </AppBar>
-<p class="h4">Name:</p>
+<p class="h5">Name:</p>
 <div class="input-group input-group-divider grid-cols-[auto_1fr_auto]">
-  <div class="input-group-shim">{$user.username}/</div>
-  <input type="text" placeholder="https://nuvolaris.dev/api/v1/web/gporchia/display/..." bind:value={name}/>
+    <div class="input-group-shim">{$user.username}/</div>
+    <input type="text" placeholder="https://nuvolaris.dev/api/v1/web/gporchia/display/..." bind:value={name}/>
 </div>
-<p class="h4">Description:</p>
+<p class="h5">Description:</p>
 <textarea class="textarea" rows="2" placeholder="Enter a description to pass to the AI to generate your UI" bind:value={description}/>
-<p class="h4">Layout:</p>
+<p class="h5">Layout:</p>
 <div class="space-y-2">
     <label class="flex items-center space-x-2">
         <input class="checkbox" type="checkbox" bind:value={header_check}/>
@@ -132,10 +196,53 @@
         <input class="input" title="footer description" type="text" placeholder="footer description" bind:value={footer_description}/>
     </label>
 </div>
-<p class="h4">Data:</p>
+<p class="h5">Data:</p>
 <div class="space-y-0">
-<p class="h5">file:</p>
-<input class="input" type="file" accept=".csv" bind:files on:change={onChangeHandler}/>
+    <p class="h5">collection:</p>
+    <div class="flex space-x-4">
+    <button class="btn [&>*]:pointer-events-none variant-ringed" use:popup={{event: 'click', target: 'collections_list', placement: 'top'}} on:click={() => {
+        collections_promise = get_collections();
+    }}>
+        {#if col_name}
+            {col_name}
+        {:else}
+            choose
+        {/if}
+    </button>
+    <div class="card p-4 overflow-y-auto max-h-[50vh] shadow-xl " data-popup="collections_list">
+        {#await collections_promise}
+        ...loading collections
+        {:then cols}
+        {#if cols}
+        <header class="flex">
+            <input
+                class="input sm:w-64 w-36"
+                type="search"
+                placeholder="Search..."
+                bind:value
+                on:input={() => handler.search(value)} />
+            </header>
+            <table class="table table-hover table-comfortable w-full">
+                <tbody>
+            {#each $rows as col, i}
+            <tr>
+            <div class="grid grid-cols-12 p-1">
+                <div class="grid col-span-10">
+                    {col}
+                </div>
+                <button class="btn btn-sm variant-filled self-end" on:click={() => {col_name = col}}>choose</button>
+                <button class="btn btn-sm variant-filled self-end" on:click={() => check_dataset(col)}>look</button>
+            </div>
+            </tr>
+            {/each}
+        </tbody>
+        </table>
+        {/if}
+        {/await}
+    </div>
+    <FileButton name="files" button="btn variant-ringed" accept=".csv" bind:files={files} on:change={onChangeHandler}>CSV</FileButton >
+    <FileButton name="files" button="btn variant-ringed" accept=".pdf" bind:files={files} on:change={onChangeHandler}>PDF</FileButton >
+    </div>
 <p class="h5">url:</p>
 <input class="input" title="Input (url)" type="url" placeholder="example.com" bind:value={url}/>
 <p class="h5">text:</p>

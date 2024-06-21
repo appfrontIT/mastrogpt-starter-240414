@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { LightSwitch } from '@skeletonlabs/skeleton';
     import { onMount } from 'svelte';
     import * as swaggerJson from '../../lib/appfront.json';
     import SwaggerUI from 'swagger-ui';
@@ -12,6 +11,5 @@
         });
     });
 </script>
-<LightSwitch />
 
 <div id="swagger-ui-container" />

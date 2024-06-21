@@ -9,6 +9,8 @@ import requests
 from requests.auth import HTTPBasicAuth
 import os
 import jwt
+import urllib.parse
+import json
 
 def main(args):
     OW_KEY = os.getenv('__OW_API_KEY')
@@ -19,7 +21,7 @@ def main(args):
         return {'statusCode': 401}
     path = args['__ow_path']
     token = token.split(' ')[1]
-    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?JWT={token}", headers={'Authorization': f"Bearer {token}"})
+    response = requests.get(f"https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/users/find_one?filter=" + urllib.parse.quote(json.dumps({'JWT': token})), headers={'Authorization': f"Bearer {token}"}) 
     if response.status_code != 200:
         return {"statusCode": 404}
     user = response.json()
@@ -30,6 +32,10 @@ def main(args):
                             json={"input": input, 'token': token, 'user': user})
     elif path == '/lookinglass':
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/lookinglass/bot",
+                            auth=HTTPBasicAuth(split[0], split[1]),
+                            json={"input": input, 'token': token, 'user': user})
+    elif path == '/general':
+        resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/base/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": input, 'token': token, 'user': user})
     elif path == '/admin':
@@ -51,7 +57,7 @@ def main(args):
     elif path == '/chart':
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/grapher/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
-                            json={"input": input, 'token': token, 'user': user, 'name': args.get('name', ''), 'data': args.get('data', '')})
+                            json={"input": input, 'token': token, 'user': user})
     elif path == '/chat_lookinglass':
         resp = requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/lookinglass/bot?blocking=true",
                             auth=HTTPBasicAuth(split[0], split[1]),

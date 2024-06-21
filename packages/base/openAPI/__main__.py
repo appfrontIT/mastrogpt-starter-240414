@@ -163,7 +163,7 @@ def delete(path, openapi, COLLECTION, token):
 def main(args):
     global AI
     global JWT
-
+    
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     token = args['__ow_headers'].get('authorization', False)
     if not token:

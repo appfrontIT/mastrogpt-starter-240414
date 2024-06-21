@@ -50,7 +50,7 @@ def query_message(
 ) -> str:
     """Return a message for GPT, with relevant source texts pulled from a dataframe."""
     strings, relatednesses = strings_ranked_by_relatedness(query=query, df=df)
-    introduction = 'Use the below informations to answer the subsequent question. If the answer cannot be found in the informations, write "I could not find an answer."'
+    introduction = 'Use the below informations to answer the subsequent question. If the answer cannot be found in the informations, answer to the query'
     question = f"\n\nQuestion: {query}"
     message = introduction
     for string in strings:

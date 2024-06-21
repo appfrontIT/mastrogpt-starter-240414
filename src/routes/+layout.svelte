@@ -10,16 +10,20 @@
 	import javascript from 'highlight.js/lib/languages/javascript';
 	import typescript from 'highlight.js/lib/languages/typescript';
 	import { initializeStores, Drawer, Modal, Toast, type ModalComponent } from '@skeletonlabs/skeleton';
-	import ModalWaiting from '../lib/ModalWaiting.svelte';
-	import ModalFs from '../lib/ModalFS.svelte';
-	import ModalAddUser from '../lib/ModalAddUser.svelte';
-	import ModalConfirm from '../lib/ModalConfirm.svelte';
+	import ModalWaiting from '$lib/ModalWaiting.svelte';
+	import ModalFs from '$lib/ModalFS.svelte';
+	import ModalAddUser from '$lib/ModalAddUser.svelte';
+	import ModalConfirm from '$lib/ModalConfirm.svelte';
+	import ModalData from "$lib/ModalData.svelte";
+	import Header from '$lib/Header.svelte';
+	import { logged } from '../store';
 
 	const modalRegistry: Record<string, ModalComponent> = {
 		modalWaiting: { ref: ModalWaiting },
 		modalFs: { ref: ModalFs },
 		modalAddUser: { ref: ModalAddUser },
-		modalConfirm: { ref: ModalConfirm }
+		modalConfirm: { ref: ModalConfirm },
+		modalData: { ref: ModalData }
 	};
 
 	initializeStores();
@@ -35,5 +39,9 @@
 	import { storePopup } from '@skeletonlabs/skeleton';
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 </script>
+{#if $logged}
+<Header />
+{/if}
+<Toast />
 <Modal components={modalRegistry} />
 <slot />

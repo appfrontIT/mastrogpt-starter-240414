@@ -162,7 +162,7 @@
 		</thead>
 		<tbody>
 			{#if rows}
-			{#each $rows as pack}
+			{#each $rows as pack, i}
 				<tr>
 					<td>{pack.name}</td>
 					<td>{pack.package}</td>
@@ -175,8 +175,8 @@
                         {pack.url}
                     </td>
 					<br>
-				<button class="btn-icon hover:variant-filled" use:popup={{event: 'click', target: 'action_opt', placement: 'left'}}><h3 class="h3">⋮</h3></button>
-				<div data-popup='action_opt'>
+				<button class="btn-icon hover:variant-filled" use:popup={{event: 'click', target: 'action_opt_' + i, placement: 'left'}}><h3 class="h3">⋮</h3></button>
+				<div data-popup='action_opt_{i}'>
 					<div class="btn-group-vertical variant-filled">
 					<button on:click={async() => {
 						modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: "Preparing the editor..." }});
@@ -198,7 +198,7 @@
 							$editor.language = obj.exec.kind.split(':')[0];
 							if ($editor.language === 'nodejs') $editor.language = 'javascript';
 							modalStore.close();
-							$selector = 1;
+							$selector = 2;
 							return;
 						}
 						modalStore.close();
@@ -217,7 +217,17 @@
 								actions.splice(index, 1);
 								handler_init();
 								modalStore.close();
-								toastStore.trigger(delete_ok);
+								modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: `removing action spec from openAPI...` }});
+								const openapi_resp = await fetch(`api/my/base/openAPI/delete?action=/gporchia/${pack.package}/${pack.name}`, {
+									method: 'DELETE',
+									headers: {'Authorization': `Bearer ${$user['JWT']}`}
+								})
+								modalStore.close();
+								if (openapi_resp.ok) {
+									toastStore.trigger(delete_ok);
+								} else {
+									alert('Something went wrong while removing the action from swagger');
+								}
 							} else {
 								modalStore.close();
 								toastStore.trigger(delete_failure);

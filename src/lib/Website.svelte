@@ -98,16 +98,15 @@
 			body: data,
 			headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + $user!['JWT']}
 		})
-        $chat_room[1].messageFeed = new Array({
+        $chat_room[$selector].messageFeed = new Array({
 			host: false,
 			name: 'Hari',
 			timestamp: `Today @ ${getCurrentTimestamp()}`,
 			message: `Ho generato la pagina che mi hai richiesto, se posso aiutarti con altro fammi sapere`,
 			color: 'variant-soft-primary'
 		})
-        $chat_room[1].history = [...$chat_room[1].history, {'role': 'user', 'content': query}]
         modalStore.close();
-        $selector = 1;
+        $chat_room[$selector].showEditor = true;
     }
 
 </script>

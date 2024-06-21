@@ -1,43 +1,18 @@
-<Toast />
-{#await promise then us}
-<AppBar>
-	<svelte:fragment slot="lead">
-		<h1 class="h1 font-bold"><span class="bg-gradient-to-br from-pink-500 to-violet-500 bg-clip-text text-transparent box-decoration-clone">Walkiria</span></h1>
-	</svelte:fragment>
-	<svelte:fragment slot="trail">
-		<ol class="breadcrumb">
-			<li class="crumb"><a class="anchor" href="/scraped" target="_blank">Scraped</a></li>
-			<li class="crumb-separator" aria-hidden><span class="divider-vertical h-10" /></li>
-			<li class="crumb"><a class="anchor" href="/swagger-ui" target="_blank">Swagger</a></li>
-			<li class="crumb-separator" aria-hidden><span class="divider-vertical h-10" /></li>
-			<li use:popup={popupFeatured}><Avatar
-				initials={us.username[0]}
-				border="border-4 border-surface-300-600-token hover:!border-primary-500"
-				cursor="cursor-pointer"
-			/></li>
-			<div class="card p-4 w-72 shadow-xl z-10" data-popup="popupFeatured">
-				<div><button class="btn" on:click={logout}>Logout</button></div>
-				<div><button class="btn" on:click={() => window.open('/my-swagger')}>My Swagger</button></div>
-				<div><button class="btn" on:click={() => window.open('/display')}>My Pages</button></div>
-				<div><button class="btn">Settings</button></div>
-				<div class="arrow bg-surface-100-800-token" />
-			</div>
-			<!-- <LightSwitch /> -->
-		</ol>
-	</svelte:fragment>
-</AppBar>
 <div class="chat grid grid-cols-7 gap-3 space-y-2" style="height: 87vh;">
 	<div class="grid grid-rows-[1fr_auto] gap-1 col-span-3">
 		<section bind:this={elemChat} class="max-h-[80vh] p-4 overflow-y-auto space-y-4 col-span-3">
 			<div class="grid row-span-1 col-span-3 input-group input-group-divider grid-cols-[auto_1fr_auto]">
 				<button class="btn-sm variant-filled input-group-shim" on:click={bots_trigger}>chatbot</button>
 				<div>
-					{#if $selector == 0} Lookinglass
-					{:else if $selector == 1} Coder
-					{:else if $selector == 2} Admin
-					{:else} Select your chat bot!
+					{#if $selector == 0} Select your chat bot!
+					{:else if $selector == 1} Lookinglass
+					{:else if $selector == 2} Coder
+					{:else if $selector == 3} Admin
+					{:else if $selector == 4} Website
+					{:else if $selector == 5} Chart
 					{/if}
 				</div>
+				<button class="btn-sm input-group-shim"><img alt="clip img" src={clip_svg} width="20" height="20"/></button>
 			</div>
 			{#if $selector != -1}
 			{#each $chat_room[$selector].messageFeed as bubble}
@@ -56,12 +31,12 @@
 					<div class="grid grid-cols-[1fr_auto] gap-2">
 						<div class="card p-4 rounded-tr-none space-y-4 {bubble.color}">
 							<header class="flex justify-between items-center">
-								<p class="font-bold">{us.username}</p>
+								<p class="font-bold">{$user.username}</p>
 								<small class="opacity-50">{bubble.timestamp}</small>
 							</header>
 							<p>{bubble.message}</p>
 						</div>
-						<Avatar initials={us.username[0]} width="w-12" />
+						<Avatar initials={$user.username[0]} width="w-12" />
 					</div>
 				{/if}
 			{/each}
@@ -89,17 +64,25 @@
 	</div>
 	<!-- Right column -->
 	<div class="col-span-4 h-full space-y-2" id="right_div">
-		{#if $selector === 0}
+		{#if $selector === 1}
 			<object title="appfront-page" type="text/html" data={manPage} class="h-full w-full"/>
-		{:else if $selector === 1}
-			<Editor />
 		{:else if $selector === 2}
-			<Admin />
+			<Editor />
 		{:else if $selector === 3}
-			<Website />
+			<Admin />
 		{:else if $selector === 4}
-			<Chart />
-		{:else}
+			{#if $chat_room[$selector].showEditor}
+				<Editor />
+			{:else}
+				<Website />
+			{/if}
+		{:else if $selector === 5}
+			{#if $chat_room[$selector].showEditor}
+				<Editor />
+			{:else}
+				<Chart />
+			{/if}
+		{:else if $selector === 0}
 			<object title="appfront-page" type="text/html" data="https://www.appfront.cloud/walkiria" class="h-full w-full"/>
 		{/if}
 	</div>
@@ -145,12 +128,9 @@
 		</div>
 	</dl>
 </Drawer>
-{:catch}
-	{logout()}
-{/await}
+
 <script lang="ts">
 	import SvelteMarkdown from 'svelte-markdown';
-	import { LightSwitch } from '@skeletonlabs/skeleton';
 	import hari from '$lib/hari.png';
 	import manual_svg from '$lib/manual.svg';
 	import code_svg from '$lib/coding.svg';
@@ -160,12 +140,13 @@
 	import Website from '$lib/Website.svelte';
 	import website_svg from '$lib/website.svg';
 	import chart_svg from '$lib/chart.svg';
+	import clip_svg from '$lib/clip.svg';
 	import { onMount, onDestroy } from 'svelte';
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
 	import { Avatar, AppBar, Drawer, ProgressBar, ProgressRadial, popup, Toast } from '@skeletonlabs/skeleton';
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
-	import { chat_room, selector, user, editor } from '../store';
-	import Chart from '../lib/Chart.svelte';
+	import { chat_room, selector, user, editor, logged } from '../store';
+	import Chart from '$lib/Chart.svelte';
 	
 	const drawerStore = getDrawerStore();
 
@@ -178,18 +159,7 @@
 	let currentMessage = '';
 	let elemChat: HTMLElement;
 	let loading_msg = false;
-	let promise = get_user();
 	let manPage = 'https://appfront-operations.gitbook.io/lookinglass-manuale-utente';
-
-	async function get_user() {
-		const res = await fetch('api/my/base/auth/user', {
-                method: 'GET',
-                credentials: 'include'
-            })
-
-		if (res.ok) { const obj = await res.json(); $user = obj; return obj; }
-		else { throw new Error('failed to get user') };
-	}
 
 	const interval = setInterval(async () => {
 		const r = await fetch('api/my/db/chat', {
@@ -199,7 +169,9 @@
 			const obj = await r.json();
 			for (let i = 0; i < obj.length; i++) {
 				if ('editor' in obj[i]) {
-					$editor = obj[i].editor;
+					console.log($selector)
+					console.log(obj[i].editor)
+					$chat_room[$selector].editor = obj[i].editor;
 				} else {
 					if ('frame' in obj[i]) { manPage = obj[i].frame; }
 					if ('pdf' in obj[i]) { }
@@ -270,16 +242,17 @@
 				return window.location.assign('/login')
 			}
 		}
+		$logged = true;
 		setTimeout(() => { scrollChatBottom('smooth'); }, 0);
 	});
 	
 	onDestroy(() => clearInterval(interval));
 
-	function lookinglass() { $selector = 0; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
-	function coder() { $selector = 1; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
-	function admin() { $selector = 2; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
-	function website() { $selector = 3; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
-	function chart() { $selector = 4; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
+	function lookinglass() { $selector = 1; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
+	function coder() { $selector = 2; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
+	function admin() { $selector = 3; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
+	function website() { $selector = 4; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
+	function chart() { $selector = 5; drawerStore.close(); setTimeout(() => { scrollChatBottom('smooth'); }, 0);}
 
 	function bots_trigger() {
 		const drawerSettings: DrawerSettings = {
@@ -293,25 +266,9 @@
 		drawerStore.open(drawerSettings);
 	}
 
-	async function logout() {
-		const response = await fetch('api/my/base/auth/logout', {
-			method: 'DELETE',
-			credentials: 'include',
-			headers: { 'Content-Type': 'application/json'},
-		});
-		$user = null;
-		document.cookie = 'appfront-sess-cookie=;expires=Thu, 01 Jan 1970 00:00:01 GMT'
-        sessionStorage.clear()
-        return window.parent.location.replace('/login')
-	}
-
 	function new_chat() {
 		$chat_room[$selector].history = new Array();
 		$chat_room[$selector].messageFeed = new Array();
-	}
-
-	function swagger() {
-		return window.location.assign('/swagger-ui')
 	}
 
 </script>

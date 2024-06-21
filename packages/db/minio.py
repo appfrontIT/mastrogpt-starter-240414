@@ -19,6 +19,16 @@ CLIENT = None
 BUCKET = None
 JWT = None
 
+def delete(args):
+    bucket_name = BUCKET
+    name = args.get('name', None)
+    if not name:
+        return {'statusCode': 400, 'body': 'no name provided'}
+    # Remove object.
+    CLIENT.remove_object(bucket_name, name)
+    return {'statusCode': 204}
+
+
 def add(args):
     bucket_name = BUCKET
     destination_file = args.get('target', False)
@@ -52,7 +62,8 @@ def find(args):
         data = CLIENT.get_object(BUCKET, name)
     except ResponseError as err:
         print(err)
-    return {"body": data.read()}
+    decoded_string = data.read()
+    return {"body": {"data": str(decoded_string, encoding='utf-8')} }
 
 def find_all():
     # List objects information whose names starts with "my/prefix/".
@@ -103,8 +114,8 @@ def main(args):
         return {'statusCode': 404, 'body': f'bucket {BUCKET} missing'}
     if op == 'add' and args['__ow_method'] == 'post':
         return add(args)
-    # elif path == '/delete' and args['__ow_method'] == 'delete':
-    #     return delete(args)
+    elif op == 'delete' and args['__ow_method'] == 'delete':
+        return delete(args)
     # elif path == '/update' and args['__ow_method'] == 'put':
     #     return update(args)
     elif op == 'find' and args['__ow_method'] == 'get':

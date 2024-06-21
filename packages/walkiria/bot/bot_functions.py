@@ -132,10 +132,11 @@ def action_info(name = False, package = False):
         obj = action.json()
         for an in obj['annotations']:
             if an['key'] == 'description':
-                namespace = obj['namespace']
-                editor = {"function": obj['exec']['code'], "name": obj['name'], "description": an['value'], "namespace": namespace.split('/')[0], "package": package, "language": obj['exec']['kind'].split(':')[0]}
-                requests.post("https://nuvolaris.dev/api/v1/web/gporchia/db/code_editor/add", json={'editor': editor}, headers={"cookie": f"cookie={config.session_user['cookie']}"})
-                return f"Action:\nfunction: {obj['exec']['code']}, name: {obj['name']}, description: {an['value']}, package: {package}"
+                if obj['exec']['binary'] == True:
+                    function = "il corpo del codice non é recuperabile, perché l'azione incorpora piú file "
+                else:
+                    function = obj['exec']['code']
+                return f"Action:\nfunction: {function}, name: {obj['name']}, description: {an['value']}, package: {package}"
     return "Non sono riuscito a trovare l'azione richiesta. Assicurati che il nome sia corretto e che sia specificato il package se appartiene ad uno"
 
 def delete_action(name = False, package = False):

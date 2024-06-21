@@ -8,7 +8,7 @@
     import { oneDark } from "@codemirror/theme-one-dark";
     import {EditorView, keymap} from "@codemirror/view"
     import {defaultKeymap} from "@codemirror/commands"
-    import { editor } from '../store'
+    import { chat_room, editor, selector } from '../store'
     import { getToastStore, popup } from '@skeletonlabs/skeleton';
     import type { SvelteComponent } from 'svelte';
     
@@ -47,17 +47,17 @@
 
 </script>
 <div class="grid grid-cols-12 gap-4 space-y-1 w-max" style="height: 5vh;">
-    <input class="input col-span-4" title="Action name" type="text" placeholder="action name" bind:value={$editor.name}>
-    {#if $editor.language != 'html'}
-    <input class="input col-span-4" title="Description" type="text" placeholder="description" bind:value={$editor.description}/>
-    <select class="select col-span-1" bind:value={$editor.package}>
+    <input class="input col-span-4" title="Action name" type="text" placeholder="action name" bind:value={$chat_room[$selector].editor.name}>
+    {#if $chat_room[$selector].editor.language != 'html'}
+    <input class="input col-span-4" title="Description" type="text" placeholder="description" bind:value={$chat_room[$selector].editor.description}/>
+    <select class="select col-span-1" bind:value={$chat_room[$selector].editor.package}>
         <option disabled selected value>Package</option>
         {#each packages as pack}
             <option value={pack}>{pack}</option>
         {/each}
     </select>
     {/if}
-    <select class="select col-span-1" bind:value={$editor.language}>
+    <select class="select col-span-1" bind:value={$chat_room[$selector].editor.language}>
         <option disabled selected value>Language</option>
         {#each languages as lang}
         <option value={lang}>{lang}</option>
@@ -67,8 +67,8 @@
 </div>
 <div class="basis-full h-max ">
     <CodeMirror
-        bind:value={$editor.function}
-        lang={languages_func.get($editor.language)}
+        bind:value={$chat_room[$selector].editor.function}
+        lang={languages_func.get($chat_room[$selector].editor.language)}
         theme={oneDark}
         class="max-h-[90vh] overflow-y-auto"
         styles={{

@@ -4,6 +4,7 @@
 #--annotation description "use this endpoint to perform operations with action. You must specify the operation correspondig path: '/add', '/update', '/delete', '/find'"
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--param JWT_SECRET $JWT_SECRET
+#--timeout 300000
 #--annotation url https://nuvolaris.dev/api/v1/web/gporchia/base/action
 
 import jwt
@@ -48,7 +49,7 @@ def add(args, token):
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
     else:
         resp = requests.put(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
-    requests.post('https://nuvolaris.dev/api/v1/web/gporchia/base/openAPI/add',
+    r = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/base/openAPI/add',
                 headers={'Authorization': 'Bearer ' + token},
                 json={'action': f"""url: https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}\ndescription: {description}\nfunction: {function}""", 'token': token})
     return {'statusCode': resp.status_code, 'body': resp.json()}
@@ -62,14 +63,14 @@ def delete(args):
         return {'statusCode': 404}
     response = requests.delete(f"https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/{package}/{name}",
                     auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
-    if response.ok:
-        del_from_openapi = requests.delete(
-            'https://nuvolaris.dev/api/v1/web/gporchia/base/openAPI/delete?action=' + f"/gporchia/{package}/{name}",
-            headers={'Authorization': args['__ow_headers'].get('authorization')}
-            )
-        if not del_from_openapi.ok:
-            return {'statusCode': 200, 'body': "action successfully deleted, but failed to remove it from openAPI"}
-        return {'statusCode': response.status_code}
+    # if response.ok:
+    #     del_from_openapi = requests.delete(
+    #         'https://nuvolaris.dev/api/v1/web/gporchia/base/openAPI/delete?action=' + f"/gporchia/{package}/{name}",
+    #         headers={'Authorization': args['__ow_headers'].get('authorization')}
+    #         )
+    #     if not del_from_openapi.ok:
+    #         return {'statusCode': 200, 'body': "action successfully deleted, but failed to remove it from openAPI"}
+    #     return {'statusCode': response.status_code}
     return {'statusCode': response.status_code, 'body': response.json()}
 
 def update(args):
