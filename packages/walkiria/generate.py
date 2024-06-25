@@ -28,7 +28,7 @@ Your role is to create an action and verify it.
 The available languages are: Python, Javascript, Go, Java, PHP.
 Take your time to answer and you must procede step by step.
 Actions must ALWAYS include the 'main' function, accepting '(args)' as parameters. This is mandatory.
-Always return a JSON with keys 'body' and 'statusCode'.
+Always return a JSON with keys 'body' and 'statusCode'. The body returned must always be a valid json, like: {'body': {<key>: <value>}}
 
 NEVER, EVER, BE LAZY! IF YOU NEED TIME TO UNDERSTAND THE TASK TAKE YOUR TIME, BUT ALWAYS ANSWER PROPERLY WITH ALL THE USER REQUESTS
 
@@ -65,27 +65,27 @@ Mandatory:
                 # create an element using 'data'
                 if path == '/create':
                     response = request.post("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/add", headers = {"Authorization": token}, json={"data": {"title": args.get("title"), "author": args.get("author"), "pages": args.get("pages"), "year": args.get("year")}})
-                    return {"statusCode": response.status_code, "body": response.text}
+                    return {"statusCode": response.status_code, "body": response.json()}
 
                 # delete an element by id
                 elif path == '/delete':
                     response = request.delete("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/delete?id=" + args.get('id'), headers = {"Authorization": token},)
-                    return {"statusCode": response.status_code, "body": response.text}
+                    return {"statusCode": response.status_code, "body": response.json()}
 
                 # update an element by id using 'data'
                 elif path == '/update':
                     response = request.put("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/update?id=" + args.get('id'), headers = {"Authorization": token}, json={"data": {"title": args.get("title"), "author": args.get("author"), "pages": args.get("pages"), "year": args.get("year")}})
-                    return {"statusCode": response.status_code, "body": response.text}
+                    return {"statusCode": response.status_code, "body": response.json()}
 
                 # find single element matching the filter
                 elif path == '/find_one':
                     response = request.get("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/find_one?title=" + args.get('title') + "&author=" args.get('author'), headers = {"Authorization": token},)
-                    return {"statusCode": response.status_code, "body": response.text}
+                    return {"statusCode": response.status_code, "body": response.json()}
 
                 # find all elements matching the filter
                 elif path == '/find_many':
                     response = request.get("https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/books/find_many", headers = {"Authorization": token},)
-                    return {"statusCode": response.status_code, "body": response.text}
+                    return {"statusCode": response.status_code, "body": response.json()}
                 return {"statusCode": 400}
         ```
 
@@ -97,7 +97,7 @@ Mandatory:
     9 - axios, jsdom, node-html-parser are forbidden, you can't use them
 """
 
-def deploy_action(name, function, description, language):
+def deploy_action(name, function, description, language, returns = None):
     global AI
     global JWT
     global SESSION_USER
@@ -107,6 +107,7 @@ def deploy_action(name, function, description, language):
         return {'error: package not found'}
     action_list = package_up.json()['actions']
     # Generate a new name if needed
+    
     name_arr = []
     for x in action_list:
         name_arr.append(x['name'])
@@ -146,7 +147,8 @@ def deploy_action(name, function, description, language):
                     "description": description,
                     "namespace":  "gporchia/" + SESSION_USER['username'],
                     "package": SESSION_USER['username'],
-                    "language": language
+                    "language": language,
+                    "returns": json.dumps(returns)
                 })
     if deploy.ok:
         requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
@@ -169,7 +171,7 @@ def create_action(args):
     function = function.replace(language, '')
     function = function.replace(language, '')
     description = args.get('description', False)
-    return deploy_action(NAME, function, description, language)
+    return deploy_action(NAME, function, description, language, args.get('return'))
 
 def main(args):
     global JWT
@@ -230,8 +232,20 @@ create_action_tool = [{
                         "properties": {
                             "name": {"type": "string", "description": "action name"},
                             "function": {"type": "string", "description": "the generated function. It must starts with 'def main(args):'"},
-                            "description": {"type": "string", "description": "a description of the action you made. The description MUST includes the parameters the action needs such as: {key: type, key: type, ...}. Example: 'an action which add an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}, None'. Also you MUST specify the exact return of the action. Example: The action returns 404 in case of ... in case of success, returns 200 and the body as: {'body': <body>}. Be explicit about the return body!"},
-                            "language": {"type": "string", "description": "the language in which you wrote the function. It must be 1 word from the following: 'python', 'javascript', 'go', 'php'"}
+                            "description": {"type": "string", "description": "a description of the action you made. The description MUST includes the parameters the action needs such as: {key: type, key: type, ...}. Example: 'an action which add an user to the database. Required parameters: {'name': name, 'password': password, 'role': role}, None'."},
+                            "language": {"type": "string", "description": "the language in which you wrote the function. It must be 1 word from the following: 'python', 'javascript', 'go', 'php'"},
+                            "return": {
+                                "type": "array",
+                                "description": "an array of each possible return of the action. Example: [{'status': 200, 'body': body}, {'status': 204}, {'status': 401, 'body': 'authorization failed'}, {...}]",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "string", "content": "the return status code"},
+                                        "body": {"type": "string", "content": "the return body, if present"}
+                                    },
+                                    "required": ["status"]
+                                },
+                                },
                             },
                         },
                     },

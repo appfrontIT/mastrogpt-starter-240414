@@ -17,11 +17,12 @@ OW_API_SPLIT = OW_KEY.split(':')
 JWT: None
 
 def add(args, token):
-    name = args.get('name', False)
-    package = args.get('package', False)
-    function = args.get('function', False)
-    description = args.get('description', False)
-    language = args.get('language', False)
+    name = args.get('name', None)
+    package = args.get('package', None)
+    function = args.get('function', None)
+    description = args.get('description', None)
+    language = args.get('language', None)
+    returns = args.get('returns', None)
     if not function or not name or not description or not language or not package:
         return {'statusCode': 400}
     url = f"https://nuvolaris.dev/api/v1/web/gporchia/{package}/{name}"
@@ -42,7 +43,8 @@ def add(args, token):
             {"key":"raw-http","value":False},
             {"key": "final", "value": True},
             {"key": "description", "value": description},
-            {"key": "url", "value": url}
+            {"key": "url", "value": url},
+            {"key": "return", "value": returns}
             ]
         }
     if package == 'default':

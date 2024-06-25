@@ -31,7 +31,7 @@ TUNED_MODEL = None
 def main(args):
     global AI
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
-    print(args)
+    
     input = args.get("input", "")
     # user = args.get("user", None)
     if input == "":

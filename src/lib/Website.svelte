@@ -26,6 +26,7 @@
 
     onMount(async () => {
 		actions = await get_actions();
+        console.log(actions)
     })
 
     async function get_actions() {
@@ -69,13 +70,13 @@
         if (description != '') { query += `- Description: ${description}\n`}
         if (header_check && header_description != '') { query += `- Include the following page header: ${header_description}\n`}
         if (footer_check && footer_description != '') { query += `- Include the following page footer: ${footer_description}\n`}
-        if (n_cols >= 0) {
+        if (n_cols >= 1) {
             query += `- Page coloumns: ${n_cols}\n`;
             if (cols_description != '') {
                 query += `- Coloumns description: ${cols_description}\n`
             }
         }
-        if (n_rows >= 0) {
+        if (n_rows >= 1) {
             query += `- Page rows: ${n_rows}\n`;
             if (rows_description != '') {
                 query += `- Rows description: ${rows_description}\n`
@@ -86,8 +87,10 @@
             for (let i = 0; i < action_arr.length; i++) {
                 query += `\t- Action:\n\t\t- name: ${action_arr[i].name}\n\t\t- package: ${action_arr[i].package}\n\t\t- url: ${action_arr[i].url}`
                 const annotations = action_arr[i].annotations;
+                console.log(annotations)
                 for (let j = 0; j < annotations.length; j++) {
                     if (annotations[j].key === 'description') { query += `\n\t\t- description: ${annotations[j].value}`; }
+                    else if (annotations[j].key === 'return') { query += `\n\t\t- returns: ${annotations[j].value}`; }
                 }
             }
         }

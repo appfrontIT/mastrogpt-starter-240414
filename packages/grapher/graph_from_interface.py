@@ -59,6 +59,9 @@ def main(args):
             messages.extend([{'role': 'user', 'content': f"data from url:\n{response.text}"}])
         else:
             return {"statusCode": 500, "body": "an error occured while fetching the url"}
+    text = data.get('text', None)
+    if text:
+        messages.extend([{'role': 'user', 'content': f"data from text:\n{text}"}])
     collection = data.get('collection', None)
     if collection != None:
         connection_string = args.get('CONNECTION_STRING', False)

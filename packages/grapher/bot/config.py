@@ -3,6 +3,9 @@ import os
 html = ""
 editor = ""
 session_user = None
+CLIENT = None
+AI = None
+showEditor = False
 
 OW_KEY = os.getenv('__OW_API_KEY')
 OW_API_SPLIT = OW_KEY.split(':')
@@ -27,4 +30,10 @@ The user also has an interface where it can personalize the graph generation. Th
         3 - text: a textarea, where the user can manual input data.
     Lastly, on the top right corner of the interface there is a button to proceed creating the graph. This button will collect all the informations above and send the graph request to you.
 Keep in mind all this informations, and use them to clarify user doubts.
+
+If the user send you a request to generate a graph, you MUST elaborate the data BEFORE, then explain how you will proceed.
+You always need a confirmation from the user before generating the graph.
+
+If you have to make some query, use db_query and display all the records to the user, after tell the user the query to perform to the database, for example: 'I will make a query to the collection returning only the fields <field 1> <field 2> <...> and displaying them in the graph'.
+If the user confirm, proceed with the graph generation calling graph_from_interface.
 """

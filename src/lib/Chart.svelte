@@ -4,6 +4,7 @@
     import { AppBar, getModalStore, FileButton, popup } from '@skeletonlabs/skeleton';
 	import { DataHandler } from "@vincjo/datatables";
     import type { Readable, Writable } from 'svelte/store';
+	import { text } from "d3";
 
     const modalStore = getModalStore();
     const reader = new FileReader();
@@ -98,11 +99,11 @@
         if (!col_name && !url && !text_data) {
             alert("Devi specificare uno o piú dati da visualizzare nel grafico"); return ;
         }
-        modalStore.trigger({
-            type: 'component',
-            component: 'modalWaiting',
-            meta: { msg: "Sto generando il grafico, per favore attendi" }
-        });
+        // modalStore.trigger({
+        //     type: 'component',
+        //     component: 'modalWaiting',
+        //     meta: { msg: "Sto generando il grafico, per favore attendi" }
+        // });
         let query = "create a chart using the following guidelines:"
         query += `\nChart type: ${type}\n Page name: ${name}\nDescription: ${description}`;
         if (header_check) {
@@ -111,22 +112,17 @@
         if (footer_check) {
             query += `\nPage footer: ${footer_description}`
         }
+        if (col_name) { query += `'collection': ${col_name}`}
+        if (text_data) { query += `'text': ${text_data}`}
+        if (url) { query += `'url': ${url}`}
         $chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'user', 'content': query}]
-        const data = JSON.stringify({'input': $chat_room[$selector].history, 'name': name, 'id': $user!['_id'], 'data': {'collection': col_name, 'text': text_data, 'url': url}});
-        const response = await fetch(`api/my/grapher/graph_from_interface`, {
+        const data = JSON.stringify({'input': $chat_room[$selector].history});
+        const response = await fetch($chat_room[$selector].url, {
 			method: 'POST',
 			body: data,
 			headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + $user!['JWT']}
 		})
-        $chat_room[$selector].messageFeed = new Array({
-			host: false,
-			name: 'Hari',
-			timestamp: `Today @ ${getCurrentTimestamp()}`,
-			message: `Ho generato la pagina che mi hai richiesto, se posso aiutarti con altro fammi sapere`,
-			color: 'variant-soft-primary'
-		})
-        modalStore.close();
-        $chat_room[$selector].showEditor = true;
+        // modalStore.close();
     }
 
     async function check_dataset(name) {

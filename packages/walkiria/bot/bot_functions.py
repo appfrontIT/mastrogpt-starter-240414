@@ -74,21 +74,23 @@ def single_page_scrape(url = None):
 def html_gen(args):
     actions_info = args.get('actions_names', '')
     description: str = args.get('description', '')
-    print(description)
+
     name: str = args.get('name', '')
-    action_array = ""
+    action_array = []
     for action in actions_info:
-        status = utils.action_info(action['name'], action['package'])
-        if status.status_code == 200:
-            obj = status.json()
-            action_array += f"name: {obj['name']}\n"
-            annotations = obj['annotations']
-            for pair in annotations:
-                if pair['key'] == 'url' or pair['key'] == 'description':
-                    action_array += f"{pair['key']}: {pair['value']}\n"
-            action_array += f"code: {obj['exec']['code']}\n"
-        else:
-            return f"the following action does not exists: {action}\n"
+        action_array.append(action_info(action['name'], action['package']))
+        # status = utils.action_info(action['name'], action['package'])
+        # if status.status_code == 200:
+        #     obj = status.json()
+        #     action_array += f"name: {obj['name']}\n"
+        #     annotations = obj['annotations']
+        #     for pair in annotations:
+        #         if pair['key'] == 'url' or pair['key'] == 'description':
+        #             action_array += f"{pair['key']}: {pair['value']}\n"
+        #     action_array += f"code: {obj['exec']['code']}\n"
+        # else:
+        #     return f"the following action does not exists: {action}\n"
+        
     if action_array != "":
         query = f"{description}\nHere the informations about the actions you have to call inside it: {action_array}"
     else:
@@ -130,13 +132,18 @@ def action_info(name = False, package = False):
     action = utils.action_info(name, package)
     if action.status_code == 200:
         obj = action.json()
+        description = ''
+        returns = ''
         for an in obj['annotations']:
             if an['key'] == 'description':
-                if obj['exec']['binary'] == True:
-                    function = "il corpo del codice non é recuperabile, perché l'azione incorpora piú file "
-                else:
-                    function = obj['exec']['code']
-                return f"Action:\nfunction: {function}, name: {obj['name']}, description: {an['value']}, package: {package}"
+                description = an['value']
+            elif an['key'] == 'return':
+                returns = an['value']
+        if obj['exec']['binary'] == True:
+                function = "il corpo del codice non é recuperabile, perché l'azione incorpora piú file "
+        else:
+            function = obj['exec']['code']
+        return f"Action:\nfunction: {function}, name: {obj['name']}, description: {description}, return: {returns}, package: {package}"
     return "Non sono riuscito a trovare l'azione richiesta. Assicurati che il nome sia corretto e che sia specificato il package se appartiene ad uno"
 
 def delete_action(name = False, package = False):

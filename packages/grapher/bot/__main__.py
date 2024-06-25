@@ -11,27 +11,46 @@ from openai import OpenAI
 import requests
 import config
 import json
+import bot_functions
 from requests.auth import HTTPBasicAuth
+from pymongo import MongoClient, errors
+from pymongo.collection import Collection
 
-AI = None
 MODEL = "gpt-4o"
+
+def ask(
+    messages,
+    model: str = MODEL,
+) -> str:
+    response = config.AI.chat.completions.create(
+        model=model,
+        messages=messages,
+        tools=bot_functions.tools,
+        tool_choice="auto",
+        temperature=0.1,
+        top_p=0.1
+    )
+    if response.choices[0].finish_reason == "tool_calls":
+        return bot_functions.tools_func(messages, response)
+    return response.choices[0].message.content
 
 def main(args):
     global AI
-    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
+
+    config.AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     config.session_user = args.get('user', False)
     if not config.session_user:
         return {"statusCode": 404, "body": "failed to retrieve the user, please login again"}
     input = args.get("input", False)
     if not input:
         return {"statusCode": 400, "body": "error: no input provided"}
+    config.CLIENT = MongoClient(args.get('CONNECTION_STRING'))
     messages = [{'role': 'system', 'content': config.ROLE}]
     messages.extend(input)
-    response = AI.chat.completions.create(
-        model=MODEL,
-        messages=messages,
-    )
+    res = { "output": ask(messages=messages, model=MODEL)}
+    if config.showEditor:
+        res['showEditor'] = True
     requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
                 auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
-                json={'id': config.session_user['_id'], 'message': {'output': response.choices[0].message.content,}})
-    return {"statusCode": 200, "body": { "output": response.choices[0].message.content } }
+                json={'id': config.session_user['_id'], 'message': res})
+    return {"statusCode": 200, "body": res }

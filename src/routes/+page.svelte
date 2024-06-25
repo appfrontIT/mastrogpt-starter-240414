@@ -1,7 +1,7 @@
 <div class="chat grid grid-cols-7 gap-3 space-y-2" style="height: 87vh;">
 	<div class="grid grid-rows-[1fr_auto] gap-1 col-span-3">
 		<section bind:this={elemChat} class="max-h-[80vh] p-4 overflow-y-auto space-y-4 col-span-3">
-			<div class="grid row-span-1 col-span-3 input-group input-group-divider grid-cols-[auto_1fr_auto]">
+			<div class="grid row-span-1 col-span-3 input-group input-group-divider grid-cols-[auto_1fr_auto_auto]">
 				<button class="btn-sm variant-filled input-group-shim" on:click={bots_trigger}>chatbot</button>
 				<div>
 					{#if $selector == 0} Select your chat bot!
@@ -12,6 +12,7 @@
 					{:else if $selector == 5} Chart
 					{/if}
 				</div>
+				<button class={voice_on ? "variant-filled-primary" : "input-group-shim"} on:click={toggle_voice}><img alt="clip img" src={voice_on_svg} width="20" height="20"/></button>
 				<button class="btn-sm input-group-shim"><img alt="clip img" src={clip_svg} width="20" height="20"/></button>
 			</div>
 			{#if $selector != -1}
@@ -46,7 +47,7 @@
 			{/if}
 		</section>
 		<!-- Prompt -->
-		<div class="input-group input-group-divider grid-cols-[auto_1fr_auto] rounded-container-token col-span-3">
+		<div class="input-group input-group-divider grid-cols-[auto_1fr_auto_auto] rounded-container-token col-span-3">
 			<button class="input-group-shim" on:click={new_chat}>+</button>
 			<textarea
 				bind:value={currentMessage}
@@ -57,6 +58,7 @@
 				rows="1"
 				on:keydown={onPromptKeydown}
 			/>
+			<button class={recording ? 'variant-filled-primary' : 'input-group-shim'} on:click={record}><img alt="record img" src={microphone_svg} width="20" height="20" /></button>
 			<button class={currentMessage ? 'variant-filled-primary' : 'input-group-shim'} on:click={addMessage}>
 				send
 			</button>
@@ -141,6 +143,8 @@
 	import website_svg from '$lib/website.svg';
 	import chart_svg from '$lib/chart.svg';
 	import clip_svg from '$lib/clip.svg';
+	import microphone_svg from '$lib/microphone.svg'
+	import voice_on_svg from '$lib/voice_on.svg'
 	import { onMount, onDestroy } from 'svelte';
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
 	import { Avatar, AppBar, Drawer, ProgressBar, ProgressRadial, popup, Toast } from '@skeletonlabs/skeleton';
@@ -156,10 +160,15 @@
 		placement: 'bottom',
 	};
 
+	let recording = false;
+	let voice_on = false;
 	let currentMessage = '';
 	let elemChat: HTMLElement;
 	let loading_msg = false;
 	let manPage = 'https://appfront-operations.gitbook.io/lookinglass-manuale-utente';
+	let audioRecorder: MediaRecorder;
+    let audioChunks = [];
+	let audioCtx = new AudioContext();
 
 	const interval = setInterval(async () => {
 		const r = await fetch('api/my/db/chat', {
@@ -169,12 +178,11 @@
 			const obj = await r.json();
 			for (let i = 0; i < obj.length; i++) {
 				if ('editor' in obj[i]) {
-					console.log($selector)
-					console.log(obj[i].editor)
 					$chat_room[$selector].editor = obj[i].editor;
 				} else {
 					if ('frame' in obj[i]) { manPage = obj[i].frame; }
 					if ('pdf' in obj[i]) { }
+					if ('showEditor' in obj[i]) { $chat_room[$selector].showEditor = obj[i].showEditor}
 					if ('output' in obj[i]) {
 						const newMessage = {
 							host: false,
@@ -185,6 +193,39 @@
 						$chat_room[$selector].messageFeed = [...$chat_room[$selector].messageFeed, newMessage];
 						$chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'assistant', 'content': obj[i].output}]
 						setTimeout(() => { scrollChatBottom('smooth'); }, 0);
+						if (voice_on) {
+							const response = await fetch('/api/my/utility/text_to_speech', {
+								method: "POST",
+								body: obj[i].output
+							})
+							if (response.ok) {
+								const data = await response.arrayBuffer();
+								// console.log(data)
+								// var buffer = new ArrayBuffer(data.length*2);
+								// var bufferView = new Uint16Array(buffer);
+								// for (let j = 0; j < data.length; j++) {
+								//     bufferView[j] = data.charCodeAt(j);
+								// }
+								// console.log(buffer)
+								const z = new Float32Array(data, 4, 4)
+								const blob = new Blob([z], { type: "audio/mpeg" })
+								const audioUrl = window.URL.createObjectURL(blob);
+								console.log(audioUrl)
+								const audio = new Audio(audioUrl);
+								audio.play();
+								// const decoded = await audioCtx.decodeAudioData(buffer);
+								// const source = audioCtx.createBufferSource();
+								// source.buffer = decoded;
+								// source.connect(audioCtx.destination);
+								// source.start();								
+								// const audioCtx = new AudioContext();
+								// const decodedData = await audioCtx.decodeAudioData(data)
+								// const source = new AudioBufferSourceNode(audioCtx);
+								// source.buffer = decodedData;
+								// source.connect(audioCtx.destination);
+								// source.start(0);
+							}
+						}
 					}
 				}
 			}
@@ -205,6 +246,7 @@
 	}
 
 	async function addMessage(): Promise<void> {
+		if (currentMessage.length == 0) { return; }
 		const newMessage = {
 			host: true,
 			timestamp: `Today @ ${getCurrentTimestamp()}`,
@@ -243,6 +285,24 @@
 			}
 		}
 		$logged = true;
+		navigator.mediaDevices.getUserMedia({ audio: true })
+		.then(stream => {
+			audioRecorder = new MediaRecorder(stream);
+			audioRecorder.ondataavailable = (e) => { audioChunks.push(e.data);};
+			audioRecorder.onstop = async (e) => {
+				const blob = new Blob(audioChunks, { type: audioRecorder.mimeType });
+				
+				const response  = await fetch('/api/my/utility/speech_to_text', {
+					method: "POST",
+					body: await blob.arrayBuffer()
+				})
+				if (response.ok) {
+					const text = await response.text();
+					currentMessage = text;
+					addMessage();
+				}
+			}
+		;})
 		setTimeout(() => { scrollChatBottom('smooth'); }, 0);
 	});
 	
@@ -271,4 +331,17 @@
 		$chat_room[$selector].messageFeed = new Array();
 	}
 
+	function record() {
+		recording = recording ? false : true;
+		if (recording) {
+			audioChunks = [];
+			audioRecorder.start();
+			document.getElementById('prompt').placeholder = 'Recording...';
+		} else {
+			audioRecorder.stop();
+			document.getElementById('prompt').placeholder = "Write a message...";
+		}
+	}
+
+	function toggle_voice() { voice_on = voice_on ? false : true; }
 </script>
