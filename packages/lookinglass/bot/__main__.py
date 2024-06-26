@@ -22,56 +22,28 @@ import json
 import man
 from requests.auth import HTTPBasicAuth
 
-MODEL = "gpt-3.5-turbo"
+MODEL = "gpt-4o"
 AI = None
-
-available_functions = {
-    "quotation_by_birth": veichle.quotation_by_birth,
-    "quotation_by_cf": veichle.quotation_by_cf,
-    "find_man_page": man.find_man_page
-}
 
 def ask(
     messages,
     model: str = MODEL,
 ) -> str:
-    response = AI.chat.completions.create(
+    response = config.AI.chat.completions.create(
         model=model,
         messages=messages,
-        tools=bot_functions.quotation_functions,
-        tool_choice="auto"
+        tools=bot_functions.tools,
+        tool_choice="auto",
+        temperature=0.1,
+        top_p=0.1
     )
     if response.choices[0].finish_reason == "tool_calls":
-        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'cookie': config.session_user['cookie'], "message": {"output": "Certamente, procedo subito ad elaborare la tua richiesta"}})
-        tool_calls = response.choices[0].message.tool_calls
-        messages.append(response.choices[0].message)
-        for tool_call in tool_calls:
-            print(tool_call.function.name)
-            function_name = tool_call.function.name
-            function_to_call = available_functions[function_name]
-            function_args = json.loads(tool_call.function.arguments)
-            function_response = function_to_call(
-                **function_args
-                )
-            messages.append({
-                "tool_call_id": tool_call.id,
-                "role": "tool",
-                "name": function_name,
-                "content": function_response
-            })
-        response = AI.chat.completions.create(
-            model=model,
-            messages=messages,
-        )
-    else:
-        print('no tools')
+        return bot_functions.tools_func(messages, response)
     return response.choices[0].message.content
 
 def main(args):
-    global AI
     config.html = ""
-
-    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
+    config.AI = OpenAI(api_key=args['OPENAI_API_KEY'])
 
     config.session_user = args.get('user', False)
     if not config.session_user:

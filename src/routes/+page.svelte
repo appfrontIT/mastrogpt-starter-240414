@@ -168,7 +168,7 @@
 	let manPage = 'https://appfront-operations.gitbook.io/lookinglass-manuale-utente';
 	let audioRecorder: MediaRecorder;
     let audioChunks = [];
-	let audioCtx = new AudioContext();
+	let audioCtx;
 
 	const interval = setInterval(async () => {
 		const r = await fetch('api/my/db/chat', {
@@ -303,6 +303,7 @@
 				}
 			}
 		;})
+		audioCtx = new AudioContext();
 		setTimeout(() => { scrollChatBottom('smooth'); }, 0);
 	});
 	
