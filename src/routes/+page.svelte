@@ -1,7 +1,7 @@
 <div class="chat grid grid-cols-7 gap-3 space-y-2" style="height: 87vh;">
 	<div class="grid grid-rows-[1fr_auto] gap-1 col-span-3">
 		<section bind:this={elemChat} class="max-h-[80vh] p-4 overflow-y-auto space-y-4 col-span-3">
-			<div class="grid row-span-1 col-span-3 input-group input-group-divider grid-cols-[auto_1fr_auto_auto]">
+			<div class="grid row-span-1 col-span-3 input-group input-group-divider grid-cols-[auto_1fr_auto]">
 				<button class="btn-sm variant-filled input-group-shim" on:click={bots_trigger}>chatbot</button>
 				<div>
 					{#if $selector == 0} Select your chat bot!
@@ -13,7 +13,6 @@
 					{/if}
 				</div>
 				<button class={voice_on ? "variant-filled-primary" : "input-group-shim"} on:click={toggle_voice}><img alt="clip img" src={voice_on_svg} width="20" height="20"/></button>
-				<button class="btn-sm input-group-shim"><img alt="clip img" src={clip_svg} width="20" height="20"/></button>
 			</div>
 			{#if $selector != -1}
 			{#each $chat_room[$selector].messageFeed as bubble}
@@ -47,8 +46,10 @@
 			{/if}
 		</section>
 		<!-- Prompt -->
-		<div class="input-group input-group-divider grid-cols-[auto_1fr_auto_auto] rounded-container-token col-span-3">
+		<div class="input-group input-group-divider grid-cols-[auto_auto_1fr_auto_auto] rounded-container-token col-span-3">
 			<button class="input-group-shim" on:click={new_chat}>+</button>
+			<input class="hidden" id="file-to-upload" type="file" accept=".png,.jpg,.pdf" multiple bind:this={filesInput} on:change={attach_file}/>
+			<button class="input-group-shim" on:click={ () => filesInput.click() }><img alt="clip img" src={clip_svg} width="20" height="20"/></button>
 			<textarea
 				bind:value={currentMessage}
 				class="bg-transparent border-0 ring-0"
@@ -147,11 +148,12 @@
 	import voice_on_svg from '$lib/voice_on.svg'
 	import { onMount, onDestroy } from 'svelte';
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
-	import { Avatar, AppBar, Drawer, ProgressBar, ProgressRadial, popup, Toast } from '@skeletonlabs/skeleton';
+	import { Avatar, AppBar, Drawer, ProgressBar, ProgressRadial, popup, Toast, } from '@skeletonlabs/skeleton';
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
 	import { chat_room, selector, user, editor, logged } from '../store';
 	import Chart from '$lib/Chart.svelte';
-	
+	import TemplateCarousel from '../lib/TemplateCarousel.svelte';
+
 	const drawerStore = getDrawerStore();
 
 	const popupFeatured: PopupSettings = {
@@ -160,6 +162,7 @@
 		placement: 'bottom',
 	};
 
+	let filesInput;
 	let recording = false;
 	let voice_on = false;
 	let currentMessage = '';
@@ -169,6 +172,7 @@
 	let audioRecorder: MediaRecorder;
     let audioChunks = [];
 	let audioCtx;
+	let reader;
 
 	const interval = setInterval(async () => {
 		const r = await fetch('api/my/db/chat', {
@@ -193,39 +197,7 @@
 						$chat_room[$selector].messageFeed = [...$chat_room[$selector].messageFeed, newMessage];
 						$chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'assistant', 'content': obj[i].output}]
 						setTimeout(() => { scrollChatBottom('smooth'); }, 0);
-						if (voice_on) {
-							const response = await fetch('/api/my/utility/text_to_speech', {
-								method: "POST",
-								body: obj[i].output
-							})
-							if (response.ok) {
-								const data = await response.arrayBuffer();
-								// console.log(data)
-								// var buffer = new ArrayBuffer(data.length*2);
-								// var bufferView = new Uint16Array(buffer);
-								// for (let j = 0; j < data.length; j++) {
-								//     bufferView[j] = data.charCodeAt(j);
-								// }
-								// console.log(buffer)
-								const z = new Float32Array(data, 4, 4)
-								const blob = new Blob([z], { type: "audio/mpeg" })
-								const audioUrl = window.URL.createObjectURL(blob);
-								console.log(audioUrl)
-								const audio = new Audio(audioUrl);
-								audio.play();
-								// const decoded = await audioCtx.decodeAudioData(buffer);
-								// const source = audioCtx.createBufferSource();
-								// source.buffer = decoded;
-								// source.connect(audioCtx.destination);
-								// source.start();								
-								// const audioCtx = new AudioContext();
-								// const decodedData = await audioCtx.decodeAudioData(data)
-								// const source = new AudioBufferSourceNode(audioCtx);
-								// source.buffer = decodedData;
-								// source.connect(audioCtx.destination);
-								// source.start(0);
-							}
-						}
+						if (voice_on) {}
 					}
 				}
 			}
@@ -274,6 +246,7 @@
 	}
 
 	onMount(async () => {
+		reader = new FileReader()
 		loading_msg = false;
 		let cookie = document.cookie;
         if (!cookie) {
@@ -345,4 +318,14 @@
 	}
 
 	function toggle_voice() { voice_on = voice_on ? false : true; }
+
+	async function attach_file() {
+		for(let i = 0; i < filesInput.files.length; i++) {
+			reader.readAsDataURL(filesInput.files[i]);
+			while(reader.readyState == 1) {
+				await new Promise(r => setTimeout(r, 1000));
+			}
+			
+		}
+	}
 </script>

@@ -4,7 +4,6 @@
     import { AppBar, getModalStore, FileButton, popup } from '@skeletonlabs/skeleton';
 	import { DataHandler } from "@vincjo/datatables";
     import type { Readable, Writable } from 'svelte/store';
-	import { text } from "d3";
 
     const modalStore = getModalStore();
     const reader = new FileReader();

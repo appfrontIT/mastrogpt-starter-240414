@@ -15,7 +15,7 @@ def main(args):
     if not audio:
         return {"statusCode": 404, "body": "audio not found"}
     decoded = base64.b64decode(audio)
-    print(decoded)
+
     client = OpenAI(api_key=args['OPENAI_API_KEY'])
     # audio_file = open(audio, "rb")
     wav_file = open("temp.wav", "wb")

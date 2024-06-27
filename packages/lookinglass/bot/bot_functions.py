@@ -109,19 +109,22 @@ def extract_data_from_vehicle_reg(url = None, name = None):
     if not url and not name:
         return "both url and name missing"
     if url:
-        response = requests.get('https://nuvolaris.dev/api/v1/web/gporchia/utility/pdf_to_text?url=' + url)
-    elif name:
-        response = requests.get('https://nuvolaris.dev/api/v1/web/gporchia/utility/pdf_to_text?name=' + name)
-    text = response.text
-    comp = config.AI.chat.completions.create(
-        model='gpt-4o',
+        response = config.AI.chat.completions.create(
+        model="gpt-4o",
         messages=[
-            {"role": "system", "content": f"""Ti viene passato un testo che riguarda una carta di circolazione. Leggilo ed estrai i dati contenuti in essa. Di seguito un elenco delle voci riportate sulla carta di circolazione:
-            {config.carta_circolazione}\nIn caso il documento non riguardi una carta di circolazioni, rispondi di conseguenza"""},
-            {"role": "user", "content": f"estrai i dati dal seguente testo:\n{text}"}
-        ]
-    )
-    return comp.choices[0].message.content
+            {"role": "user", "content": [
+                {"type": "text", "text": "please extract the following informations from the img:\n" + config.carta_circolazione + "\nPlease, take your time to answer, it's very important that the informations are as much precise as possible"},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": url,
+                        "detail": "high"
+                        },
+                    }
+                ]
+            }
+        ])
+    return f"please use the full name of each category instead of the code:\n{response.choices[0].message.content}"
 
 def tools_func(
         messages: list[dict[str, str]],
@@ -215,7 +218,8 @@ tools = [
                     "type": "object",
                     "properties": {
                         "url": {"type": "string", "description": "the pdf url"},
-                        "name": {"type": "string", "description": "the pdf name stored in the database"}
+                        "name": {"type": "string", "description": "the pdf name stored in the database"},
+                        "base64img": {"type": "string", "description": "base64 string representing an img"}
                     },
                 },
             },
