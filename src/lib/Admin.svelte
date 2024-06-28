@@ -38,7 +38,6 @@ async function get_users() {
 	return users;
 }
 </script>
-
 <TabGroup justify='justify-center'>
 	<Tab bind:group={tabSet} name="tab1" value={0}>Users</Tab>
 	<Tab bind:group={tabSet} name="tab2" value={1}>packages</Tab>

@@ -5,6 +5,7 @@
     import { onMount } from "svelte";
     import { AppBar } from '@skeletonlabs/skeleton';
     import { getModalStore } from '@skeletonlabs/skeleton';
+    import TemplateCarousel from './TemplateCarousel.svelte';
 
     const modalStore = getModalStore();
 
@@ -113,27 +114,9 @@
     }
 
 </script>
-<div style="height: 80vh;">
+<div>
 <AppBar background="0x44000000">
-    <svelte:fragment slot="lead">
-        <div class="flex">
-            <label class="flex space-x-4">
-                <input class="checkbox" type="checkbox" />
-                <p>Option 1</p>
-                <input class="checkbox" type="checkbox" />
-                <p>Option 2</p>
-                <input class="checkbox" type="checkbox" />
-                <p>Option 3</p>
-                <input class="checkbox" type="checkbox" />
-                <p>Option 4</p>
-                <input class="checkbox" type="checkbox" />
-                <p>Option 5</p>
-            </label>
-        </div>
-    </svelte:fragment>
-    <svelte:fragment slot="trail">
-        <button type="button" class="btn btn-md variant-filled" on:click={proceed}>procedi</button>
-    </svelte:fragment>
+    <TemplateCarousel />
 </AppBar>
 <div class="flex gap-2 input-group input-group-divider">
 	<div class="input-group-shim">Primary</div><input class="input flex-none w-14" type="color" bind:value={primaryColor} />

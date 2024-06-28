@@ -40,7 +40,7 @@
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 </script>
 {#if $logged}
-<Header />
+	<Header />
 {/if}
 <Toast />
 <Modal components={modalRegistry} />

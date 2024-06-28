@@ -142,7 +142,7 @@
     }
 
 </script>
-<div class="space-y-2" style="height: 80vh;">
+<div class="space-y-2">
 <p class="h5">Chart type:</p>
 <AppBar background="0x44000000">
     <svelte:fragment slot="lead">
