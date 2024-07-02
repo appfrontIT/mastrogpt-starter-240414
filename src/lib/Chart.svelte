@@ -146,8 +146,7 @@
 <p class="h5">Chart type:</p>
 <AppBar background="0x44000000">
     <svelte:fragment slot="lead">
-        <div class="flex">
-            <label class="flex space-x-4">
+            <label class="flex space-x-2">
                 <input class="radio" type="radio" name="radio-direct" value="Area"/>
                 <p>Area</p>
                 <input class="radio" type="radio" name="radio-direct" value="Bar"/>
@@ -167,7 +166,6 @@
                 <input class="radio" type="radio" name="radio-direct" value="Scatter"/>
                 <p>Scatter</p>
             </label>
-        </div>
     </svelte:fragment>
     <svelte:fragment slot="trail">
         <button type="button" class="btn btn-md variant-filled" on:click={proceed}>procedi</button>

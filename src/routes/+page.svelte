@@ -17,6 +17,8 @@
 	import Chart from '$lib/Chart.svelte';
 	import AppRail from '../lib/AppRail.svelte';
 	import Chat from '../lib/Chat.svelte';
+	import Flow from '../lib/flow/Flow.svelte';
+	import { SvelteFlowProvider } from '@xyflow/svelte';
 
 	const drawerStore = getDrawerStore();
 
@@ -43,6 +45,7 @@
 			}
 		}
 		$logged = true;
+		console.log($selector)
 	});
 
 	function lookinglass() { $selector = 1; drawerStore.close();}
@@ -52,36 +55,45 @@
 	function chart() { $selector = 5; drawerStore.close();}
 
 </script>
-<div class="grid grid-cols-[1fr_auto] h-max-[87vh]">
+<div class="grid grid-cols-[auto_2fr]" style="height: 87vh;">
 <AppRail />
-	<!-- Right column -->
-	<div class="grid grid-cols-subgrid h-full space-y-2">
+	<div class="grid grid-cols-subgrid max-h-[87vh] space-y-2 h-full">
 		<div class="grid grid-cols-2">
-			<Chat />
-			{#if $selector === 1}
-			<object title="appfront-page" type="text/html" data={manPage} class="h-full w-full"/>
-			{:else if $selector === 2}
-			<div class="grid grid-cols-subgrid h-full space-y-2">
-			<Editor />
-			</div>
-			{:else if $selector === 3}
-			<Admin />
-			{:else if $selector === 4}
-			{#if $chat_room[$selector].showEditor}
-			<Editor />
-			{:else}
-			<Website />
-			{/if}
-			{:else if $selector === 5}
-			{#if $chat_room[$selector].showEditor}
-			<Editor />
-			{:else}
-			<Chart />
-			{/if}
-			{:else if $selector === 0}
-			<object title="appfront-page" type="text/html" data="https://www.appfront.cloud/walkiria" class="h-full w-full"/>
-			{/if}
+		{#if $selector === 1}
+		<Chat />
+		<object title="appfront-page" type="text/html" data={manPage} class="h-full w-full"/>
+		{:else if $selector === 2}
+		<Chat />
+		<Editor />
+		{:else if $selector === 3}
+		<Chat />
+		<Admin />
+		{:else if $selector === 4}
+		{#if $chat_room[$selector].showEditor}
+		<Chat />
+		<Editor />
+		{:else}
+		<Website />
+		{/if}
+		{:else if $selector === 5}
+		{#if $chat_room[$selector].showEditor}
+		<Chat />
+		<Editor />
+		{:else}
+		<Chat />
+		<Chart />
+		{/if}
+		{:else if $selector === 6}
+		<div class="col-span-2">
+			<SvelteFlowProvider>
+				<Flow />
+			</SvelteFlowProvider>
 		</div>
+		{:else if $selector === 0}
+		<Chat />
+		<object title="appfront-page" type="text/html" data="https://www.appfront.cloud/walkiria" class="h-full w-full"/>
+		{/if}
+	</div>
 	</div>
 </div>
 

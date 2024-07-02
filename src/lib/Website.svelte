@@ -1,14 +1,23 @@
 <script lang="ts">
-    import { popup } from '@skeletonlabs/skeleton';
-    import type { PopupSettings } from '@skeletonlabs/skeleton';
     import { user, chat_room, selector, getCurrentTimestamp } from "../store";
     import { onMount } from "svelte";
-    import { AppBar } from '@skeletonlabs/skeleton';
-    import { getModalStore } from '@skeletonlabs/skeleton';
-    import TemplateCarousel from './TemplateCarousel.svelte';
+    import { popup, AppBar, getModalStore, ProgressBar } from '@skeletonlabs/skeleton';
+    import Carousel from 'svelte-carousel'
+	import { templates } from "../store";
+    import type { ModalSettings, ModalComponent, ModalStore } from '@skeletonlabs/skeleton';
+
+	let carousel; // for calling methods of the carousel instance
+	let curr_page = 0;
 
     const modalStore = getModalStore();
-
+    const modal: ModalSettings = {
+        type: 'prompt',
+        title: 'Action',
+        body: 'Provide a description of the action in the field below.',
+        value: 'Description',
+        valueAttr: { type: 'text', minlength: 3, required: true },
+        response: (r: string) => console.log('response:', r),
+    };
     let actions = new Array();
     let primaryColor: any = -1;
     let secondaryColor: any = -1;
@@ -24,10 +33,12 @@
     let n_rows: number = -1;
     let cols_description: string = '';
     let rows_description: string = '';
+    let steps: number = 0;
+    let template = $templates[0];
+    let assets =[{'img': '', 'description': ''}]
 
     onMount(async () => {
 		actions = await get_actions();
-        console.log(actions)
     })
 
     async function get_actions() {
@@ -65,6 +76,7 @@
             meta: { msg: "Building your page..." }
         });
         let query: string = 'user the following informations to generate an html page (call the html_gen function):\n';
+        query += `You must use this webpage as example: ${template.demo}\n` 
         if (primaryColor != -1) {query += `- Primary color: ${primaryColor}\n`;}
         if (secondaryColor != -1) {query += `- Secondary color: ${secondaryColor}\n`;}
         if (tertiaryColor != -1) {query += `- Tertiary color: ${tertiaryColor}\n`;}
@@ -95,6 +107,12 @@
                 }
             }
         }
+        if (assets.length > 0) {
+            query += `Here's a list of assets you have to use and the corrispettive descrition:`
+            for (let i = 0; i < assets.length; i++) {
+                query += `\nimg: ${assets[i].img}, description: ${assets[i].description}`
+            }
+        }
         $chat_room[$selector].history = [...$chat_room[$selector].history, {'role': 'user', 'content': query}]
         const data = JSON.stringify({'input': $chat_room[$selector].history, 'name': name, 'id': $user!['_id']});
         const response = await fetch($chat_room[$selector].url, {
@@ -113,29 +131,66 @@
         $chat_room[$selector].showEditor = true;
     }
 
+    const addField = () => {
+		assets = [...assets, {img: '', description: ''}]
+	};
+	const removeField = () => {
+		assets = assets.slice(0, assets.length-1)
+	};
+
 </script>
-<div>
-<AppBar background="0x44000000">
-    <TemplateCarousel />
-</AppBar>
-<div class="flex gap-2 input-group input-group-divider">
-	<div class="input-group-shim">Primary</div><input class="input flex-none w-14" type="color" bind:value={primaryColor} />
-	<input class="input flex-none w-36" type="text" bind:value={primaryColor} readonly tabindex="-1" />
-    <div class="input-group-shim">Secondary</div><input class="input flex-none w-14" type="color" bind:value={secondaryColor} />
-	<input class="input flex-none w-36" type="text" bind:value={secondaryColor} readonly tabindex="-1" />
-    <div class="input-group-shim">Tertiary</div><input class="input flex-none w-14" type="color" bind:value={tertiaryColor} />
-	<input class="input flex-none w-36" type="text" bind:value={tertiaryColor} readonly tabindex="-1" />
+<div class="col-span-2 text-center space-y-4">
+    {#if steps == 0}
+    <div class="space-y-8">
+        <p class="h2">Start by selecting your template</p>
+        <div class="w-9/12 mx-auto space-x-4">
+            <p class="h2">{$templates[curr_page].name}</p>
+        <Carousel bind:this={carousel} on:pageChange={ event => curr_page = event.detail }>
+            {#each $templates as {img, demo}, i}
+                    <img
+                    class="rounded-container-token hover:brightness-125"
+                    src={img}
+                    alt={img}
+                    title={img}
+                    loading="lazy"
+                />
+            {/each}
+        </Carousel>
+        <button class="btn variant-filled" on:click={() => {window.open($templates[curr_page].demo, '_blank')}}>demo</button>
+        <button class="btn variant-filled" on:click={() => {template = $templates[curr_page]; steps++;}}>choose</button>
+        </div>
+    </div>
+    {:else if steps == 1}
+    <AppBar gridColumns="grid-cols-3" slotTrail="place-content-end" background="0">
+        <svelte:fragment slot="lead"><button class="btn variant-filled" on:click={() => {steps--;}}>back</button></svelte:fragment>
+        <p class="h2">Customize your page even more!</p>
+        <svelte:fragment slot="trail"><button class="btn variant-filled" on:click={() => {steps++;}}>next</button></svelte:fragment>
+    </AppBar>
+    <div class="grid grid-cols-3">
+        <div class="grid row-span-1 input-group input-group-divider grid-cols-[auto_auto_auto]">
+            <div class="input-group-shim">Primary</div>
+            <input class="input my-auto mx-auto" type="color" bind:value={primaryColor} />
+            <input class="input-group-shim" type="text" bind:value={primaryColor} readonly tabindex="-1" />
+        </div>
+        <div class="grid row-span-1 input-group input-group-divider grid-cols-[auto_auto_auto]">
+            <div class="input-group-shim">Secondary</div>
+            <input class="input my-auto mx-auto" type="color" bind:value={secondaryColor} />
+            <input class="input-group-shim" type="text" bind:value={secondaryColor} readonly tabindex="-1" />
+        </div>
+        <div class="grid row-span-1 input-group input-group-divider grid-cols-[auto_auto_auto]">
+            <div class="input-group-shim">Tertiary</div>
+            <input class="input my-auto mx-auto" type="color" bind:value={tertiaryColor} />
+            <input class="input-group-shim" type="text" bind:value={tertiaryColor} readonly tabindex="-1" />
+        </div>
 </div>
-<br>
 <p>Name</p>
 <div class="input-group input-group-divider grid-cols-[auto_1fr_auto]">
   <div class="input-group-shim">{$user.username}/</div>
   <input type="text" placeholder="https://nuvolaris.dev/api/v1/web/gporchia/display/..." bind:value={name}/>
 </div>
-<br>
 <p>Description</p>
-<textarea class="textarea" rows="4" placeholder="Enter a description to pass to the AI to generate your UI" bind:value={description}/>
-<div class="space-y-2">Layout<br>
+<textarea class="textarea" rows="8" placeholder="Enter a description to pass to the AI to generate your UI" bind:value={description}/>
+<div class="space-y-4"><p>Layout</p>
     <div class="space-y-2">
         <label class="flex items-center space-x-2">
             <input class="checkbox" type="checkbox" bind:value={header_check}/>
@@ -146,7 +201,7 @@
             <input class="input" title="footer description" type="text" placeholder="footer description" bind:value={footer_description}/>
         </label>
     </div>
-	<div class="input-group input-group-divider flex">
+	<!-- <div class="input-group input-group-divider flex">
 		<div class="input-group-shim flex-none w-40">Number of cols</div>
 		<input title="number of cols" type="number" placeholder="n cols" bind:value={n_cols}/>
         <div class="input-group-shim">description</div>
@@ -157,15 +212,24 @@
 		<input title="number of rows" type="number" placeholder="n rows" bind:value={n_rows}/>
         <div class="input-group-shim">description</div>
 		<input class="flex-auto" title="description" type="text" placeholder="rows description" bind:value={rows_description}/>
-    </div>
+    </div> -->
 </div>
-<br>
+{:else if steps == 2}
 <p>Actions</p>
+<AppBar gridColumns="grid-cols-3" slotTrail="place-content-end" background="0">
+    <svelte:fragment slot="lead"><button class="btn variant-filled" on:click={() => {steps--;}}>back</button></svelte:fragment>
+    <p class="h2">Choose any action to use inside your page, or create a new one!</p>
+    <svelte:fragment slot="trail"><button class="btn variant-filled" on:click={() => {steps++;}}>next</button></svelte:fragment>
+</AppBar>
 <div>
-    <div class="grid grid-cols-6">
+    {#await get_actions()}
+        <p class="h5">Loading actions</p><br>
+        <ProgressBar value={undefined} />
+    {:then arr} 
+    <div class="grid grid-cols-2">
         {#each actions as action, i}
         {#if $user && $user['package'].includes(action.package)}
-        <div class="input-group input-group-divider grid-cols-[auto_1fr_auto] rounded-container-token col-span-3">
+        <div class="input-group input-group-divider grid-cols-[auto_1fr_auto]">
             <button class="input-group-shim" use:popup={{event: 'click', target: 'action-' + i, placement: 'top'}}>?</button>
             <p>{action.name}</p>
             {#if action_arr.includes(action)}
@@ -184,5 +248,47 @@
         {/if}
         {/each}
     </div>
+    {/await}
 </div>
+<button class="btn variant-filled" on:click={() => modalStore.trigger(modal)}>new</button>
+{:else if steps == 3}
+<AppBar gridColumns="grid-cols-3" slotTrail="place-content-end" background="0">
+    <svelte:fragment slot="lead"><button class="btn variant-filled" on:click={() => {steps--;}}>back</button></svelte:fragment>
+    <p class="h2">It's time to choose some assets for your site! Provide the asset link and description!</p>
+    <svelte:fragment slot="trail"><button class="btn variant-filled" on:click={() => {steps++;}}>next</button></svelte:fragment>
+</AppBar>
+{#each assets as v, i}
+<div class="grid grid-cols-[auto_4fr]">
+	<input id={i} type="text" bind:value={assets[i].img} placeholder="image url"/>
+	<input id={i} type="text" bind:value={assets[i].description} placeholder="description"/>
+</div>
+{/each}
+<button class="btn variant-filled" on:click|preventDefault={addField}>Add</button>
+<button class="btn variant-filled" on:click={removeField}>Remove</button>
+{:else if steps == 4}
+<AppBar gridColumns="grid-cols-3" slotTrail="place-content-end" background="0">
+    <svelte:fragment slot="lead"><button class="btn variant-filled" on:click={() => {steps--;}}>back</button></svelte:fragment>
+    <p class="h2">We're almost done! Here's a recap of your request:</p>
+</AppBar>
+<p>Name: {name}</p>
+<div class="grid grid-cols-[auto_auto] space-y-4">
+<p>Template:</p>
+{template.name}
+<p>Primary colour:</p><input class="input my-auto mx-auto" type="color" bind:value={primaryColor} />
+<p>Secondary colour:</p><input class="input my-auto mx-auto" type="color" bind:value={secondaryColor} />
+<p>Tertiary colour:</p><input class="input my-auto mx-auto" type="color" bind:value={tertiaryColor} />
+<p>Description:</p><p>{description}</p>
+<p>Header:</p><p>{header_description}</p>
+<p>Footer:</p><p>{footer_description}</p>
+<p>Actions:</p>
+    <div class="flex space-x-4">
+    {#each action_arr as a}<div>{a.name}</div>{/each}
+</div>
+<p>Assets:</p>
+<div class="flex space-x-4">
+    {#each assets as i}<div>{i.img}</div>{/each}
+</div>
+<button class="btn variant-filled" on:click={proceed}>confirm</button>
+</div>
+{/if}
 </div>

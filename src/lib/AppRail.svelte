@@ -7,30 +7,34 @@
 	import chart_svg from '$lib/chart.svg';
     import menu_svg from '$lib/menu.svg';
     import github_svg from '$lib/github-mark-white.svg'
+	import create_svg from '$lib/create.svg'
     import { selector } from '../store'
 
     let currentTile: number = $selector;
 </script>
 
-<AppRail width="w-16">
+<AppRail>
 	<svelte:fragment slot="lead">
 		<AppRailAnchor href="/" on:click={() => {$selector = -1}}><img alt="menu img" src={menu_svg}/></AppRailAnchor>
 	</svelte:fragment>
 	<!-- --- -->
-	<AppRailTile bind:group={currentTile} on:click={() => {$selector = 1}} name="tile-1" value={0} title="tile-1">
+	<AppRailTile bind:group={currentTile} on:click={() => {$selector = 1}} name="Lookinglass" value={0} title="Lookinglass">
 		<svelte:fragment slot="lead" ><img alt="manual img" src={manual_svg}/></svelte:fragment>
 	</AppRailTile>
-	<AppRailTile bind:group={currentTile} on:click={() => {$selector = 2}} name="tile-2" value={1} title="tile-2">
+	<AppRailTile bind:group={currentTile} on:click={() => {$selector = 2}} name="Coder" value={1} title="Coder">
 		<svelte:fragment slot="lead"><img alt="coder img" src={code_svg}/></svelte:fragment>
 	</AppRailTile>
-	<AppRailTile bind:group={currentTile} on:click={() => {$selector = 3}} name="tile-3" value={2} title="tile-3">
+	<AppRailTile bind:group={currentTile} on:click={() => {$selector = 3}} name="Admin" value={2} title="Admin">
 		<svelte:fragment slot="lead"><img alt="admin img" src={admin_svg}/></svelte:fragment>
 	</AppRailTile>
-    <AppRailTile bind:group={currentTile} on:click={() => {$selector = 4}} name="tile-4" value={3} title="tile-4">
+    <AppRailTile bind:group={currentTile} on:click={() => {$selector = 4}} name="Website" value={3} title="Website">
 		<svelte:fragment slot="lead"><img alt="website img" src={website_svg}/></svelte:fragment>
 	</AppRailTile>
-    <AppRailTile bind:group={currentTile} on:click={() => {$selector = 5}} name="tile-5" value={4} title="tile-5">
+    <AppRailTile bind:group={currentTile} on:click={() => {$selector = 5}} name="Graph" value={4} title="Graph">
 		<svelte:fragment slot="lead"><img alt="website img" src={chart_svg}/></svelte:fragment>
+	</AppRailTile>
+	<AppRailTile bind:group={currentTile} on:click={() => {$selector = 6}} name="Visual devel" value={5} title="Visual devel">
+		<svelte:fragment slot="lead"><img alt="website img" src={create_svg}/></svelte:fragment>
 	</AppRailTile>
 	<!-- --- -->
 	<svelte:fragment slot="trail">

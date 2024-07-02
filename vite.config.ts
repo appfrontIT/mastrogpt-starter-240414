@@ -7,6 +7,7 @@ export default defineConfig({
 	plugins: [sveltekit(), purgeCss()],
 	optimizeDeps: {
         exclude: ["svelte-codemirror-editor", "codemirror", "@codemirror/language-javascript" /* ... */],
+		include: ['lodash.get', 'lodash.isequal', 'lodash.clonedeep'],
     },
 	server: {
 		port: 8080,

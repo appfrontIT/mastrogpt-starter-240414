@@ -163,7 +163,7 @@
 	}
 </script>
 
-<div class="grid grid-rows-[1fr_auto] gap-1" id="chat">
+<div class="grid grid-rows-[1fr_auto] gap-1" id="chat" style="height: 87vh;">
     <section bind:this={elemChat} class="p-4 overflow-y-auto space-y-4">
         <div class="grid row-span-1 input-group input-group-divider grid-cols-[auto_1fr_auto]">
             <button class="btn-sm variant-filled input-group-shim" on:click={bots_trigger}>chatbot</button>
@@ -210,10 +210,10 @@
         {/if}
     </section>
     <!-- Prompt -->
-    <div class="input-group input-group-divider grid-cols-[auto_auto_1fr_auto_auto] rounded-container-token">
-        <button class="input-group-shim" on:click={new_chat}>+</button>
+    <div class="grid row-span-1 input-group input-group-divider grid-cols-[auto_auto_1fr_auto_auto]">
+        <button class="btn-sm input-group-shim" on:click={new_chat}>+</button>
         <input class="hidden" id="file-to-upload" type="file" accept=".png,.jpg" multiple bind:this={filesInput} on:change={attach_file}/>
-        <button class="input-group-shim" on:click={ () => filesInput.click() }><img alt="clip img" src={clip_svg} width="20" height="20"/></button>
+        <button class="btn-sm input-group-shim" on:click={ () => filesInput.click() }><img alt="clip img" src={clip_svg} width="20" height="20"/></button>
         <textarea
             bind:value={currentMessage}
             class="bg-transparent border-0 ring-0"

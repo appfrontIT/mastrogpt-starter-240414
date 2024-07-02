@@ -1,37 +1,22 @@
 <script lang="ts">
     import { onMount } from "svelte";
+	import Carousel from 'svelte-carousel'
+	import { templates } from "../store";
 
-    const modules = import.meta.glob("./templates/*", { eager: true });
-    const pages = Object.keys(modules).map((key) => modules[key].default);
-
-    let elemCarousel: HTMLDivElement;
+	let carousel; // for calling methods of the carousel instance
+	let curr_page = 0;
 
     onMount(() => {
     })
 
-    function multiColumnLeft(): void {
-	let x = elemCarousel.scrollWidth;
-	if (elemCarousel.scrollLeft !== 0) x = elemCarousel.scrollLeft - elemCarousel.clientWidth;
-	elemCarousel.scroll(x, 0);
-}
-
-function multiColumnRight(): void {
-	let x = 0;
-	// -1 is used because different browsers use different methods to round scrollWidth pixels.
-	if (elemCarousel.scrollLeft < elemCarousel.scrollWidth - elemCarousel.clientWidth - 1) x = elemCarousel.scrollLeft + elemCarousel.clientWidth;
-	elemCarousel.scroll(x, 0);
-}
 </script>
-
-<div class="grid grid-cols-[auto_1fr_auto] gap-4 items-center">
-	
-	<button type="button" class="btn-icon variant-ringed" on:click={multiColumnLeft}>
-		<i class="fa-solid fa-arrow-left" />
-	</button>
-	
-	<div bind:this={elemCarousel} class="snap-x snap-mandatory scroll-smooth flex gap-2 pb-2 overflow-x-auto">
-        
-        {#each pages as img, i}
+<div class="w-9/12 mx-auto space-y-4 space-x-4">
+	<p class="h2">{$templates[curr_page].name}</p>
+<Carousel
+bind:this={carousel}
+on:pageChange={ event => curr_page = event.detail }
+>
+	{#each $templates as {img, demo}, i}
             <img
             class="rounded-container-token hover:brightness-125"
             src={img}
@@ -40,9 +25,7 @@ function multiColumnRight(): void {
             loading="lazy"
         />
 		{/each}
-	</div>
-	
-	<button type="button" class="btn-icon variant-ringed" on:click={multiColumnRight}>
-		<i class="fa-solid fa-arrow-right" />
-	</button>
+</Carousel>
+<button class="btn variant-filled" on:click={() => {window.open($templates[curr_page].demo, '_blank')}}>demo</button>
+<button class="btn variant-filled">choose</button>
 </div>

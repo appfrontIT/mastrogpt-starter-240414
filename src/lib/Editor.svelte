@@ -328,30 +328,31 @@
     }
 
 </script>
+<div class="grid grid-rows-[1fr_auto]">
 <div class="grid grid-cols-12 gap-4 space-y-1" style="height: 5vh;">
-    <input class="input col-span-4" title="Action name" type="text" placeholder="action name" bind:value={$chat_room[$selector].editor.name}>
-    {#if $chat_room[$selector].editor.language != 'html'}
-    <input class="input col-span-4" title="Description" type="text" placeholder="description" bind:value={$chat_room[$selector].editor.description}/>
-    <select class="select col-span-2" bind:value={$chat_room[$selector].editor.package}>
-        <option disabled selected value>Package</option>
-        {#each $user.package as pack}
-            <option value={pack}>{pack}</option>
-        {/each}
-    </select>
-    {/if}
-    <select class="select col-span-2" bind:value={$chat_room[$selector].editor.language}>
-        <option disabled selected value>Language</option>
-        {#each languages as lang}
-        <option value={lang}>{lang}</option>
-        {/each}
-    </select>
+        <input class="input col-span-4" title="Action name" type="text" placeholder="action name" bind:value={$chat_room[$selector].editor.name}>
+        {#if $chat_room[$selector].editor.language != 'html'}
+        <input class="input col-span-4" title="Description" type="text" placeholder="description" bind:value={$chat_room[$selector].editor.description}/>
+        <select class="select col-span-2" bind:value={$chat_room[$selector].editor.package}>
+            <option disabled selected value>Package</option>
+            {#each $user.package as pack}
+                <option value={pack}>{pack}</option>
+            {/each}
+        </select>
+        {/if}
+        <select class="select col-span-2" bind:value={$chat_room[$selector].editor.language}>
+            <option disabled selected value>Language</option>
+            {#each languages as lang}
+            <option value={lang}>{lang}</option>
+            {/each}
+        </select>
 </div>
-<div class="grid h-full w-full grid-rows-[1fr_auto] grid-cols-11" style="height: 80vh;">
+    <div class="grid h-full grid-rows-[1fr_auto] grid-cols-12" style="height: 80vh;">
     <CodeMirror
         bind:value={$chat_room[$selector].editor.function}
         lang={languages_func.get($chat_room[$selector].editor.language)}
         theme={oneDark}
-        class="col-span-10 max-h-[80vh] overflow-y-auto"
+        class="col-span-11 max-h-[80vh] overflow-y-auto"
         styles={{
             "&": {
                 maxWidth: "100%",
@@ -359,7 +360,7 @@
             },
         }}
         />
-        <div class="grid w-full grid-rows-10 space-y-2" style="height: 80vh;">
+        <div class="grid grid-rows-10 space-y-2" style="height: 80vh;">
             <button class="btn [&>*]:pointer-events-none" on:click={fullscreen} use:popup={popupFullscreen}><img src={fullscreen_icon} alt="expand to fullscreen"></button>
             <div class="card p-4 variant-filled-secondary" data-popup="popupFullscreen">
                 <p>Questo bottone imposta l'editor a schermo interno</p>
@@ -482,4 +483,5 @@
                 </p>
             </div>
         </div>
+    </div>
 </div>

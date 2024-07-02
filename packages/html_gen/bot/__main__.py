@@ -19,18 +19,24 @@ def ask(
     messages,
     model: str = MODEL,
 ) -> str:
-    response = AI.chat.completions.create(
+    response = config.AI.chat.completions.create(
         model=model,
         messages=messages,
-        temperature=0.2
+        tools=bot_functions.tools,
+        tool_choice="auto",
+        temperature=0.1,
+        top_p=0.1
     )
+    if response.choices[0].finish_reason == "tool_calls":
+        return bot_functions.tools_func(messages, response)
     return response.choices[0].message.content
+
 
 TUNED_MODEL = None
 
 def main(args):
-    global AI
-    AI = OpenAI(api_key=args['OPENAI_API_KEY'])
+    print(args)
+    config.AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     
     input = args.get("input", "")
     # user = args.get("user", None)

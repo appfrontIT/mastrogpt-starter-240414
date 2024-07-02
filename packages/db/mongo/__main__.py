@@ -28,6 +28,17 @@ def csv_to_json(filename, header=None):
         ret.append(obj)
     return ret
 
+def aggregate(collection: Collection, pipeline: None):
+    if not pipeline:
+        return {"statusCode": 400, "body": "pipeline missing"}
+    data = collection.aggregate(pipeline=pipeline)
+    ret = []
+    for x in data:
+        if '_id' in x:
+            x['_id'] = str(x['_id'])
+        ret.append(x)
+    return {"statusCode": 200, "body": ret}
+
 def update(collection: Collection, data, id = False):
     if not id or not data:
         return {"statusCode": 400, "body": "error: parameter 'id' missing or 'data' missing"}
@@ -159,4 +170,6 @@ def main(args):
         return delete(db_coll, args)
     elif op == 'update' and method == 'put':
         return update(db_coll, args.get('data', None), args)
+    elif op == 'aggregate' and method == 'post':
+        return aggregate(db_coll, args.get('pipeline', None))
     return {"statusCode": 400}

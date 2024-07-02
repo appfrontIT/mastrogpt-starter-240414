@@ -56,7 +56,7 @@ def generate_graph(name, request, collection = '', text = '', url = ''):
         else:
             return {"collection provided does not exists"}
         data = db_coll.find({}, {'_id': 0}).limit(10)
-        messages.extend([{'role': 'user', 'content': f"""You must call this endpoint to fetch data from database, adding the fields you want to return: 'https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/find_many?fields=' + encodeURIComponent(JSON.stringify(<fields to return>)).
+        messages.extend([{'role': 'user', 'content': f"""You must call this endpoint to fetch data from database, making the aggregate and call this API: ('https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/aggregate, json={{'pipeline': [...]}}).
                         Pay attention to the field you want to return because the name of the key MUST BE EXACTLY EQUAL, so you must be carefull with lowercase or uppercase letters.
                         This endpoint require authorization, here's a full example on how to get the token:
                             - let cookie = document.cookie; if (!cookie) return window.location.assign('/login');

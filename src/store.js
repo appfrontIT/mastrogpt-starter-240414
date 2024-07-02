@@ -148,3 +148,116 @@ export function set_dark_mode() {
     const e=document.documentElement.classList,t=localStorage.getItem("modeUserPrefers")==="false",n=!("modeUserPrefers"in localStorage),r=window.matchMedia("(prefers-color-scheme: dark)").matches;
     t||n&&r?e.add("dark"):e.remove("dark")
 }
+
+export const templates = writable([
+    {
+        "name": "Band",
+        "img": "https://www.w3schools.com/w3css/img_temp_band.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_band.htm",
+    },
+    {
+        "name": "Blog",
+        "img": "https://www.w3schools.com/w3css/img_temp_blog.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_blog.htm",
+    },
+    {
+        "name": "Gourmet Catering",
+        "img": "https://www.w3schools.com/w3css/img_temp_gourmet_catering.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_gourmet_catering.htm",
+    },
+    {
+        "name": "Food Blog",
+        "img": "https://www.w3schools.com/w3css/img_temp_food_blog.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_food_blog.htm",
+    },
+    {
+        "name": "Fashion blog",
+        "img": "https://www.w3schools.com/w3css/img_temp_fashion_blog.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_fashion_blog.htm",
+    },
+    {
+        "name": "CV",
+        "img": "https://www.w3schools.com/w3css/img_temp_cv.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_cv.htm",
+    },
+    {
+        "name": "Comingsoon",
+        "img": "https://www.w3schools.com/w3css/img_temp_comingsoon.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_coming_soon.htm",
+    },
+    {
+        "name": "Photo",
+        "img": "https://www.w3schools.com/w3css/img_temp_photo.JPG",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_photo.htm",
+    },
+    {
+        "name": "Interior Design",
+        "img": "https://www.w3schools.com/w3css/img_temp_interior_design.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_interior_design.htm",
+    },
+    {
+        "name": "Startup",
+        "img": "https://www.w3schools.com/w3css/img_temp_startup.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_startup.htm",
+    },
+    {
+        "name": "App Launch",
+        "img": "https://www.w3schools.com/w3css/img_temp_app_launch.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_app_launch.htm",
+    },
+    {
+        "name": "Marketing",
+        "img": "https://www.w3schools.com/w3css/img_temp_marketing.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_marketing.htm",
+    },
+    {
+        "name": "Website",
+        "img": "https://www.w3schools.com/w3css/img_temp_website.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_website.htm",
+    },
+    {
+        "name": "Art",
+        "img": "https://www.w3schools.com/w3css/img_temp_art.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_streetart.htm",
+    },
+    {
+        "name": "Webpage",
+        "img": "https://www.w3schools.com/w3css/img_temp_webpage.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_webpage.htm",
+    },
+    {
+        "name": "Social",
+        "img": "https://www.w3schools.com/w3css/img_temp_social.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_social.htm",
+    },
+    {
+        "name": "Analytics",
+        "img": "https://www.w3schools.com/w3css/img_temp_analytics.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_analytics.htm",
+    },
+    {
+        "name": "Apartment Rental",
+        "img": "https://www.w3schools.com/w3css/img_temp_apartment_rental.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_apartment_rental.htm",
+    },
+    {
+        "name": "Hotel",
+        "img": "https://www.w3schools.com/w3css/img_temp_hotel.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_hotel.htm",
+    },
+    {
+        "name": "Travel",
+        "img": "https://www.w3schools.com/w3css/img_temp_travel2.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_travel2.htm",
+    },
+    {
+        "name": "50/50",
+        "img": "https://www.w3schools.com/w3css/img_temp_fifty.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_fifty.htm",
+    },
+    {
+        "name": "Mail",
+        "img": "https://www.w3schools.com/w3css/img_temp_mail.jpg",
+        "demo": "https://www.w3schools.com/w3css/tryw3css_templates_mail.htm",
+    },
+])
