@@ -32,6 +32,7 @@
 import appfront_logo from '$lib/appfront_logo.png'
 import { onMount } from 'svelte';
 import { user } from '../../store';
+
 let username: string;
 let password: string;
 

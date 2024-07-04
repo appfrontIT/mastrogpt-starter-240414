@@ -30,7 +30,7 @@
         {#each pages as page}
             {#if page.endsWith('.html')}
                 <li class="flex space-x-2">
-                    <a class="flex-auto" href={'https://gporchia.nuvolaris.dev/' + user.username + '/' + page} target="_blank">{page}</a>
+                    <a class="flex-auto" href={'walkiria.cloud/' + user.username + '/' + page} target="_blank">{page}</a>
                     <button class="btn variant-filled" on:click={async () => {
                         const response = await fetch('/api/my/db/minio/gporchia-web/delete?name=' + user.username + '/' + page, {
                             method: 'DELETE',

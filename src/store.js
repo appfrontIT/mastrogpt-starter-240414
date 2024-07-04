@@ -261,3 +261,6 @@ export const templates = writable([
         "demo": "https://www.w3schools.com/w3css/tryw3css_templates_mail.htm",
     },
 ])
+
+export const edges = writable([]);
+export const nodes = writable([]);

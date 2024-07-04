@@ -80,7 +80,7 @@ def make_quotation_birth(data):
     if presigned.status_code == 200:
         upload = requests.put(presigned.text, data=file.content)
         if upload.ok:
-            config.frame = f"https://gporchia.nuvolaris.dev/" + f"quotations/{quot_obj['data']['id']}"
+            config.frame = f"https://walkiria.cloud/" + f"quotations/{quot_obj['data']['id']}"
     return True
 
 def quotation_by_cf(plate, cf):

@@ -151,9 +151,9 @@
                 });
                 if (upload_r.ok) {
                     const t: ToastSettings = {
-                        message: 'La tua pagina é stata caricata con successo! Per accederla visitare: ' + `https://gporchia.nuvolaris.dev/${$user.username}/${file.name}`,
+                        message: 'La tua pagina é stata caricata con successo! Per accederla visitare: ' + `https://walkiria.cloud/${$user.username}/${file.name}`,
                         autohide: false,
-                        action: { label: 'Visit', response: () => window.open(`https://gporchia.nuvolaris.dev/${$user.username}/${file.name}`)}
+                        action: { label: 'Visit', response: () => window.open(`https://walkiria.cloud/${$user.username}/${file.name}`)}
                     }
                     toastStore.trigger(t);
                 }
