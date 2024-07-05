@@ -26,13 +26,13 @@ cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
 At this point, you can reinstall the others VMs adding the you public ssh to them.
 Another way, is to manually authorize this key from inside each server. While still sshed in the bastion, do these steps:
     - log into each server using ssh root@<server ip>. For the 2 VMs without the ipv4, using the -6 flag
-    ```
-    ssh -6 root@<server ip>
-    ```
+```
+ssh -6 root@<server ip>
+```
     - copy the key inside the authorized_keys, in the .ssh folder
-    ```
-    cat >> ~/.ssh/authorized_keys
-    ```
+```
+cat >> ~/.ssh/authorized_keys
+```
     and paste your key here. Logout and go to next VM.
     <!-- - you can also use this command to ease the process:
     ```
@@ -44,25 +44,25 @@ Another way, is to manually authorize this key from inside each server. While st
 
 Now we need to set up the environment to install nuvolaris cluster. Inside the bastion launch the following commands:
     - update the system
-    ``` 
-    apt-get update
-    ```
+``` 
+apt-get update
+```
     - install git and snapd
-    ```
-    apt-get install git snapd
-    ```
+```
+apt-get install git snapd
+```
     - clone grinder from nuvolaris
-    ```
-    git clone git@github.com:nuvolaris/grinder
-    ```
+```
+git clone git@github.com:nuvolaris/grinder
+```
     - cd into grinder
-    ```
-    cd grinder/
-    ```
+```
+cd grinder/
+```
     - update submodule
-    ```
-    git submodule update --init --force --remote
-    ```
+```
+git submodule update --init --force --remote
+```
 
 ## Step 3
 
@@ -73,9 +73,9 @@ bash setup.sh
 ```
 keep in mind that many of the following steps will take a LOT of time, so be patient. This script will setup the environment for each VM.
     - create the .env from the .env.dist
-    ```
-    cp .env.dist .env
-    ```
+```
+cp .env.dist .env
+```
     - delete everything except: DOCKER_HUB_USER, DOCKER_HUB_TOKEN, SLACK_API_URL, SLACK_CHANNEL
     - now you need to fill the .env with your data, especially DOCKER_HUB_USER, DOCKER_HUB_TOKEN
     - if you want to send notification to your slack, you must build an app in Slack and put the link in 'SLACK_API_URL' and the channel in 'SLACK_CHANNEL'
@@ -89,35 +89,35 @@ keep in mind that many of the following steps will take a LOT of time, so be pat
         - change REMOTE_IPV6_1 with the ipv6 of the bastion without the subnet mask
         - remove the last 5 lines (GATEWAY_WG, SERVER_WG_1, SERVER_WG_2, SERVER_WG_3 REMOTE_WG_1)
     - now reload the ENV by closing and reoping the terminal or launching:
-    ```
-    source ~/.bashrc
-    ```
+```
+source ~/.bashrc
+```
     - inside grinder folder, launch
-    ```
-    task config C=appfront
-    ```
+```
+task config C=appfront
+```
     - at the of the execution, you will find the 5 ENV vars we delete before. Copy and paste them inside the config/appfront.env
     - inside grinder folder, launch:
-    ```
-    task setup:wireguard
-    ```
+```
+task setup:wireguard
+```
     this will take a REALLY LONG time.
     - when it finished, launch the following command:
-    ```
-    task status:vms
-    ```
+```
+task status:vms
+```
     you will see that the disk is not partitioned. To correctly use 'rook' we need a dedicated partion. Launch the following command to partition all the VMs:
-    ```
-    task setup:repartition
-    ```
+```
+task setup:repartition
+```
     - setup the cluster:
-    ```
-    task setup:cluster
-    ```
+```
+task setup:cluster
+```
     - check the cluster status:
-    ```
-    task status:cluster
-    ```
+```
+task status:cluster
+```
     if everything is fine, you should see 3 nodes
 
 ## Step 4
