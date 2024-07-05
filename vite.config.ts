@@ -11,9 +11,10 @@ export default defineConfig({
     },
 	server: {
 		port: 8080,
+		host: true,
 		proxy: {
 			"/api/my": {
-				target: "https://walkiria.cloud",
+				target: process.env.NUVDEV_HOST,
 				changeOrigin: true
 			}
 		}
