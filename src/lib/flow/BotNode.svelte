@@ -1,35 +1,72 @@
 <script lang="ts">
-    import { Handle, Position, useHandleConnections, type NodeProps } from '@xyflow/svelte';
-    import { nodes, edges } from '../../store';
+    import { Handle, Position, useNodesData, useHandleConnections, type NodeProps, useSvelteFlow } from '@xyflow/svelte';
 
     type $$Props = NodeProps;
 
     export let data: $$Props['data'];
+    export let temp: $$Props['data']['temp'] = 0;
     export let id: $$Props['id'];
     export let isConnectable: $$Props['isConnectable'];
 
-    const connections = useHandleConnections({ nodeId: id, type: 'target' });
+    const prompt_connections = useHandleConnections({
+        nodeId: id,
+        type: 'target',
+        id: 'prompt_handle'
+    });
+    const query_connections = useHandleConnections({
+        nodeId: id,
+        type: 'target',
+        id: 'query_handle'
+    });
 
-    // $: isConnectable = $connections.length === 0;
+    const { updateNodeData } = useSvelteFlow();
 
-    // BUTTON ON TOP TO HIDE THE REST OF THE CARD
+    $: promptNodesData = useNodesData($prompt_connections[0]?.source);
+    $: queryNodesData = useNodesData($query_connections[0]?.source);
+
+    $: data.prompt = $promptNodesData?.data?.text;
+    $: data.query = $queryNodesData?.data?.text;
+
+    $$restProps;
 </script>
-
-<Handle type="target" position={Position.Left} style="background: #555;" {isConnectable} />
-<Handle type="target" position={Position.Left} style="background: #555; bottom: 45px; top: auto;" {isConnectable} />
-<div class="container space-y-4">
+<Handle type="target" position={Position.Left} id="query_handle" style="top: 285px;" {isConnectable} class="handle"/>
+<Handle type="target" position={Position.Left} id="prompt_handle" style="top: 175px;" {isConnectable} class="handle"/>
+<Handle type="target" position={Position.Left} id="tools_handle" style="top: 100px;" {isConnectable} class="handle"/>
+<div class="container">
 <div class="h4 text-orange-500">AI node</div>
 <hr />
 <div id="show">
-<label class="label mx-3 rounded-sm text-left">
-	<span>Model:</span>
-	<select class="select variant-ringed border-1 rounded-sm">
-		<option value="1">gpt-3.5-turbo</option>
-		<option value="2">gpt-4o</option>
-	</select>
-</label>
-<button class="nodrag variant-ringed w-full">Prompt</button>
-<button class="nodrag variant-ringed w-full" on:click={() => {
+    <span>Model</span>
+    <label class="nodrag label rounded-sm text-left">
+        <select class="select variant-ringed border-1 rounded-sm text-center text-xs">
+            <option value="1">gpt-3.5-turbo</option>
+            <option value="2">gpt-4o</option>
+        </select>
+    </label>
+    <span>Tools</span><hr />
+    <span>Temperature {temp / 10}</span>
+    <input type="range" id="temperature" class="input rounded-sm text-xs nodrag" max="20" min="0" bind:value={temp}/>
+    <hr />
+<p>prompt</p>
+<hr />
+    <textarea
+    id="prompt"
+    rows="4"
+    bind:value={data.prompt}
+    on:input={(evt) => updateNodeData(id, { text: evt.currentTarget.value })}
+    placeholder="prompt area"
+    class="nodrag textarea rounded-sm text-xs"
+    />
+<p>query</p>
+<hr />
+    <textarea
+    rows="4"
+    bind:value={data.query}
+    on:input={(evt) => updateNodeData(id, { text: evt.currentTarget.value })}
+    placeholder="prompt area"
+    class="nodrag textarea rounded-sm text-xs"
+    />
+<!-- <button class="nodrag variant-ringed w-full" on:click={() => {
     for (let i = 0; i < $nodes.length; i++) {
         console.log($nodes[i])
         if ($nodes[i].id === id) {
@@ -38,28 +75,26 @@
             $nodes = $nodes
         }
     }
-}}>delete</button>
+}}>delete</button> -->
+<button class="nodrag w-full text-right px-2">></button>
 </div>
 </div>
-    <Handle
+<Handle
     type="source"
     position={Position.Right}
-    id="a"
-    style="background: orange; top: 20px; border: 50px;"
+    id="out"
+    style="bottom: 5px; top: auto;"
     {isConnectable}
-    />
+    class="handle"
+/>
 
 <style>
     :global(.svelte-flow__node-bot) {
+        width: 200px;
         font-size: 12px;
         background: #000000;
         border: 1px solid #555;
         border-radius: 5px;
         text-align: center;
-    }
-    :global(.svelte-flow__node.selected) {
-        outline: none;
-        border-color: #ab02bb;
-        box-shadow: 0 0 8px #ab02bb;   
     }
 </style>

@@ -17,9 +17,17 @@
     import Sidebar from './Sidebar.svelte';
     import BotNode from './BotNode.svelte';
     import { nodes, edges } from '../../store'
+	import TextNode from './TextNode.svelte';
+    import AddNode from './AddNode.svelte';
+    import RetNode from './RetNode.svelte';
+    import ResponseNode from './ResponseNode.svelte';
 
     const nodeTypes: NodeTypes = {
-      bot: BotNode
+        bot: BotNode,
+        text: TextNode,
+        op: AddNode,
+        return: RetNode,
+        response: ResponseNode,
     };
 
     const { screenToFlowPosition } = useSvelteFlow();
@@ -44,9 +52,9 @@
                 id: `${Math.random()}`,
                 type,
                 position,
-                data: { label: `${type} node` },
+                data: { label: `${type} node`, text: '', prompt: '', query: ''},
                 origin: [0.5, 0.0],
-                width: 200,
+                
             } satisfies Node;
             $nodes.push(newNode);
             $nodes = $nodes;
@@ -71,15 +79,27 @@
         <Sidebar />
 </div>
 </main>
-<svelte:window on:keydown|preventDefault={(e) => {
+<!-- <svelte:window on:keydown|preventDefault={(e) => {
   if (e.key === 'Delete' && selectedNode != null) {
     const index = $nodes.indexOf(selectedNode);
     $nodes.splice(index, 1);
     $nodes = $nodes;
   }
-}} />
+}} /> -->
 <style>
     main {
     height: 87vh;
     }
+        :global(.svelte-flow__node.selected) {
+        outline: none;
+        border-color: #ab02bb;
+        box-shadow: 0 0 8px #ab02bb;   
+    }
+    :global(.svelte-flow .svelte-flow__handle) {
+        border: 50px;
+        background-color: orange;
+    }
+    /* :global(.svelte-flow .svelte-flow__handle-right) {
+        right: -10px;
+    } */
 </style>

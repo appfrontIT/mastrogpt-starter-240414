@@ -45,7 +45,6 @@
 			}
 		}
 		$logged = true;
-		console.log($selector)
 	});
 
 	function lookinglass() { $selector = 1; drawerStore.close();}
