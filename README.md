@@ -20,7 +20,7 @@ The public key (the one you may share) is located at /home/local-user/.ssh/id_rs
 
 copy you id_rsa.pub inside the authorized_keys:
 ```
-cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 ```
 
 At this point, you can reinstall the others VMs adding the you public ssh to them.
