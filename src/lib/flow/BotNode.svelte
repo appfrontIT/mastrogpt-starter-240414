@@ -33,7 +33,7 @@
 <Handle type="target" position={Position.Left} id="prompt_handle" style="top: 175px;" {isConnectable} class="handle"/>
 <Handle type="target" position={Position.Left} id="tools_handle" style="top: 100px;" {isConnectable} class="handle"/>
 <div class="container">
-<div class="h4 text-orange-500">AI node</div>
+<div class="h4 text-violet-500">AI node</div>
 <hr />
 <div id="show">
     <span>Model</span>
@@ -76,17 +76,14 @@
         }
     }
 }}>delete</button> -->
-<button class="nodrag w-full text-right px-2">></button>
+<div class="grid grid-cols-2">
+    <button class="nodrag w-full text-left px-2">&#60;</button>
+    <button class="nodrag w-full text-right px-2">	&#62;</button>
+    <Handle type="source" position={Position.Right} id="out" style="bottom: 5px; top: auto; background-color: rgb(139 92 246);" {isConnectable} class="handle"/>
+    <Handle type="target" position={Position.Left} id="in" style="bottom: 5px; top: auto; background-color: rgb(139 92 246);" {isConnectable} class="handle"/>
 </div>
 </div>
-<Handle
-    type="source"
-    position={Position.Right}
-    id="out"
-    style="bottom: 5px; top: auto;"
-    {isConnectable}
-    class="handle"
-/>
+</div>
 
 <style>
     :global(.svelte-flow__node-bot) {

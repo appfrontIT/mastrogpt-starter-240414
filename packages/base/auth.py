@@ -19,6 +19,7 @@ SECRET = None
 COLLECTION = None
 
 def get_user(cookie):
+    print(cookie)
     split_cookie = cookie.split('=')
     user = COLLECTION.find_one({'cookie': split_cookie[1]})
     if user:

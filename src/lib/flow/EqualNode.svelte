@@ -28,9 +28,9 @@
     $$restProps;
 </script>
 <Handle type="target" position={Position.Left} id="left-a" style="top: 10px;" {isConnectable} class="handle"/>
-<Handle type="target" position={Position.Left} id="left-b" style="top: 30px;" {isConnectable} class="handle"/>
+<Handle type="target" position={Position.Left} id="left-b" style="top: 20px;" {isConnectable} class="handle"/>
 <div class="container">
-    <p class="h4 text-orange-500 py-2">==?</p>
+    <p class="text-orange-500">==</p>
 </div>
 <Handle
     type="source"
@@ -41,8 +41,8 @@
 />
 <style>
     :global(.svelte-flow__node-equal) {
-        width: 50px;
-        height: 50px;
+        width: 30px;
+        height: 30px;
         font-size: 12px;
         background: #000000;
         border: 1px solid #555;

@@ -15,17 +15,8 @@
 </script>
 <Handle type="target" position={Position.Left} id="left-a" style="top: 15px;" {isConnectable} class="handle"/>
 <div class="container">
-<div class="text-orange-500">Text Node</div>
-<hr />
-<div>
-    <textarea
-    rows="4"
-    bind:value={data.text}
-    on:input={(evt) => updateNodeData(id, { text: evt.currentTarget.value })}
-    placeholder="text area"
-    class="nodrag textarea rounded-sm text-xs"
-    />
-</div>
+<p class="text-orange-500">num</p>
+<input type="number" style="font-size:x-small" class="input rounded-sm text-xs" placeholder="0" bind:value={data.number}/>
 </div>
 <Handle
     type="source"
@@ -36,12 +27,17 @@
     class="handle"
 />
 <style>
-    :global(.svelte-flow__node-text) {
-        width: 100px;
+    :global(.svelte-flow__node-number) {
+        width: 50px;
         font-size: 12px;
         background: #000000;
         border: 1px solid #555;
         border-radius: 5px;
         text-align: center;
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
     }
 </style>

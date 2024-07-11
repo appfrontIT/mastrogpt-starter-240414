@@ -17,7 +17,7 @@
 <Handle type="target" position={Position.Left} id="headers" style="top: 100px;" {isConnectable} class="handle"/>
 <Handle type="target" position={Position.Left} id="body" style="bottom: 30px; top: auto;" {isConnectable} class="handle"/>
 <div class="container">
-<div class="h4 text-orange-500">Response</div>
+<div class="h4 text-violet-500">Return</div>
 <hr />
 <span class="label">status</span>
 <select class="select rounded-sm text-xs">
@@ -38,25 +38,13 @@
     if (headers.length == 1) { return ;}
     headers = headers.slice(0, headers.length - 1);
 }}>Remove</button><br><hr />
-        <span>body</span>
-        <hr />
-    <!-- <textarea
-    rows="4"
-    bind:value={data.text}
-    on:input={(evt) => updateNodeData(id, { text: evt.currentTarget.value })}
-    placeholder="text area"
-    class="nodrag textarea rounded-sm text-xs"
-    /> -->
-<button class="nodrag w-full text-right px-2">></button>
+<span>body</span>
+<hr />
+<div class="grid grid-cols-2">
+    <button class="nodrag w-full text-left px-2">&#60;</button>
+    <Handle type="target" position={Position.Left} id="in" style="bottom: 5px; top: auto; background-color: rgb(139 92 246);" {isConnectable} class="handle"/>
 </div>
-<Handle
-    type="source"
-    position={Position.Right}
-    id="out"
-    style="bottom: 5px; top: auto;"
-    {isConnectable}
-    class="handle"
-/>
+</div>
 <style>
     :global(.svelte-flow__node-response) {
         width: 200px;

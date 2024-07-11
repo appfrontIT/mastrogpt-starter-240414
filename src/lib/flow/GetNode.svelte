@@ -6,6 +6,7 @@
     export let data: $$Props['data'];
     export let id: $$Props['id'];
     export let isConnectable: $$Props['isConnectable'];
+    let input: string;
     // $: isConnectable = $connections.length === 0;
 
     // BUTTON ON TOP TO HIDE THE REST OF THE CARD
@@ -15,17 +16,8 @@
 </script>
 <Handle type="target" position={Position.Left} id="left-a" style="top: 15px;" {isConnectable} class="handle"/>
 <div class="container">
-<div class="text-orange-500">Text Node</div>
-<hr />
-<div>
-    <textarea
-    rows="4"
-    bind:value={data.text}
-    on:input={(evt) => updateNodeData(id, { text: evt.currentTarget.value })}
-    placeholder="text area"
-    class="nodrag textarea rounded-sm text-xs"
-    />
-</div>
+<div class="text-orange-500">get</div>
+<input class="input rounded-sm text-xs" type="text" bind:value={input} />
 </div>
 <Handle
     type="source"
@@ -36,7 +28,7 @@
     class="handle"
 />
 <style>
-    :global(.svelte-flow__node-text) {
+    :global(.svelte-flow__node-get) {
         width: 100px;
         font-size: 12px;
         background: #000000;

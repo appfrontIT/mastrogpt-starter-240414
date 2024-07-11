@@ -19,23 +19,29 @@
     import { nodes, edges } from '../../store'
 	import TextNode from './TextNode.svelte';
     import AddNode from './AddNode.svelte';
-    import RetNode from './RetNode.svelte';
     import ResponseNode from './ResponseNode.svelte';
     import MapNode from './MapNode.svelte';
     import RequestNode from './RequestNode.svelte';
     import EqualNode from "./EqualNode.svelte";
-    import NotEqualNode from "./NotEqualNode.svelte";
+    import GetResponse from "./GetResponse.svelte";
+    import IfNode from "./IfNode.svelte";
+    import NumberNode from './NumberNode.svelte';
+    import StartNode from './StartNode.svelte';
+    import GetNode from './GetNode.svelte';
 
     const nodeTypes: NodeTypes = {
         bot: BotNode,
         text: TextNode,
         op: AddNode,
-        return: RetNode,
         response: ResponseNode,
         request: RequestNode,
         map: MapNode,
         equal: EqualNode,
-        notEqual: NotEqualNode
+        getResponse: GetResponse,
+        if: IfNode,
+        number: NumberNode,
+        start: StartNode,
+        get: GetNode
     };
 
     const { screenToFlowPosition } = useSvelteFlow();

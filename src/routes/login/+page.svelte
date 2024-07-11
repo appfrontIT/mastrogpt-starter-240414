@@ -63,7 +63,11 @@ onMount(async () => {
                 credentials: 'include'
             })
       if (res.ok) { const obj = await res.json(); $user = obj; return window.location.assign('/'); }
-      else { throw new Error('failed to get user') };
+      else {
+        document.cookie = 'appfront-sess-cookie=;expires=Thu, 01 Jan 1970 00:00:01 GMT';
+        sessionStorage.clear();
+        throw new Error('failed to get user');
+      };
     }
   }
 })
