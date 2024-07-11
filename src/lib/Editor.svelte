@@ -1,5 +1,5 @@
 <script lang="ts">
-    import fullscreen_icon from '$lib/fullscreen.svg'
+    import fullscreen_icon from '$lib/assets/fullscreen.svg'
     import CodeMirror from "svelte-codemirror-editor";
     import { javascript } from "@codemirror/lang-javascript";
     import { python } from "@codemirror/lang-python";

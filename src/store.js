@@ -265,5 +265,5 @@ export const templates = writable([
 export const edges = writable([]);
 export const nodes = writable([]);
 export const status = writable([
-    200, 2001, 204, 400, 401, 403, 404, 500
+    200, 201, 204, 400, 401, 403, 404, 500
 ])

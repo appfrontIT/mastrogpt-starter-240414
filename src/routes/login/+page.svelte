@@ -29,7 +29,7 @@
 </div>
 
 <script lang="ts">
-import appfront_logo from '$lib/appfront_logo.png'
+import appfront_logo from '$lib/assets/appfront_logo.png'
 import { onMount } from 'svelte';
 import { user } from '../../store';
 

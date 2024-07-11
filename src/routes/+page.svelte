@@ -1,23 +1,21 @@
 <script lang="ts">
-	import SvelteMarkdown from 'svelte-markdown';
-	import hari from '$lib/hari.png';
-	import manual_svg from '$lib/manual.svg';
-	import code_svg from '$lib/coding.svg';
-	import admin_svg from '$lib/admin.svg';
+	import manual_svg from '$lib/assets/manual.svg';
+	import code_svg from '$lib/assets/coding.svg';
+	import admin_svg from '$lib/assets/admin.svg';
 	import Editor from '$lib/Editor.svelte';
 	import Admin from '$lib/Admin.svelte';
 	import Website from '$lib/Website.svelte';
-	import website_svg from '$lib/website.svg';
-	import chart_svg from '$lib/chart.svg';
+	import website_svg from '$lib/assets/website.svg';
+	import chart_svg from '$lib/assets/chart.svg';
 	import { onMount, onDestroy } from 'svelte';
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
 	import { Avatar, AppBar, Drawer, ProgressBar, ProgressRadial, popup, Toast, } from '@skeletonlabs/skeleton';
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
 	import { chat_room, selector, user, editor, logged } from '../store';
 	import Chart from '$lib/Chart.svelte';
-	import AppRail from '../lib/AppRail.svelte';
-	import Chat from '../lib/Chat.svelte';
-	import Flow from '../lib/flow/Flow.svelte';
+	import AppRail from '$lib/AppRail.svelte';
+	import Chat from '$lib/Chat.svelte';
+	import Flow from '$lib/flow/Flow.svelte';
 	import { SvelteFlowProvider } from '@xyflow/svelte';
 
 	const drawerStore = getDrawerStore();

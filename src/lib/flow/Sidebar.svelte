@@ -5,6 +5,9 @@
   import AddNode from "./AddNode.svelte";
   import RetNode from "./RetNode.svelte";
   import ResponseNode from "./ResponseNode.svelte";
+  import MapNode from "./MapNode.svelte";
+  import RequestNode from "./RequestNode.svelte";
+  import EqualNode from "./EqualNode.svelte";
 
   const nodeTypes: NodeTypes = {
     bot: BotNode,
@@ -12,6 +15,9 @@
     op: AddNode,
     return: RetNode,
     response: ResponseNode,
+    request: RequestNode,
+    map: MapNode,
+    equal: EqualNode,
   };
   const onDragStart = (event: DragEvent, nodeType: string) => {
     if (!event.dataTransfer) {
@@ -59,6 +65,27 @@
     draggable={true}
   >
     response
+  </div>
+  <div
+    class="btn variant-filled"
+    on:dragstart={(event) => onDragStart(event, 'request')}
+    draggable={true}
+  >
+    request
+  </div>
+  <div
+    class="btn variant-filled"
+    on:dragstart={(event) => onDragStart(event, 'map')}
+    draggable={true}
+  >
+    map
+  </div>
+  <div
+    class="btn variant-filled"
+    on:dragstart={(event) => onDragStart(event, 'equal')}
+    draggable={true}
+  >
+    ==?
   </div>
   </div>
 </aside>

@@ -1,13 +1,13 @@
 <script lang="ts">
     import { AppRail, AppRailTile, AppRailAnchor } from '@skeletonlabs/skeleton';
-    import manual_svg from '$lib/manual.svg';
-	import code_svg from '$lib/coding.svg';
-	import admin_svg from '$lib/admin.svg';
-	import website_svg from '$lib/website.svg';
-	import chart_svg from '$lib/chart.svg';
-    import menu_svg from '$lib/menu.svg';
-    import github_svg from '$lib/github-mark-white.svg'
-	import create_svg from '$lib/create.svg'
+    import manual_svg from '$lib/assets/manual.svg';
+	import code_svg from '$lib/assets/coding.svg';
+	import admin_svg from '$lib/assets/admin.svg';
+	import website_svg from '$lib/assets/website.svg';
+	import chart_svg from '$lib/assets/chart.svg';
+    import menu_svg from '$lib/assets/menu.svg';
+    import github_svg from '$lib/assets/github-mark-white.svg'
+	import create_svg from '$lib/assets/create.svg'
     import { selector } from '../store'
 
     let currentTile: number = $selector;

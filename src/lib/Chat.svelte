@@ -3,10 +3,10 @@
     import { selector, chat_room, user } from '../store'
     import { Avatar, ProgressRadial } from '@skeletonlabs/skeleton';
     import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
-    import hari from '$lib/hari.png'
-    import clip_svg from '$lib/clip.svg';
-	import microphone_svg from '$lib/microphone.svg'
-	import voice_on_svg from '$lib/voice_on.svg'
+    import hari from '$lib/assets/hari.png'
+    import clip_svg from '$lib/assets/clip.svg';
+	import microphone_svg from '$lib/assets/microphone.svg'
+	import voice_on_svg from '$lib/assets/voice_on.svg'
 	import { onMount, onDestroy } from 'svelte';
     
 

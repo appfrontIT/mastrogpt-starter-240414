@@ -8,23 +8,18 @@
     export let id: $$Props['id'];
     export let isConnectable: $$Props['isConnectable'];
     
-    let body = [{'key': '', 'value': ''}]
-    let headers = [{'key': '', 'value': ''}]
     const { updateNodeData } = useSvelteFlow();
+    let url: string;
+    let headers = [{'key': '', 'value': ''}]
 
     $$restProps;
 </script>
-<Handle type="target" position={Position.Left} id="headers" style="top: 100px;" {isConnectable} class="handle"/>
-<Handle type="target" position={Position.Left} id="body" style="bottom: 30px; top: auto;" {isConnectable} class="handle"/>
+<Handle type="target" position={Position.Left} id="left-a" style="top: 100px;" {isConnectable} class="handle"/>
 <div class="container">
-<div class="h4 text-orange-500">Response</div>
+<div class="h4 text-orange-500">Request</div>
 <hr />
-<span class="label">status</span>
-<select class="select rounded-sm text-xs">
-    {#each $status as s}
-        <option value={s}>{s}</option>
-    {/each}
-</select>
+<span class="label">url</span>
+<input class="input rounded-sm text-xs" bind:value={url} />
 <span class="label">headers</span>
 {#each headers as v, i}
 	<input class="input rounded-sm text-xs" id={i} type="text" bind:value={headers[i].key} placeholder="key"/>
@@ -37,16 +32,10 @@
 <button class="btn rounded-sm text-xs" on:click={() => {
     if (headers.length == 1) { return ;}
     headers = headers.slice(0, headers.length - 1);
-}}>Remove</button><br><hr />
-        <span>body</span>
-        <hr />
-    <!-- <textarea
-    rows="4"
-    bind:value={data.text}
-    on:input={(evt) => updateNodeData(id, { text: evt.currentTarget.value })}
-    placeholder="text area"
-    class="nodrag textarea rounded-sm text-xs"
-    /> -->
+}}>Remove</button>
+<hr />
+    <span>body</span>
+<hr />
 <button class="nodrag w-full text-right px-2">></button>
 </div>
 <Handle
@@ -58,7 +47,7 @@
     class="handle"
 />
 <style>
-    :global(.svelte-flow__node-response) {
+    :global(.svelte-flow__node-request) {
         width: 200px;
         font-size: 12px;
         background: #000000;

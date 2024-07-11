@@ -21,6 +21,10 @@
     import AddNode from './AddNode.svelte';
     import RetNode from './RetNode.svelte';
     import ResponseNode from './ResponseNode.svelte';
+    import MapNode from './MapNode.svelte';
+    import RequestNode from './RequestNode.svelte';
+    import EqualNode from "./EqualNode.svelte";
+    import NotEqualNode from "./NotEqualNode.svelte";
 
     const nodeTypes: NodeTypes = {
         bot: BotNode,
@@ -28,6 +32,10 @@
         op: AddNode,
         return: RetNode,
         response: ResponseNode,
+        request: RequestNode,
+        map: MapNode,
+        equal: EqualNode,
+        notEqual: NotEqualNode
     };
 
     const { screenToFlowPosition } = useSvelteFlow();
