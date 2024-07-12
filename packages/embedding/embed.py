@@ -2,7 +2,7 @@
 #--kind python:default
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--param CONNECTION_STRING $CONNECTION_STRING
-#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/embedding/embed
+#--annotation url https://walkiria.cloud/api/v1/web/gporchia/embedding/embed
 
 from openai import OpenAI
 import requests

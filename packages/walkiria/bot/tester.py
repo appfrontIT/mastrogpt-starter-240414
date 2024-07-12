@@ -18,7 +18,7 @@ def tester(name = None, package = None):
             action_s += f"{pair['key']}: {pair['value']}\n"
     action_s += f"code: {action_obj['exec']['code']}\n"
     test = requests.post(
-        'https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/tester/run',
+        'https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/tester/run',
         auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
         json={"action": action_s, "token": config.session_user['JWT']})
     return "Sto testando l'azione, ti invieró il risulatato appena finiti i test!"

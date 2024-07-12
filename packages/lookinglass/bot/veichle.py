@@ -75,7 +75,7 @@ def make_quotation_birth(data):
         'ExternalAuthorization': AccessToken,
         "Authorization": "Bearer kKYdPYn3AwEO3eYMvR1pzPjXWTw4QBafuzy23hy5H4tmgxz8x1mLDHQZpmcz",
     })
-    presigned = requests.get('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + f"quotations/{quot_obj['data']['id']}",
+    presigned = requests.get('https://walkiria.cloud/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + f"quotations/{quot_obj['data']['id']}",
                             headers= {"Authorization": "Bearer " + config.session_user['JWT']})
     if presigned.status_code == 200:
         upload = requests.put(presigned.text, data=file.content)

@@ -4,7 +4,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "store a collection of data inside the database following a specific format"
 #--timeout 600000
-#--annotation url https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/db_store_init
+#--annotation url https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/db_store_init
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -37,7 +37,7 @@ def main(args):
         return {'statusCode': 401}
     
     text = crawl(url)
-    format_obj = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/utility/md_to_json?blocking=true', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={
+    format_obj = requests.post('https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/utility/md_to_json?blocking=true', auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), json={
         "md": format
     })
     obj = format_obj.json()
@@ -128,7 +128,7 @@ def main(args):
 
     Remember to keep the same keys as the guidelines, all lowercase and snake_case
     """
-    action = requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/walkiria/generate?blocking=true',
+    action = requests.post('https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/walkiria/generate?blocking=true',
                         auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
                         json={"request": request, "token": token}
                         )
@@ -139,7 +139,7 @@ def main(args):
         lines = list(islice(split, 500))
         if not lines:
             break
-        requests.post('https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/db_store_exec',
+        requests.post('https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/db_store_exec',
                     auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
                     json={"format": md, "collection": collection, "text": lines, "url": url}
                     )

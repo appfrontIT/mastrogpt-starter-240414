@@ -2,7 +2,7 @@
 #--kind python:default
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--timeout 300000
-#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/embedding/retrieve
+#--annotation url https://walkiria.cloud/api/v1/web/gporchia/embedding/retrieve
 
 from openai import OpenAI
 import pandas as pd

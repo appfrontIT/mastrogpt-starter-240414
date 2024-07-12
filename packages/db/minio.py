@@ -6,7 +6,7 @@
 #--param MINIO_HOST $MINIO_HOST
 #--param MINIO_PORT $MINIO_PORT
 #--param JWT_SECRET $JWT_SECRET
-#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/db/minio
+#--annotation url https://walkiria.cloud/api/v1/web/gporchia/db/minio
 
 from datetime import timedelta
 from xmlrpc.client import ResponseError

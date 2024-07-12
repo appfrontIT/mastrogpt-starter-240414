@@ -5,7 +5,7 @@
 #--annotation description "create and upload the target openAPI spec for the given action"
 #--param JWT_SECRET $JWT_SECRET
 #--timeout 300000
-#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/base/openAPI
+#--annotation url https://walkiria.cloud/api/v1/web/gporchia/base/openAPI
 
 from pymongo import MongoClient, errors
 from bson.objectid import ObjectId

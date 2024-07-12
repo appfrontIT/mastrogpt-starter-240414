@@ -20,11 +20,9 @@
     data-np-uid="prova"/>
   </label>
 
-    <div>
-      <button
-      type="button"
-      style="width: 100%;"
-      class="btn variant-filled" on:click|preventDefault={login}>Login</button>
+    <div class="text-center space-y-2">
+      <button type="button" style="width: 100%;" class="btn variant-filled" on:click|preventDefault={login}>Login</button>
+      <p>not a member? <a href="/signup">Signup!</a></p>
     </div>
 </div>
 

@@ -3,7 +3,7 @@
 #--annotation description "This action convert an image to a pdf"
 #--timeout 300000
 #--param OPENAI_API_KEY $OPENAI_API_KEY
-#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/utility/pdf_to_jpg
+#--annotation url https://walkiria.cloud/api/v1/web/gporchia/utility/pdf_to_jpg
 import requests
 import convertapi
 from os.path import isfile, join
@@ -28,7 +28,7 @@ def main(args):
         paths = name.split('/')
         filename = paths[-1]
         extension = filename.split('.')[-1]
-        response = requests.get('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/find?name=' + name)
+        response = requests.get('https://walkiria.cloud/api/v1/web/gporchia/db/minio/gporchia-web/find?name=' + name)
         if response.ok:
             obj = response.json()
             data = obj['data']

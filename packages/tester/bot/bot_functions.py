@@ -51,7 +51,7 @@ def general_test(test_array = []):
             except requests.exceptions.RequestException as e:
                 r = e
         result = r
-        requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+        requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
                     auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                     json={'id': config.session_user['_id'], 'message': {"output": json.dumps(result)}, 'history': {"role": "assistant", "content": json.dumps(result)}})
         ret.append(result)

@@ -37,7 +37,7 @@
             await new Promise(r => setTimeout(r, 1000));
         }
         const result = reader.result;
-        const response = await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + `${user.username}/${files[0].name}`, {
+        const response = await fetch('https://walkiria.cloud/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + `${user.username}/${files[0].name}`, {
             method: "GET",
             headers: {"Authorization": "Bearer " + user!['JWT']},
         })

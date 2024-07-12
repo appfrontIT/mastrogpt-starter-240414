@@ -139,7 +139,7 @@
                 meta: { msg: "Sto caricando la tua pagina, per favore attendi" }
             });
             let file = new File([$chat_room[$selector].editor.function], $chat_room[$selector].editor.name + '.html', {type: "text/html", endings: "native"})
-            const response = await fetch('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + `${$user.username}/${file.name}`, {
+            const response = await fetch('api/my/db/minio/mcipolla-web/presignedUrl?name=' + `${$user.username}/${file.name}`, {
                 method: "GET",
                 headers: {"Authorization": "Bearer " + $user!['JWT']},
             })

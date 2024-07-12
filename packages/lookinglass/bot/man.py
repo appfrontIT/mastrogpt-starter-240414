@@ -15,7 +15,7 @@ def find_man_page(page: str):
     query = str(config.query[-1:])
     query = query.replace("[{'content': '", '')
     query = query.replace("', 'role': 'user'}]", '')
-    resp = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/embedding/retrieve', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
+    resp = requests.post('https://walkiria.cloud/api/v1/web/gporchia/embedding/retrieve', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
         "collection": 'crawl_appfront_operations__gitbook__io',
         'query': query
     })

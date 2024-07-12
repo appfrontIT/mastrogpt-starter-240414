@@ -2,7 +2,7 @@
 #--kind python:default
 #--param CONNECTION_STRING $CONNECTION_STRING
 #--annotation description "This action returns all mongo collections inside the passed database"
-#--annotation url https://nuvolaris.dev/api/v1/web/gporchia/db/get_coll_list
+#--annotation url https://walkiria.cloud/api/v1/web/gporchia/db/get_coll_list
 
 from pymongo import MongoClient
 import json

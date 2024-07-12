@@ -18,7 +18,7 @@ If the action store data inside the database, test the action in this order. Gen
 loop 1 - add 5 element inside the database. Remember the return from the database. Ensure the correct operation is passed as parameter. Example:
     {
         "method": "POST", 
-        "url": "https://nuvolaris.dev/api/v1/web/gporchia/pippo/create_book_crud/create", 
+        "url": "https://walkiria.cloud/api/v1/web/gporchia/pippo/create_book_crud/create", 
         "headers": "{'Content-Type': 'application/json', 'Authorization': 'Bearer {token}'}", 
         "body": "{'title': title, 'author': author, 'pages': 200, 'year': 2020}",
         "output": "{'status': 204}"
@@ -27,14 +27,14 @@ loop 2 - find 5 element inside the database using different filter. You can find
     {
         "method": "GET",
         "headers": "{'Authorization': 'Bearer {token}'}"
-        "url": "https://nuvolaris.dev/api/v1/web/gporchia/pippo/create_book_crud/find_one?id=343242465436",
+        "url": "https://walkiria.cloud/api/v1/web/gporchia/pippo/create_book_crud/find_one?id=343242465436",
         "output": "{'status': 200, 'data': {'title': title, 'author': author, 'pages': 200, 'year': 2020}}"
     } 
 loop 3 - update 5 elements inside the database. You MUST set "id" as parameter. Ensure the correct operation is passed as parameter.
     {
         "method": "PUT",
         "headers": "{'Authorization': 'Bearer {token}'}"
-        "url": "https://nuvolaris.dev/api/v1/web/gporchia/pippo/create_book_crud/update?id=343242465436",
+        "url": "https://walkiria.cloud/api/v1/web/gporchia/pippo/create_book_crud/update?id=343242465436",
         "body": "{'title': updated title, 'author': updated author, 'pages': 100, 'year': 2121}", 
         "output": "{'status': 204}"
     }
@@ -42,7 +42,7 @@ loop 4 - Delete all the elements you created while testing. You MUST set "id" as
     {
         "method": "DELETE",
         "headers": "{'Authorization': 'Bearer {token}'}"
-        "url": "https://nuvolaris.dev/api/v1/web/gporchia/pippo/create_book_crud/delete?id=343242465436", 
+        "url": "https://walkiria.cloud/api/v1/web/gporchia/pippo/create_book_crud/delete?id=343242465436", 
         "output": "{'status': 204}"
     }
 

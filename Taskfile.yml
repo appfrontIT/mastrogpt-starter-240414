@@ -97,7 +97,7 @@ tasks:
                 echo "*** Configuring Access to nuvolaris.dev with OpenAI ***"
                 echo -n "Enter Username: "
                 read NUVDEV_USERNAME
-                if nuv -login https://nuvolaris.dev "$NUVDEV_USERNAME"
+                if nuv -login https://walkiria.cloud "$NUVDEV_USERNAME"
                 then 
                     source ~/.wskprops
                     echo "NUVDEV_USERNAME=$NUVDEV_USERNAME" >.env

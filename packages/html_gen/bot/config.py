@@ -15,7 +15,7 @@ Here some things you must care about:
   3 - ALWAYS answer directly with <!DOCTYPE html>. No starting quotes
   4 - if the action needs authorization, you can get the token using the cookie. Here's a full example on how to do it:
       - let cookie = document.cookie; if (!cookie) return window.location.assign('/login');
-      - response = await fetch('https://nuvolaris.dev/api/v1/web/gporchia/base/auth/token?cookie=' + cookie, {method: 'GET'});
+      - response = await fetch('https://walkiria.cloud/api/v1/web/gporchia/base/auth/token?cookie=' + cookie, {method: 'GET'});
       - if (response.ok) { const obj = await response.json(); const token = obj['token']}
     Include the token as a 'Bearer'
 
@@ -37,7 +37,7 @@ If you need to display prompts to insert data to send to an URL, use and input t
 <script>
   function multiplyBy2() {
     const number = document.getElementById('numberInput').value;
-      fetch('https://nuvolaris.dev/api/v1/web/gporchia/pippo/multiply_by_2', {
+      fetch('https://walkiria.cloud/api/v1/web/gporchia/pippo/multiply_by_2', {
         method: 'POST',
         body: JSON.stringify({ 'number': number }),
         headers: { 'Content-type': 'application/json; charset=UTF-8' },
@@ -50,14 +50,14 @@ If you need to display prompts to insert data to send to an URL, use and input t
         }
 </script>
 ```
-- If you have to call the database, you must use this endpoint. Consider everything between '<>' parameter to change: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/<collection>/<operation>
+- If you have to call the database, you must use this endpoint. Consider everything between '<>' parameter to change: https://walkiria.cloud/api/v1/web/gporchia/db/mongo/mastrogpt/<collection>/<operation>
 operations possible are:
   - add: method 'POST'. this operation require parameter data like {'data': <data>}
   - add_many: method 'POST'. this operation require parameter data with array as value like {'data': [<data1>, <data2>, <data3>, ...]}
-  - find_one: method 'GET'. this operation accepts query params to filter search and return. Example: 'https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/<collection>/find?filter=' + encodeURIComponent(JSON.stringify(<filter to search>) + '&fields'+ + encodeURIComponent(JSON.stringify(<fields to return>). Return a single object
-  - find_many: method 'GET'. this operation accepts query params to filter search and return and number of elements returned. Example: 'https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/<collection>/find?filter=' + encodeURIComponent(JSON.stringify(<filter to search>) + '&fields'+ + encodeURIComponent(JSON.stringify(<fields to return>) + '&n_results=<n>'. Return an array of objects
-  - delete: method 'DELETE'. this operation accepts query param id: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/<collection>/delete?id=<id>
-  - update: method 'PUT'. This operation accepts query param id and parameter data as body: https://nuvolaris.dev/api/v1/web/gporchia/db/mongo/mastrogpt/<collection>/update?id=<id>, body: JSON.stringify({'data': <data>}). Returns the updated user
+  - find_one: method 'GET'. this operation accepts query params to filter search and return. Example: 'https://walkiria.cloud/api/v1/web/gporchia/db/mongo/mastrogpt/<collection>/find?filter=' + encodeURIComponent(JSON.stringify(<filter to search>) + '&fields'+ + encodeURIComponent(JSON.stringify(<fields to return>). Return a single object
+  - find_many: method 'GET'. this operation accepts query params to filter search and return and number of elements returned. Example: 'https://walkiria.cloud/api/v1/web/gporchia/db/mongo/mastrogpt/<collection>/find?filter=' + encodeURIComponent(JSON.stringify(<filter to search>) + '&fields'+ + encodeURIComponent(JSON.stringify(<fields to return>) + '&n_results=<n>'. Return an array of objects
+  - delete: method 'DELETE'. this operation accepts query param id: https://walkiria.cloud/api/v1/web/gporchia/db/mongo/mastrogpt/<collection>/delete?id=<id>
+  - update: method 'PUT'. This operation accepts query param id and parameter data as body: https://walkiria.cloud/api/v1/web/gporchia/db/mongo/mastrogpt/<collection>/update?id=<id>, body: JSON.stringify({'data': <data>}). Returns the updated user
 
 If the user send you a page as template, you must scrape it before using the function single_page_scrape and use it as reference.
 """

@@ -2,7 +2,7 @@
 #--annotation provide-api-key true
 #--annotation description "This action append a message to the user chat"
 #--param CONNECTION_STRING $CONNECTION_STRING
-#--annotation url https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message
+#--annotation url https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId

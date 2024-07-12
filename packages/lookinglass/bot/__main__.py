@@ -3,7 +3,7 @@
 #--annotation provide-api-key true
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description 'an action which let you interact with a custom assistant helping you in Lookinglass operations'
-#--annotation url https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/lookinglass/bot
+#--annotation url https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/lookinglass/bot
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
@@ -60,7 +60,7 @@ def main(args):
         res['frame'] = config.frame
     if config.base64_pdf != "":
         res['pdf'] = config.base64_pdf
-    requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+    requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
                 auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                 json={'id': config.session_user['_id'], 'message': res, 'history': {"role": "assistant", "content": res['output']}})
     return { "statusCode": 200, 'body': res}

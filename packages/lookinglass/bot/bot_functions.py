@@ -9,7 +9,7 @@ def find_man_page(page: str):
     query = str(config.query[-1:])
     query = query.replace("[{'content': '", '')
     query = query.replace("', 'role': 'user'}]", '')
-    resp = requests.post('https://nuvolaris.dev/api/v1/web/gporchia/embedding/retrieve', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
+    resp = requests.post('https://walkiria.cloud/api/v1/web/gporchia/embedding/retrieve', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
         "collection": 'crawl_appfront_operations__gitbook__io',
         'query': query
     })
@@ -83,7 +83,7 @@ def make_quotation_birth(data):
         'ExternalAuthorization': AccessToken,
         "Authorization": "Bearer kKYdPYn3AwEO3eYMvR1pzPjXWTw4QBafuzy23hy5H4tmgxz8x1mLDHQZpmcz",
     })
-    presigned = requests.get('https://nuvolaris.dev/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + f"quotations/{quot_obj['data']['id']}",
+    presigned = requests.get('https://walkiria.cloud/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + f"quotations/{quot_obj['data']['id']}",
                             headers= {"Authorization": "Bearer " + config.session_user['JWT']})
     if presigned.status_code == 200:
         upload = requests.put(presigned.text, data=file.content)
@@ -130,7 +130,7 @@ def tools_func(
         messages: list[dict[str, str]],
         response: ChatCompletion
         ):
-    # requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], "message": {"output": "Certo, procedo subito con la tua richiesta"}})
+    # requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], "message": {"output": "Certo, procedo subito con la tua richiesta"}})
     while True:
         tool_calls = response.choices[0].message.tool_calls
         messages.append(response.choices[0].message)
@@ -151,7 +151,7 @@ def tools_func(
         response = config.AI.chat.completions.create(model='gpt-4o', messages=messages, tools=tools, tool_choice="auto", temperature=0.1, top_p=0.1)
         if response.choices[0].finish_reason != "tool_calls":
             break
-        # requests.post("https://nuvolaris.dev/api/v1/namespaces/gporchia/actions/db/load_message",
+        # requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
         #             auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
         #             json={'id': config.session_user['_id'], "message": {"output": "Sto elaborando la tua richiesta, per favore attendi"}}
         #             )
