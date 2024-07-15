@@ -3,7 +3,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "This action take a markdown document in input and extract each key from a tab. It returns a json. Parameter: {"md": 'md file'}"
 #--timeout 300000
-#--annotation url https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/utility/md_to_json
+#--annotation url https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/utility/md_to_json
 
 from openai import OpenAI
     

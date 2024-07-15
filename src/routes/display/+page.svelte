@@ -32,7 +32,7 @@
                 <li class="flex space-x-2">
                     <a class="flex-auto" href={'walkiria.cloud/' + user.username + '/' + page} target="_blank">{page}</a>
                     <button class="btn variant-filled" on:click={async () => {
-                        const response = await fetch('/api/my/db/minio/gporchia-web/delete?name=' + user.username + '/' + page, {
+                        const response = await fetch('/api/my/db/minio/static/delete?name=' + user.username + '/' + page, {
                             method: 'DELETE',
                             headers: {'Authorization': 'Bearer ' + user.JWT}
                         })

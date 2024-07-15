@@ -2,7 +2,7 @@
 #--annotation provide-api-key true
 #--annotation description "This action append a message to the user chat"
 #--param CONNECTION_STRING $CONNECTION_STRING
-#--annotation url https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message
+#--annotation url https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message
 
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -15,7 +15,7 @@ def main(args):
     if not id:
         return {"statusCode": 400}
     client = MongoClient(connection_string)
-    dbname = client['mastrogpt']
+    dbname = client[{os.environ['__OW_NAMESPACE']}]
     collection = dbname['users']
     message = args.get('message', False)
     if message:

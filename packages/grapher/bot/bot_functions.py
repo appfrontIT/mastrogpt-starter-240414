@@ -3,9 +3,10 @@ import requests
 import json
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
 from requests.auth import HTTPBasicAuth
+import os
 
 def db_query(collection = None):
-    dbname = config.CLIENT['mastrogpt']
+    dbname = config.client[{os.environ['__OW_NAMESPACE']}]
     collection_list = dbname.list_collection_names()
     
     if collection in collection_list:
@@ -17,7 +18,7 @@ def db_query(collection = None):
 
 def gathering_data_from_url(url = None):
     if url != None:
-        response = requests.post('https://walkiria.cloud/api/v1/web/gporchia/utility/single_page_scrape', json={'url': url})
+        response = requests.post(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/utility/single_page_scrape', json={'url': url})
         if response.ok:
             return response.text
         else:
@@ -40,7 +41,7 @@ def generate_graph(name, request, collection = '', text = '', url = ''):
     messages.extend([{'role': 'user', 'content': request}])
     messages.extend([{'role': 'user', 'content': "Here's the data you must use in your graph:\n"}])
     if url != '':
-        response = requests.post('https://walkiria.cloud/api/v1/web/gporchia/utility/single_page_scrape',
+        response = requests.post(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/utility/single_page_scrape',
                             json={'url': data.get('url')})
         if response.ok:
             messages.extend([{'role': 'user', 'content': f"data from url:\n{response.text}"}])
@@ -49,18 +50,18 @@ def generate_graph(name, request, collection = '', text = '', url = ''):
     if text != '':
         messages.extend([{'role': 'user', 'content': f"data from text:\n{text}"}])
     if collection != '':
-        dbname = config.CLIENT['mastrogpt']
+        dbname = config.client[{os.environ['__OW_NAMESPACE']}]
         collection_list = dbname.list_collection_names()
         if collection in collection_list:
             db_coll = dbname[collection]
         else:
             return {"collection provided does not exists"}
         data = db_coll.find({}, {'_id': 0}).limit(10)
-        messages.extend([{'role': 'user', 'content': f"""You must call this endpoint to fetch data from database, making the aggregate and call this API: ('https://walkiria.cloud/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/aggregate, json={{'pipeline': [...]}}).
+        messages.extend([{'role': 'user', 'content': f"""You must call this endpoint to fetch data from database, making the aggregate and call this API: ('https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo/{collection}/aggregate, json={{'pipeline': [...]}}).
                         Pay attention to the field you want to return because the name of the key MUST BE EXACTLY EQUAL, so you must be carefull with lowercase or uppercase letters.
                         This endpoint require authorization, here's a full example on how to get the token:
                             - let cookie = document.cookie; if (!cookie) return window.location.assign('/login');
-                            - response = await fetch('https://walkiria.cloud/api/v1/web/gporchia/base/auth/token?cookie=' + cookie, {{method: 'GET'}});
+                            - response = await fetch('https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/auth/token?cookie=' + cookie, {{method: 'GET'}});
                             - if (response.ok) {{ const obj = await response.json(); const token = obj['token']}}
                         When calling the db, include the token as a Bearer: {{"Authorization": "Bearer " + token}}
                         Here's a list of the firsts 10 records of the collection:\n{list(data)}\n
@@ -71,7 +72,7 @@ def generate_graph(name, request, collection = '', text = '', url = ''):
     )
     print(response.choices[0].message.content)
     editor = {"function": response.choices[0].message.content, "description": '', "name": name, "namespace": '', "package": '', "language": 'html'}
-    requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
+    requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message",
                 auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                 json={'id': config.session_user['_id'], 'message': {'output': response.choices[0].message.content, 'editor': editor}})
     config.showEditor = True
@@ -81,7 +82,7 @@ def tools_func(
         messages: list[dict[str, str]],
         response: ChatCompletion
         ):
-    # requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], "message": {"output": "Certo, procedo subito con la tua richiesta"}})
+    # requests.post("https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], "message": {"output": "Certo, procedo subito con la tua richiesta"}})
     while True:
         tool_calls = response.choices[0].message.tool_calls
         messages.append(response.choices[0].message)
@@ -103,7 +104,7 @@ def tools_func(
         response = config.AI.chat.completions.create(model='gpt-4o', messages=messages, tools=tools, tool_choice="auto", temperature=0.1, top_p=0.1)
         if response.choices[0].finish_reason != "tool_calls":
             break
-        # requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
+        # requests.post("https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message",
         #             auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
         #             json={'id': config.session_user['_id'], "message": {"output": "Sto elaborando la tua richiesta, per favore attendi"}}
         #             )

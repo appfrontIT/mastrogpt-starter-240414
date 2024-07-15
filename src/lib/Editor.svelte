@@ -139,7 +139,7 @@
                 meta: { msg: "Sto caricando la tua pagina, per favore attendi" }
             });
             let file = new File([$chat_room[$selector].editor.function], $chat_room[$selector].editor.name + '.html', {type: "text/html", endings: "native"})
-            const response = await fetch('api/my/db/minio/mcipolla-web/presignedUrl?name=' + `${$user.username}/${file.name}`, {
+            const response = await fetch('api/my/db/minio/static/presignedUrl?name=' + `${$user.username}/${file.name}`, {
                 method: "GET",
                 headers: {"Authorization": "Bearer " + $user!['JWT']},
             })
@@ -263,7 +263,7 @@
     const pages_promise = pages_list();
     let page_rows: Readable<any[]>;
     async function pages_list() {
-        const r = await fetch('/api/my/db/minio/gporchia-web/find_all', {
+        const r = await fetch(`/api/my/db/minio/static/find_all`, {
             method: "GET",
             headers: {"Authorization": "Bearer " + $user['JWT']}
         })
@@ -311,7 +311,7 @@
             component: 'modalWaiting',
             meta: { msg: "Recupero informazioni della pagina..." }
         });
-        const response = await fetch('api/my/db/minio/gporchia-web/find?name=' + $user['username'] + '/' + name, {
+        const response = await fetch(`api/my/db/minio/static/find?name=${$user['username']}/name`, {
             method: "GET",
             headers: {"Authorization": "Bearer " + $user['JWT']},
         })

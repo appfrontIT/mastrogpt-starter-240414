@@ -186,7 +186,7 @@
 <p>Name</p>
 <div class="input-group input-group-divider grid-cols-[auto_1fr_auto]">
   <div class="input-group-shim">{$user.username}/</div>
-  <input type="text" placeholder="https://walkiria.cloud/api/v1/web/gporchia/display/..." bind:value={name}/>
+  <input type="text" placeholder="https://walkiria.cloud/api/v1/web/..." bind:value={name}/>
 </div>
 <p>Description</p>
 <textarea class="textarea" rows="8" placeholder="Enter a description to pass to the AI to generate your UI" bind:value={description}/>

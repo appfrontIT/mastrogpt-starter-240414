@@ -8,7 +8,7 @@
 
 	const formData = {
 		username: '',
-		password: '',
+		role: '',
 	};
 
 	// We've created a custom submit function to pass the response and close the modal.
@@ -18,11 +18,12 @@
 			headers: {"Content-Type": "application/json", 'Authorization': 'Bearer ' + $user['JWT']},
 			body: JSON.stringify({'username': formData.username, 'password': formData.password, 'role': 'user'})
 		})
+		console.log(r.status)
 		if (r.ok) {
 			alert('User creato con successo');
 			console.log(await r.json());
 		} else {
-			alert('Errore: ' + r.status);
+			alert('Errore: ' + await r.text());
 		}
 		modalStore.close();
 		return ;
@@ -43,8 +44,11 @@
 				<input class="input" type="text" bind:value={formData.username} placeholder="Enter username..." />
 			</label>
 			<label class="label">
-				<span>Password</span>
-				<input class="input" type="tel" bind:value={formData.password} placeholder="Enter password..." />
+				<span>Role</span>
+				<select class="select" bind:value={formData.role}>
+					<option value="user">user</option>
+					<option value="admin">admin</option>
+				</select>
 			</label>
 		</form>
 		<!-- prettier-ignore -->

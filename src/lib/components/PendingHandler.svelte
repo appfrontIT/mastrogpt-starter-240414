@@ -186,7 +186,7 @@
                                 const index = users.indexOf(usr);
 								users.splice(index, 1);
 								handler_init();
-                                const r = await fetch('/api/my/db/mongo/mastrogpt/signup/delete?id=' + usr._id, {
+                                const r = await fetch('/api/my/db/mongo/signup/delete?id=' + usr._id, {
                                     method: "DELETE",
                                     headers: {"Authorization": "Bearer " + $user.JWT},
                                 })

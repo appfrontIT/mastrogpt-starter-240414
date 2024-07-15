@@ -2,7 +2,7 @@
 #--kind python:default
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--timeout 300000
-#--annotation url https://walkiria.cloud/api/v1/web/gporchia/embedding/retrieve
+#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/embedding/retrieve
 
 from openai import OpenAI
 import pandas as pd
@@ -12,8 +12,9 @@ from pymongo import MongoClient
 import json
 from bson.objectid import ObjectId
 from bson.json_util import dumps
+import os
 
-MODEL = "gpt-3.5-turbo"
+MODEL = "gpt-4o"
 AI = None
 EMBEDDING_MODEL = "text-embedding-3-small"
 
@@ -72,7 +73,7 @@ def main(args):
     if query == '':
         return {"statusCode": 400, "body": "errore: nessuna richiesta. Passare la 'key' query con 'value' la richiesta dell'utente"}
     client = MongoClient("mongodb+srv://matteo_cipolla:ZULcZBvFCfZMScb6@cluster0.qe7hj.mongodb.net/mastrogpt?retryWrites=true&w=majority&appName=Cluster0")
-    dbname = client['mastrogpt']
+    dbname = client[{os.environ['__OW_NAMESPACE']}]
     data = []
     collection = args.get('collection', False)
     if collection:

@@ -59,11 +59,11 @@
 				cursor="cursor-pointer"
 			/></li>
 			<div class="card p-4 w-72 shadow-xl z-10" data-popup="popupFeatured">
-				<div><button class="btn" on:click={logout}>Logout</button></div>
 				<div><a class="btn" href='/my-swagger'>My Swagger</a></div>
 				<div><a class="btn" href='/display'>My Pages</a></div>
 				<div><a class="btn" href='/data'>My Files</a></div>
-				<div><a class="btn">Settings</a></div>
+				<div><a class="btn" href="/settings">Settings</a></div>
+				<div><button class="btn" on:click={logout}>Logout</button></div>
 				<div class="arrow bg-surface-100-800-token" />
 			</div>
 		</ol>

@@ -4,7 +4,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--param JWT_SECRET $JWT_SECRET
 #--param CONNECTION_STRING $CONNECTION_STRING
-#--annotation url https://walkiria.cloud/api/v1/web/gporchia/base/auth
+#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/auth
 
 import jwt
 import requests
@@ -14,6 +14,7 @@ from pymongo import MongoClient, errors
 from bson.objectid import ObjectId
 from pymongo.collection import Collection
 import json
+import os
 
 SECRET = None
 COLLECTION = None
@@ -27,12 +28,11 @@ def signup(args, client: MongoClient):
         return {"statusCode": 400}
     data = COLLECTION.find({}, {'username': 1, 'email': 1, '_id': 0})
     for el in data:
-        print(el)
         if el['username'] and el['username'] == username:
             return {"statusCode": 403, "body": "This username is already taken. Please try a new one"}
         if 'email'in el and el['email'] == email:
             return {'statusCode': 403, "body": "This email is already taken. Please try a new one"}
-    coll = client['mastrogpt']['signup']
+    coll = client[{os.environ['__OW_NAMESPACE']}]['signup']
     if coll.find_one({'email': email}):
         return {"statusCode": 403, "body": "There's already a pending request for this email"}
     el = coll.insert_one({
@@ -45,7 +45,7 @@ def signup(args, client: MongoClient):
 
 def get_user(cookie):
     split_cookie = cookie.split('=')
-    user = COLLECTION.find_one({'cookie': split_cookie[1]})
+    user = COLLECTION.find_one({'cookie': split_cookie[1]}, {'password': 0})
     if user:
         user['_id'] = str(user['_id'])
         return {'statusCode': 200, 'body': user}
@@ -106,7 +106,7 @@ def login(args):
             "body": {'token': encoded_jwt},
             "headers": {'Set-Cookie': f'appfront-sess-cookie={cookie}; Max-Age=43600; Version=; Path=/'},
             }
-    return {"statusCode": user.status_code}
+    return {"statusCode": 404}
 
 def main(args):
     global SECRET
@@ -116,7 +116,7 @@ def main(args):
     if not connection_string:
         return{'statusCode': 500}
     client = MongoClient(connection_string)
-    COLLECTION = client['mastrogpt']['users']
+    COLLECTION = client[os.environ['__OW_NAMESPACE']]['users']
     path = args.get('__ow_path', False)
     if path == '/login' and args['__ow_method'] == 'post':
         return login(args)

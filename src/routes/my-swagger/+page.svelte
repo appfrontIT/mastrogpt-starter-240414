@@ -6,6 +6,8 @@
     import 'swagger-ui/dist/swagger-ui.css';
     import { user, logged } from '../../store'
 
+    let paths = [];
+    let curr_path;
     onMount(async () => {
         let cookie = document.cookie;
         if (!cookie) {
@@ -32,6 +34,7 @@
             headers: {'Authorization': `Bearer ${$user.JWT}`}
         })
         const obj = await yaml.json();
+        paths = Object.entries(obj['paths']);
         SwaggerUI({
             spec: obj,
             dom_id: '#swagger-ui-container'
@@ -40,14 +43,25 @@
 </script>
 <br>
 <div class="grid grid-cols-12 space-x-4">
-<select class="select col-start-3 col-end-6">
-	<option value="1">Option 1</option>
-	<option value="2">Option 2</option>
-	<option value="3">Option 3</option>
-	<option value="4">Option 4</option>
-	<option value="5">Option 5</option>
-</select>
-<button class="btn variant-ringed">delete</button>
+    {#if paths}
+    <select class="select col-start-3 col-end-6" bind:value={curr_path}>
+        {#each paths as spec}
+        <option value={spec[0]}>{spec[0]}</option>
+        {/each}
+    </select>
+    {/if}
+<button class="btn variant-ringed" on:click={async () => {
+    const response = await fetch('/api/my/base/openAPI/delete?action=' + curr_path, {
+        method: "DELETE",
+        headers: {"Authorization": "Bearer " + $user.JWT}
+    })
+    if (response.ok) {
+        alert("openapi spec succesfully deleted!");
+        
+    } else {
+        alert("Something went wrong while deleting this spec");
+    }
+}}>delete</button>
 <button class="btn variant-ringed">edit</button>
 </div>
 <div id="swagger-ui-container" />

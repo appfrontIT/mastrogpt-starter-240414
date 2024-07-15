@@ -3,7 +3,7 @@
 #--annotation provide-api-key true
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action which interact with a custom bot to invoke administration tasks"
-#--annotation url https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/admin/bot
+#--annotation url https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/admin/bot
 
 from openai import OpenAI
 import config
@@ -51,7 +51,7 @@ def main(args):
         res = { "output": ask(messages=messages, model=MODEL)}
     if config.html != "":
         res['html'] = config.html
-    requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
+    requests.post("https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message",
                 auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                 json={'id': config.session_user['_id'], 'message': res, 'history': {"role": "assistant", "content": res['output']}})
     return {"statusCode": 204}

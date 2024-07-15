@@ -54,7 +54,7 @@
 </script>
 <div class="grid grid-cols-[auto_2fr]" style="height: 87vh;">
 <AppRail />
-	<div class="grid grid-cols-subgrid max-h-[87vh] space-y-2 h-full">
+	<div class="grid grid-cols-subgrid max-h-[87vh] space-y-2">
 		<div class="grid grid-cols-2">
 		{#if $selector === 1}
 		<Chat />

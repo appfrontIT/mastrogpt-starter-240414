@@ -1,7 +1,7 @@
 #--web true
 #--kind python:default
 #--annotation provide-api-key true
-#--annotation url https://walkiria.cloud/api/v1/web/gporchia/base/package
+#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/package
 
 import os
 import requests
@@ -10,7 +10,7 @@ OW_KEY = os.getenv('__OW_API_KEY')
 SPLIT = OW_KEY.split(':')
 
 def find_all(args):
-    response = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
+    response = requests.get(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/packages", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
     if response.status_code != 404:
         return {"statusCode": 200, "body": response.json()}
     return {"statusCode": 404}
@@ -19,14 +19,14 @@ def find(args):
     name = args.get('name', False)
     if not name:
         return {"statusCode": 400}
-    resp = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
+    resp = requests.get(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
     return {"statusCode": resp.status_code, "body": resp.text}
 
 def delete(args):
     name = args.get('name', False)
     if not name:
         return {"statusCode": 400}
-    resp = requests.delete(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages/{name}?force=true", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
+    resp = requests.delete(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/packages/{name}?force=true", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
     return {"statusCode": 200, "body": resp.json()}
 
 def add(args):
@@ -38,7 +38,7 @@ def add(args):
         "name": name,
         "publish": False
         }
-    resp = requests.put(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
+    resp = requests.put(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
     return {"statusCode": resp.status_code, 'body': resp.json()}
 
 def share(args):
@@ -47,17 +47,17 @@ def share(args):
     if not id or not packages:
         return {'statusCode': 400}
     for name in packages:
-        resp = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
+        resp = requests.get(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
         if resp.status_code != 200:
             return {'statusCode': 404, 'body': f'package {name} not found'}
-    user = requests.get(f'https://walkiria.cloud/api/v1/web/gporchia/base/user/find?id={id}')
+    user = requests.get(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/user/find?id={id}')
     if user.status_code == 200:
         obj = user.json()
         shared_package: list = obj['shared_package']
         for name in packages:
             if name not in shared_package:
                 shared_package.append(name)
-        update = requests.put(f'https://walkiria.cloud/api/v1/web/gporchia/db/mongo/mastrogpt/users/update?id={id}', json={'data': {'shared_packaged': shared_package}})
+        update = requests.put(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo/users/update?id={id}', json={'data': {'shared_packaged': shared_package}})
         return {'statusCode': update.status_code, 'body': update.json()}
     return {'statusCode': user.status_code}
 

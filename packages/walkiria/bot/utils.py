@@ -10,16 +10,16 @@ import tiktoken
 
 def delete_action(name, package):
     if package == 'default':
-        return requests.delete(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))    
-    return requests.delete(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/{package}/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
+        return requests.delete(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))    
+    return requests.delete(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/{package}/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
 
 def action_info(name, package = None):
     if package and package != 'default':
-        return requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/{package}/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
-    return requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
+        return requests.get(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/{package}/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
+    return requests.get(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/{name}", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
 
 def get_actions():
-    return requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
+    return requests.get(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]))
 
 def crawl(url):
     response = requests.get(url)
@@ -35,7 +35,7 @@ def load_zip(path):
         file_list = myzip.namelist()
         for file in file_list:
             content = str(myzip.read(file))
-            requests.post('https://walkiria.cloud/api/v1/web/gporchia/embedding/embed', json={"name": name, "data": content})
+            requests.post(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/embedding/embed', json={"name": name, "data": content})
 
 def num_tokens(text: str, model: str = 'gtp-4o') -> int:
     """Return the number of tokens in a string."""

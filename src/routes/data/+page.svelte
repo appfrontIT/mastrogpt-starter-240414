@@ -37,7 +37,7 @@
             await new Promise(r => setTimeout(r, 1000));
         }
         const result = reader.result;
-        const response = await fetch('https://walkiria.cloud/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + `${user.username}/${files[0].name}`, {
+        const response = await fetch('/api/my/db/minio/static/presignedUrl?name=' + `${user.username}/${files[0].name}`, {
             method: "GET",
             headers: {"Authorization": "Bearer " + user!['JWT']},
         })
@@ -70,7 +70,7 @@
                 <li class="flex space-x-2">
                     <a class="flex-auto" href={'https://walkiria.cloud/' + user.username + '/' + page} target="_blank">{page}</a>
                     <button class="btn variant-filled" on:click={async () => {
-                        const response = await fetch('/api/my/db/minio/gporchia-web/delete?name=' + user.username + '/' + page, {
+                        const response = await fetch('/api/my/db/minio/static/delete?name=' + user.username + '/' + page, {
                             method: 'DELETE',
                             headers: {'Authorization': 'Bearer ' + user.JWT}
                         })

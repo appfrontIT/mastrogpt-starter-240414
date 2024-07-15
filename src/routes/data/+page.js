@@ -10,7 +10,7 @@
             throw error(404)
         }
         const user = await res.json();
-        const response = await fetch('api/my/db/minio/gporchia-web/find_all', {
+        const response = await fetch('api/my/db/minio/static/find_all', {
             method: "GET",
             headers: {"Authorization": "Bearer " + user['JWT']},
         })

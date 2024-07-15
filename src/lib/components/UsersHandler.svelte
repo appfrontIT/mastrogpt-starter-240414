@@ -85,12 +85,6 @@
 			on:input={() => handler.search(value)}
 		/>
 		<button class="btn variant-ghost [&>*]:pointer-events-none" on:click={addUser}>Add</button>
-		<div class="card p-4 w-200" data-popup="add_user">
-			<label class="label">
-				<span>Input</span>
-				<input class="input" type="text" placeholder="Input" />
-			</label>
-		</div>
 		<aside class="flex place-items-center">
 			Show
 			{#if rowsPerPage}
@@ -170,7 +164,7 @@
 					<button class="btn btn-sm variant-ringed" on:click={async () => {
 						const conf = confirm('Sei sicuro di voler eliminare questo utente?');
 							if (conf) {
-								const response = await fetch(`/api/my/base/user/delete?id=${usr.id}`, {
+								const response = await fetch(`/api/my/base/user/delete?id=${usr._id}`, {
 									method: 'DELETE',
 									headers: {"Authorization": "Bearer " + $user['JWT']}
 								})

@@ -3,7 +3,7 @@
 #--annotation description "This action transalte text to audio"
 #--timeout 300000
 #--param OPENAI_API_KEY $OPENAI_API_KEY
-#--annotation url https://walkiria.cloud/api/v1/web/gporchia/utility/text_to_speech
+#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/utility/text_to_speech
 
 from openai import OpenAI
 import base64

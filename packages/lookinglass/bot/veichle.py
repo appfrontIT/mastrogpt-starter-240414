@@ -5,8 +5,9 @@ from typing import List
 import config
 import json
 import base64
+import os
 
-MODEL="gpt-3.5-turbo"
+MODEL="gpt-4o"
 
 form_validation = False
 AccessToken = None
@@ -75,7 +76,7 @@ def make_quotation_birth(data):
         'ExternalAuthorization': AccessToken,
         "Authorization": "Bearer kKYdPYn3AwEO3eYMvR1pzPjXWTw4QBafuzy23hy5H4tmgxz8x1mLDHQZpmcz",
     })
-    presigned = requests.get('https://walkiria.cloud/api/v1/web/gporchia/db/minio/gporchia-web/presignedUrl?name=' + f"quotations/{quot_obj['data']['id']}",
+    presigned = requests.get(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/minio/static/presignedUrl?name=' + f"quotations/{quot_obj['data']['id']}",
                             headers= {"Authorization": "Bearer " + config.session_user['JWT']})
     if presigned.status_code == 200:
         upload = requests.put(presigned.text, data=file.content)

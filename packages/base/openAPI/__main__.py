@@ -4,8 +4,9 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "create and upload the target openAPI spec for the given action"
 #--param JWT_SECRET $JWT_SECRET
+#--param S3_ACCESS_KEY $S3_ACCESS_KEY
 #--timeout 300000
-#--annotation url https://walkiria.cloud/api/v1/web/gporchia/base/openAPI
+#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/openAPI
 
 from pymongo import MongoClient, errors
 from bson.objectid import ObjectId
@@ -163,7 +164,6 @@ def delete(path, openapi, COLLECTION, token):
 def main(args):
     global AI
     global JWT
-    
     AI = OpenAI(api_key=args['OPENAI_API_KEY'])
     token = args['__ow_headers'].get('authorization', False)
     if not token:
@@ -173,7 +173,7 @@ def main(args):
     if not connection_string:
         return{'statusCode': 500}
     client = MongoClient(connection_string)
-    COLLECTION = client['mastrogpt']['users']
+    COLLECTION = client[{os.environ['__OW_NAMESPACE']}]['users']
     secret = args.get('JWT_SECRET')
     JWT = jwt.decode(token, key=secret, algorithms='HS256')
     data = COLLECTION.find_one({'_id': ObjectId(JWT['id'])}, {'openapi': 1, '_id': 0})

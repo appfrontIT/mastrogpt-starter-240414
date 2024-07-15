@@ -53,7 +53,7 @@
             const slice = split_res.slice(n, n + 10000);
             if (slice.length == 0) { break; }
             const data = header + '\n' + slice.join('\n');
-            const r = await fetch('/api/my/db/mongo/mastrogpt/' + col_name + '/add_csv', {
+            const r = await fetch('/api/my/db/mongo/' + col_name + '/add_csv', {
                 method: "POST",
                 headers: {"Authorization": "Bearer " + $user['JWT'], "Content-Type": "application/json"},
                 body: JSON.stringify({'data': data})
@@ -70,7 +70,7 @@
     }
 
     async function get_collections() {
-        const r = await fetch('/api/my/db/mongo/mastrogpt/get_collections', {
+        const r = await fetch('/api/my/db/mongo/get_collections', {
             method: "GET",
             headers: {"Authorization": "Bearer " + $user['JWT']}
         })
@@ -125,7 +125,7 @@
     }
 
     async function check_dataset(name) {
-        const r = await fetch('/api/my/db/mongo/mastrogpt/' + name + '/find_many?n_results=200&fields=' + encodeURIComponent(JSON.stringify({'_id': 0})), {
+        const r = await fetch('/api/my/db/mongo/' + name + '/find_many?n_results=200&fields=' + encodeURIComponent(JSON.stringify({'_id': 0})), {
             method: "GET",
             headers: {"Authorization": "Bearer " + $user['JWT']}
         })
@@ -174,7 +174,7 @@
 <p class="h5">Name:</p>
 <div class="input-group input-group-divider grid-cols-[auto_1fr_auto]">
     <div class="input-group-shim">{$user.username}/</div>
-    <input type="text" placeholder="https://walkiria.cloud/api/v1/web/gporchia/display/..." bind:value={name}/>
+    <input type="text" placeholder="https://walkiria.cloud/api/v1/web/..." bind:value={name}/>
 </div>
 <p class="h5">Description:</p>
 <textarea class="textarea" rows="2" placeholder="Enter a description to pass to the AI to generate your UI" bind:value={description}/>

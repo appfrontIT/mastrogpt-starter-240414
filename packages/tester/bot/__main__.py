@@ -4,7 +4,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action to perform tests on different endpoints"
 #--timeout 300000
-#--annotation url https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/tester/bot
+#--annotation url https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/tester/bot
 
 from openai import OpenAI
 import config
@@ -15,13 +15,13 @@ import requests
 import os
 from requests.auth import HTTPBasicAuth
 
-MODEL = "gpt-3.5-turbo"
+MODEL = "gpt-4o"
 
 def ask(
     query: str,
     model: str = MODEL,
 ) -> str:
-    history = requests.post("https://walkiria.cloud/api/v1/web/gporchia/db/get_history", json={'id': config.session_user['_id']})
+    history = requests.post(f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/get_history", json={'id': config.session_user['_id']})
     messages = json.loads(history.text)
     response = config.AI.chat.completions.create(
         model=model,
@@ -64,13 +64,13 @@ def main(args):
     input = args.get("input", "")
     if input == "":
         res = {"html": config.HTML_INFO}
-        requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'message': res, 'reset_history': True, 'history': {"role": "system", "content": config.ROLE}})
+        requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'message': res, 'reset_history': True, 'history': {"role": "system", "content": config.ROLE}})
         return { "statusCode": 204, }  
     else:
-        requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'history': {"role": "user", "content": input }})
+        requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'history': {"role": "user", "content": input }})
         output = ask(query=input, model=MODEL)
         res = { "output": output}
     if config.html != "":
         res['html'] = config.html
-    requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'message': res, 'history': {"role": "assistant", "content": res['output']}})
+    requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], 'message': res, 'history': {"role": "assistant", "content": res['output']}})
     return {"statusCode": 200, 'body': res['output']} 

@@ -7,7 +7,7 @@
 #--param JWT_SECRET $JWT_SECRET
 #--annotation provide-api-key true
 #--timeout 300000
-#--annotation url https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/utility/apify_scraper
+#--annotation url https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/utility/apify_scraper
 
 import jwt
 from openai import OpenAI
@@ -23,7 +23,7 @@ DECODED = None
 
 def send_message(msg):
     global DECODED
-    requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
+    requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message",
                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
                 json={'id': DECODED['id'], "message": {"output": msg}})
 
@@ -99,14 +99,14 @@ def main(args):
         obj_list.append(data)
     collection = f"crawl_{extract_domain(url).replace('-', '_').replace('.', '__')}"
     send_message("Lo scraping é avvenuto con successo, procedo a salvare i dati nel database")
-    response = requests.post(f"https://walkiria.cloud/api/v1/web/gporchia/db/mongo/mastrogpt/{collection}/add_many",
+    response = requests.post(f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo/{collection}/add_many",
                             headers={'Authorization': 'Bearer ' + token},
                             json={"data": obj_list})
     if response.ok:
         send_message(f"Collection {collection} salvata all'interno del database")
         if embedding:
             send_message("Procedo ad eseguire l'embedding degli elementi salvati")
-            embed = requests.post('https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/embedding/embed',
+            embed = requests.post(f'https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/embedding/embed',
                                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
                                 json={'collection': collection, 'token': token})
             if embed.ok:

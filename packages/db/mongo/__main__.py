@@ -2,8 +2,9 @@
 #--kind python:default
 #--memory 512
 #--param CONNECTION_STRING $CONNECTION_STRING
+#--param S3_ACCESS_KEY $S3_ACCESS_KEY
 #--annotation description "an action which perform operations to the database, suche as: add, update, delete, find. Required parameters: {'db': db name, 'collection': collection name, 'type of operation(add, find_one, find, delete, update)': True, 'data': required data as json. Example: 'name': name, 'role': role, 'password': password, ...}"
-#--annotation url https://walkiria.cloud/api/v1/web/gporchia/db/mongo
+#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo
 
 from pymongo import MongoClient, errors
 from pymongo.collection import Collection
@@ -12,6 +13,7 @@ from bson.objectid import ObjectId
 import base64
 import pandas as pd
 from urllib.parse import unquote
+import os
 
 def csv_to_json(filename, header=None):
     filename = filename.replace(';', ',')
@@ -63,6 +65,8 @@ def find_one(collection: Collection, args):
     filter = args.get('filter', {})
     if filter != {}:
         filter = json.loads(unquote(filter))
+    if '_id' in filter:
+        filter['_id'] = ObjectId(filter['_id'])
     fields = args.get('fields', {})
     if fields != {}:
         fields = json.loads(unquote(fields))
@@ -136,12 +140,11 @@ def main(args):
     connection_string = args.get('CONNECTION_STRING', False)
     path: str = args.get('__ow_path', False)
     path_spl = path[1:].split('/')
-    db = path_spl[0]
-    collection = path_spl[1]
-    if not collection or not db:
-        return {"statusCode": 400, "body": "parameter 'db' or 'collection' missing"}
+    collection = path_spl[0]
+    if not collection:
+        return {"statusCode": 400, "body": "'collection' missing"}
     client = MongoClient(connection_string)
-    dbname = client[db]
+    dbname = client[os.environ['__OW_NAMESPACE']]
 
     collection_list = dbname.list_collection_names()
     method = args['__ow_method']
@@ -153,9 +156,9 @@ def main(args):
     else:
         db_coll = dbname.create_collection(collection)
     
-    if len(path_spl) != 3:
+    if len(path_spl) != 2:
         return {"statusCode": 400}
-    op = path_spl[2]
+    op = path_spl[1]
     if op == 'find_one' and method == 'get':
         return find_one(db_coll, args)
     elif op == 'find_many' and method == 'get':
@@ -169,7 +172,7 @@ def main(args):
     elif op == 'delete' and method == 'delete':
         return delete(db_coll, args.get('id', None))
     elif op == 'update' and method == 'put':
-        return update(db_coll, args.get('data', None), args)
+        return update(db_coll, args.get('data', None), args.get('id', False))
     elif op == 'aggregate' and method == 'post':
         return aggregate(db_coll, args.get('pipeline', None))
     return {"statusCode": 400}

@@ -5,8 +5,10 @@
 #--param MINIO_SECRET_KEY $MINIO_SECRET_KEY
 #--param MINIO_HOST $MINIO_HOST
 #--param MINIO_PORT $MINIO_PORT
+#--param MINIO_BUCKET_STATIC $MINIO_BUCKET_STATIC
+#--param MINIO_BUCKET_DATA $MINIO_BUCKET_DATA
 #--param JWT_SECRET $JWT_SECRET
-#--annotation url https://walkiria.cloud/api/v1/web/gporchia/db/minio
+#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/minio
 
 from datetime import timedelta
 from xmlrpc.client import ResponseError
@@ -14,6 +16,7 @@ from minio import Minio
 from minio.error import S3Error
 import io
 import jwt
+import os
 
 CLIENT = None
 BUCKET = None
@@ -67,7 +70,7 @@ def find(args):
 
 def find_all():
     # List objects information whose names starts with "my/prefix/".
-    objects = CLIENT.list_objects("gporchia-web", prefix=JWT['username'] + '/')
+    objects = CLIENT.list_objects(BUCKET, prefix=JWT['username'] + '/')
     arr = []
     for obj in objects:
         arr.append(str(obj.object_name).replace(JWT['username'] + '/', ''))
@@ -97,8 +100,7 @@ def main(args):
     token = token.split(' ')[1]
     secret = args.get('JWT_SECRET')
     JWT = jwt.decode(token, key=secret, algorithms='HS256')
-    endpoint = f"{args.get('MINIO_HOST')}:{args.get('MINIO_PORT')}"
-    CLIENT = Minio('s3.nuvolaris.dev',
+    CLIENT = Minio('s3.walkiria.cloud',
         access_key=args.get('MINIO_ACCESS_KEY'),
         secret_key=args.get('MINIO_SECRET_KEY'),
         secure=True,
@@ -107,7 +109,10 @@ def main(args):
     path_spl = path[1:].split('/')
     if len(path_spl) != 2:
         return {"statusCode": 400}
-    BUCKET = path_spl[0]
+    if path_spl[0] == 'static':
+        BUCKET = args.get('MINIO_BUCKET_STATIC')
+    else:
+        BUCKET = args.get('MINIO_BUCKET_DATA')
     op = path_spl[1]
     found = CLIENT.bucket_exists(BUCKET)
     if not found:
