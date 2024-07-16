@@ -4,7 +4,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action that create and test an action asynchronously"
 #--timeout 600000
-#--annotation url https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/db_store_exec
+#--annotation url https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/db_store_exec
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -39,5 +39,5 @@ def main(args):
         response = requests.post(url, json={'line': line})
         if response.status_code == 200:
             arr.append(response.json())
-    insertion = requests.post(f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo/{collection}/add_many", json={"data": arr})
+    insertion = requests.post(f"https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/{collection}/add_many", json={"data": arr})
     return {"statusCode": 204}

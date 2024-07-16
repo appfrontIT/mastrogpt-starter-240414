@@ -4,7 +4,7 @@
 #--param CONNECTION_STRING $CONNECTION_STRING
 #--param S3_ACCESS_KEY $S3_ACCESS_KEY
 #--annotation description "an action which perform operations to the database, suche as: add, update, delete, find. Required parameters: {'db': db name, 'collection': collection name, 'type of operation(add, find_one, find, delete, update)': True, 'data': required data as json. Example: 'name': name, 'role': role, 'password': password, ...}"
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/db/mongo
 
 from pymongo import MongoClient, errors
 from pymongo.collection import Collection
@@ -144,7 +144,7 @@ def main(args):
     if not collection:
         return {"statusCode": 400, "body": "'collection' missing"}
     client = MongoClient(connection_string)
-    dbname = client[os.environ['__OW_NAMESPACE']]
+    dbname = client['mcipolla']
 
     collection_list = dbname.list_collection_names()
     method = args['__ow_method']

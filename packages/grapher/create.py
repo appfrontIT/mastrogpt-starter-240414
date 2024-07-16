@@ -4,7 +4,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "an action which generate an action returning an HTML page"
 #--timeout 300000
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/grapher/create
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/grapher/create
 
 from openai import OpenAI
 import requests

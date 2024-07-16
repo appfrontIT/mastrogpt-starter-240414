@@ -8,7 +8,7 @@
 #--param MINIO_BUCKET_STATIC $MINIO_BUCKET_STATIC
 #--param MINIO_BUCKET_DATA $MINIO_BUCKET_DATA
 #--param JWT_SECRET $JWT_SECRET
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/minio
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/db/minio
 
 from datetime import timedelta
 from xmlrpc.client import ResponseError
@@ -82,12 +82,12 @@ def presigned_url(args):
     secret = args.get('MINIO_SECRET_KEY', None)
     if name == None or access == None or secret == None:
         return {'statusCode': 400}
-    client = Minio('s3.nuvolaris.dev',
+    client = Minio('s3.walkiria.cloud',
         access_key=access,
         secret_key=secret,
         secure=True,
     )
-    url = client.presigned_put_object('gporchia-web', name, expires=timedelta(hours=2))
+    url = client.presigned_put_object(BUCKET, name, expires=timedelta(hours=2))
     return {'statusCode': 200, 'body': url}
 
 def main(args):

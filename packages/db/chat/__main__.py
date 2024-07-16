@@ -3,7 +3,7 @@
 #--annotation description "This action must be used to retrieve the chat object from the database. It will get the oldest chat and delete it until all the chat is extracted"
 #--param CONNECTION_STRING $CONNECTION_STRING
 #--timeout 300000
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/chat
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/db/chat
 
 from pymongo import MongoClient
 import json
@@ -16,7 +16,7 @@ import os
 def main(args):
     connection_string = args.get('CONNECTION_STRING')
     client = MongoClient(connection_string)
-    dbname = client[{os.environ['__OW_NAMESPACE']}]
+    dbname = client['mcipolla']
     
     db_coll = dbname['users']
     cookie = args['__ow_headers'].get('cookie', False)

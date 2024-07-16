@@ -12,7 +12,6 @@
 	import { initializeStores, Drawer, Modal, Toast, type ModalComponent } from '@skeletonlabs/skeleton';
 	import ModalWaiting from '$lib/ModalWaiting.svelte';
 	import ModalFs from '$lib/ModalFS.svelte';
-	import ModalAddUser from '$lib/ModalAddUser.svelte';
 	import ModalConfirm from '$lib/ModalConfirm.svelte';
 	import ModalData from "$lib/ModalData.svelte";
 	import Header from '$lib/Header.svelte';
@@ -21,7 +20,6 @@
 	const modalRegistry: Record<string, ModalComponent> = {
 		modalWaiting: { ref: ModalWaiting },
 		modalFs: { ref: ModalFs },
-		modalAddUser: { ref: ModalAddUser },
 		modalConfirm: { ref: ModalConfirm },
 		modalData: { ref: ModalData }
 	};

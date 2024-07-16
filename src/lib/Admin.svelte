@@ -8,6 +8,7 @@ import UsersHandler from './components/UsersHandler.svelte';
 import PackageHandler from './components/PackageHandler.svelte';
 import ActionsHandler from './components/ActionsHandler.svelte';
 import PendingHandler from './components/PendingHandler.svelte';
+import ActivationsHandler from './components/ActivationsHandler.svelte';
 
 let users: any[] | null = [];
 let tabSet: number = 0;
@@ -39,11 +40,15 @@ async function get_users() {
 	return users;
 }
 </script>
+<div class="col-span-2 px-24">
 <TabGroup justify='justify-center'>
 	<Tab bind:group={tabSet} name="tab1" value={0}>Users</Tab>
 	<Tab bind:group={tabSet} name="tab2" value={1}>packages</Tab>
 	<Tab bind:group={tabSet} name="tab3" value={2}>Actions</Tab>
-	<Tab bind:group={tabSet} name="tab4" value={3}>Pendings</Tab>
+	<Tab bind:group={tabSet} name="tab4" value={3}>Activations</Tab>
+	{#if $user.role == 'admin'}
+	<Tab bind:group={tabSet} name="tab4" value={4}>Pendings</Tab>
+	{/if}
 	<!-- Tab Panels --->
 	<svelte:fragment slot="panel">
 		{#if tabSet === 0}
@@ -53,7 +58,10 @@ async function get_users() {
 		{:else if tabSet === 2}
 			<ActionsHandler />
 		{:else if tabSet === 3}
+			<ActivationsHandler />
+		{:else if tabSet === 4}
 			<PendingHandler />
 		{/if}
 	</svelte:fragment>
 </TabGroup>
+</div>

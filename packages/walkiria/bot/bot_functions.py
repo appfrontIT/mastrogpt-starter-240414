@@ -20,7 +20,7 @@ MODEL="gpt-4o"
 def embed_collection(collection = None):
     if collection == None:
         return 'no collection provided'
-    embed = requests.post(f'https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/embedding/embed',
+    embed = requests.post(f'https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/embedding/embed',
                         auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                         json={'collection': collection, 'token': config.session_user['JWT']})
     if embed.ok:
@@ -59,7 +59,7 @@ def google_for_answers(url = None):
 def domain_scraping(url = '', embedding = False):
     if url == '':
         return "No url provided"
-    resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/utility/apify_scraper",
+    resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/utility/apify_scraper",
                         auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                         json={"url": url, "embedding": embedding, "token": config.session_user['JWT']})
     return "the scraping is processing, it will be performed in background since it may takes some time"
@@ -67,7 +67,7 @@ def domain_scraping(url = '', embedding = False):
 def single_page_scrape(url = None):
     if url == None:
         return "no url provided"
-    response = requests.post(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/utility/single_page_scrape',
+    response = requests.post(f'https://walkiria.cloud/api/v1/web/mcipolla/utility/single_page_scrape',
                             json={'url': url})
     return response.text
 
@@ -95,7 +95,7 @@ def html_gen(args):
         query = f"{description}\nHere the informations about the actions you have to call inside it: {action_array}"
     else:
         query = description
-    html = requests.post(f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/html_gen/bot",
+    html = requests.post(f"https://walkiria.cloud/api/v1/web/mcipolla/html_gen/bot",
                         json={"input": query, "name": name, 'id': config.session_user['id']})
     if html.status_code == 204:
         return "failed to generate the HTML"
@@ -104,20 +104,20 @@ def html_gen(args):
 def update_action(function = False, fix = False):
     if function and fix:
         query = f"apply this fix to the following function.\nfix: {fix}\n\nfunction:{function}"
-        response = requests.post(f'https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/walkiria/generate?blocking=true',
+        response = requests.post(f'https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/walkiria/generate?blocking=true',
                             auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                             json={"request": query, "token": config.session_user['JWT']})
         return response.text
     return "there was an error performing this operation"
 
 def create_action(query):
-    response = requests.post(f'https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/walkiria/generate?blocking=true',
+    response = requests.post(f'https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/walkiria/generate?blocking=true',
                             auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                             json={"request": query, "token": config.session_user['JWT']})
     return response.text
 
 def store_text_in_specific_format(url, collection, format):
-    return requests.post(f'https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/db_store_init', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
+    return requests.post(f'https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/db_store_init', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
         "url": url,
         "collection": collection,
         "format": format,
@@ -152,9 +152,9 @@ def delete_action(name = False, package = False):
     if package not in config.session_user['package'] and config.session_user['role'] != 'admin':
         return "Non sei autorizzato ad accedere a questa azione"
     response = utils.delete_action(name, package)
-    delete = requests.delete(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/openAPI/delete',
+    delete = requests.delete(f'https://walkiria.cloud/api/v1/web/mcipolla/base/openAPI/delete',
             headers={'Authorization': 'Bearer ' + config.session_user['JWT']},
-            json={'action': f"""url: https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/{package}/{name}"""})
+            json={'action': f"""url: https://walkiria.cloud/api/v1/web/mcipolla/{package}/{name}"""})
     return f"status: {response.status_code}, body: {response.json()}"
 
 def get_actions():
@@ -209,7 +209,7 @@ def verify(analyses):
     return analyses
 
 def send_message(message):
-    requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message",
+    requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
                 auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                 json={'id': config.session_user['_id'], "message": {"output": message}})
     return 'message sent'
@@ -218,7 +218,7 @@ def tools_func(
         messages: list[dict[str, str]],
         response: ChatCompletion
         ):
-    # requests.post("https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], "message": {"output": "Certo, procedo subito con la tua richiesta"}})
+    # requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message", auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={'id': config.session_user['_id'], "message": {"output": "Certo, procedo subito con la tua richiesta"}})
     while True:
         tool_calls = response.choices[0].message.tool_calls
         messages.append(response.choices[0].message)
@@ -239,7 +239,7 @@ def tools_func(
         response = config.AI.chat.completions.create(model='gpt-4o', messages=messages, tools=tools, tool_choice="auto", temperature=0.1, top_p=0.1)
         if response.choices[0].finish_reason != "tool_calls":
             break
-        # requests.post("https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message",
+        # requests.post("https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
         #             auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
         #             json={'id': config.session_user['_id'], "message": {"output": "Sto elaborando la tua richiesta, per favore attendi"}}
         #             )

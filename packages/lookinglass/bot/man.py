@@ -16,7 +16,7 @@ def find_man_page(page: str):
     query = str(config.query[-1:])
     query = query.replace("[{'content': '", '')
     query = query.replace("', 'role': 'user'}]", '')
-    resp = requests.post(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/embedding/retrieve', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
+    resp = requests.post(f'https://walkiria.cloud/api/v1/web/mcipolla/embedding/retrieve', auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]), json={
         "collection": 'crawl_appfront_operations__gitbook__io',
         'query': query
     })

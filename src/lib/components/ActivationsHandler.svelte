@@ -1,12 +1,16 @@
 <script lang='ts'>
-	import { user } from '../../store'
+	import { user, editor, selector } from '../../store'
 	import { onMount, onDestroy } from 'svelte';
 	import { DataHandler } from '@vincjo/datatables';
 	import type { Readable, Writable } from 'svelte/store';
-	import { getToastStore, popup } from '@skeletonlabs/skeleton';
+	import { popup } from '@skeletonlabs/skeleton';
+	import { Toast, getToastStore, getModalStore } from '@skeletonlabs/skeleton';
+	import { type ModalSettings } from '@skeletonlabs/skeleton';
 	import type { ToastSettings, ToastStore } from '@skeletonlabs/skeleton';
-	
-	let users: any[] | null = [];
+
+	const modalStore = getModalStore();
+
+	let actions: any[] | null = [];
 	let value: string;
 	let handler: DataHandler<any>;
 	let rows: Readable<any[]>;
@@ -23,22 +27,19 @@
 	let pageNumber: Readable<number>;
 	let pageCount: Readable<number>;
 	let pages: Readable<number[]>;
-	let rowsPerPage: Writable<number | null>;
+    let rowsPerPage: Writable<number | null>;
 	let options = [5, 10, 20, 50, 100];
-	
-	let add_username: string;
-	let add_role: string;
 
 	const toastStore = getToastStore();
 	const delete_ok: ToastSettings = {
-		message: 'Utente eliminata con successo!',
+		message: 'Azione eliminata con successo!',
 	};
 	const delete_failure: ToastSettings = {
 		message: 'Un problema é accorso durante il processo di eliminazione, per favore riprovare',
 	};
-
+	
 	function handler_init() {
-		handler = new DataHandler(users, {rowsPerPage: 5});
+		handler = new DataHandler(actions!, {rowsPerPage: 10});
 		rows = handler.getRows();
 		rowCount = handler.getRowCount();
 		sorted = handler.getSort();
@@ -50,20 +51,20 @@
 	}
 
 	onMount(async () => {
-		await get_users();
+		await get_activations();
 		handler_init();
 	})
-	
-	async function get_users() {
-		const response = await fetch('api/my/base/user/find_all', {
+
+	async function get_activations() {
+		const response = await fetch('api/my/base/action/activations', {
 			method: 'GET',
 			headers: {"Authorization": "Bearer " + $user!['JWT']}
 		})
 		if (response.status != 200) {
 			return null
 		}
-		users = await response.json();
-		return users;
+		actions = await response.json();
+		return actions;
 	}
 	</script>
 
@@ -76,31 +77,7 @@
 			bind:value
 			on:input={() => handler.search(value)}
 		/>
-		{#if $user.role == 'admin'}
-			<div class="flex space-x-4">
-				<input class="input w-64" placeholder="username" bind:value={add_username}/>
-				<select class="select" bind:value={add_role}>
-					<option value="user">user</option>
-					<option value="admin">admin</option>
-				</select>
-				<button class="btn variant-filled" on:click={async() => {
-					const response = await fetch('api/my/base/user/add', {
-						method: 'POST',
-						headers: {"Content-Type": "application/json", 'Authorization': 'Bearer ' + $user['JWT']},
-						body: JSON.stringify({'username': add_username, 'role': add_role})
-					})
-					const obj = await response.json();
-					if (response.ok) {
-						toastStore.trigger({message: "User succesfully created.\nPassword: " + obj.password});
-						await get_users();
-						handler_init();
-					} else {
-						toastStore.trigger({message: obj.error})
-					}
-				}}>add</button>
-			</div>
-		{/if}
-		<aside class="flex place-items-center">
+        <aside class="flex place-items-center">
 			Show
 			{#if rowsPerPage}
 			<select class="select ml-2" bind:value={$rowsPerPage}>
@@ -117,10 +94,10 @@
 		<thead>
 			<tr>
 				{#if handler && $sorted}
-				<th on:click={() => handler.sort('username')} class="cursor-pointer select-none">
+				<th on:click={() => handler.sort('activationId')} class="cursor-pointer select-none">
 					<div class="flex h-full items-center justify-start gap-x-2">
 						<slot />
-						{#if $sorted.identifier === 'username'}
+						{#if $sorted.identifier === 'activationId'}
 							{#if $sorted.direction === 'asc'}
 								&darr;
 							{:else if $sorted.direction === 'desc'}
@@ -130,12 +107,12 @@
 							&updownarrow;
 						{/if}
 					</div>
-					username
+					activationId
 				</th>
-				<th on:click={() => handler.sort('package')} class="cursor-pointer select-none">
+				<th on:click={() => handler.sort('name')} class="cursor-pointer select-none">
 					<div class="flex h-full items-center justify-start gap-x-2">
 						<slot />
-						{#if $sorted.identifier === 'package'}
+						{#if $sorted.identifier === 'name'}
 							{#if $sorted.direction === 'asc'}
 								&darr;
 							{:else if $sorted.direction === 'desc'}
@@ -145,12 +122,12 @@
 							&updownarrow;
 						{/if}
 					</div>
-					package
+					name
 				</th>
-				<th on:click={() => handler.sort('role')} class="cursor-pointer select-none">
+				<th on:click={() => handler.sort('duration')} class="cursor-pointer select-none">
 					<div class="flex h-full items-center justify-start gap-x-2">
 						<slot />
-						{#if $sorted.identifier === 'role'}
+						{#if $sorted.identifier === 'duration'}
 							{#if $sorted.direction === 'asc'}
 								&darr;
 							{:else if $sorted.direction === 'desc'}
@@ -160,7 +137,22 @@
 							&updownarrow;
 						{/if}
 					</div>
-					role
+					duration
+				</th>
+				<th on:click={() => handler.sort('start')} class="cursor-pointer select-none">
+					<div class="flex h-full items-center justify-start gap-x-2">
+						<slot />
+						{#if $sorted.identifier === 'start'}
+							{#if $sorted.direction === 'asc'}
+								&darr;
+							{:else if $sorted.direction === 'desc'}
+								&uarr;
+							{/if}
+						{:else}
+							&updownarrow;
+						{/if}
+					</div>
+					start
 				</th>
 				<th>
 					opt
@@ -170,45 +162,88 @@
 		</thead>
 		<tbody>
 			{#if rows}
-			{#each $rows as usr}
-			{#if usr.role != 'root' && usr.username != $user.username}
+			{#each $rows as pack, i}
 				<tr>
-					<td>{usr.username}</td>
-					<td>{usr.package}</td>
-					<td>{usr.role}</td>
-					{#if $user.role == 'admin'}
-					<td>
-					<button class="btn btn-sm variant-ringed" on:click={async () => {
-						const conf = confirm('Sei sicuro di voler eliminare questo utente?');
-							if (conf) {
-								const response = await fetch(`/api/my/base/user/delete?id=${usr._id}`, {
-									method: 'DELETE',
-									headers: {"Authorization": "Bearer " + $user['JWT']}
-								})
-								if (response.ok) {
-									toastStore.trigger(delete_ok);
-									await get_users();
-									handler_init();
-								} else {
-									toastStore.trigger(delete_failure);
+					<td>{pack.activationId}</td>
+					<td>{pack.name}</td>
+					<td>{pack.duration}</td>
+					<td>{new Date(pack.start).toLocaleString()}</td>
+					<br>
+				<button class="btn-icon hover:variant-filled" use:popup={{event: 'click', target: 'action_opt_' + i, placement: 'left'}}><h3 class="h3">⋮</h3></button>
+				<div data-popup='action_opt_{i}'>
+					<div class="btn-group-vertical variant-filled">
+					<button on:click={async() => {
+						modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: "Preparing the editor..." }});
+						const r = await fetch(`/api/my/base/action/find?name=${pack.name}&package=${pack.package}`, {
+							method: "GET",
+							headers: {"Authorization": "Bearer " + $user['JWT']}
+						})
+						if (r.ok) {
+							const obj = await r.json();
+							$editor.name = obj.name;
+							$editor.package = obj.namespace.split('/')[1];
+							$editor.function = obj.exec.code;
+							for (let i = 0; i < obj.annotations.length; i++) {
+								if (obj.annotations[i].key === "description") {
+									$editor.description = obj.annotations[i].value;
+									break;
 								}
 							}
-					}}>Delete</button>
-					</td>
-					{/if}
+							$editor.language = obj.exec.kind.split(':')[0];
+							if ($editor.language === 'nodejs') $editor.language = 'javascript';
+							modalStore.close();
+							$selector = 2;
+							return;
+						}
+						modalStore.close();
+						return null;
+					}}>edit</button>
+					<button on:click={async () => {
+						}}>activations</button>
+					<button on:click={async () => {
+						const conf = confirm('Sei sicuro di voler eliminare questa azione?');
+						if (conf) {
+							modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: `deleting ${pack.name}...` }});
+							const response = await fetch(`api/my/base/action/delete?name=${pack.name}&package=${pack.package}`, {
+								method: 'DELETE',
+								headers: {"Authorization": "Bearer " + $user['JWT']}
+							})
+							if (response.ok) {
+								const index = actions.indexOf(pack);
+								actions.splice(index, 1);
+								handler_init();
+								modalStore.close();
+								modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: `removing action spec from openAPI...` }});
+								const openapi_resp = await fetch(`api/my/base/openAPI/delete?action=/gporchia/${pack.package}/${pack.name}`, {
+									method: 'DELETE',
+									headers: {'Authorization': `Bearer ${$user['JWT']}`}
+								})
+								modalStore.close();
+								if (openapi_resp.ok) {
+									toastStore.trigger(delete_ok);
+								} else {
+									alert('Something went wrong while removing the action from swagger');
+								}
+							} else {
+								modalStore.close();
+								toastStore.trigger(delete_failure);
+							}
+						}
+					}}>delete</button>
+				</div>
+				</div>
 				</tr>
-			{/if}
 			{/each}
 			{/if}
 		</tbody>
 	</table>
-	<footer class="flex justify-between">
+    <footer class="flex justify-between">
         <!-- <RowCount {handler} /> -->
 		<aside class="text-sm leading-8 mr-6">
 			{#if $rowCount && $rowCount.total > 0}
 				<b>{$rowCount.start}</b>
-				- <b>{$rowCount.end}</b>
-				/ <b>{$rowCount.total}</b>
+				<b>{$rowCount.end}</b>
+				<b>{$rowCount.total}</b>
 			{:else}
 				No entries found
 			{/if}

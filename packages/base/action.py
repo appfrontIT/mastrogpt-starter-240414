@@ -5,7 +5,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--param JWT_SECRET $JWT_SECRET
 #--timeout 300000
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/action
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/base/action
 
 import jwt
 import requests
@@ -25,7 +25,7 @@ def add(args, token):
     returns = args.get('returns', None)
     if not function or not name or not description or not language or not package:
         return {'statusCode': 400}
-    url = f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/{package}/{name}"
+    url = f"https://walkiria.cloud/api/v1/web/mcipolla/{package}/{name}"
     if language == 'python':
         kind = 'python:default'
     elif language == 'javascript':
@@ -48,12 +48,12 @@ def add(args, token):
             ]
         }
     if package == 'default':
-        resp = requests.put(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
+        resp = requests.put(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
     else:
-        resp = requests.put(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/{package}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
-    r = requests.post(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/openAPI/add',
+        resp = requests.put(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/{package}/{name}?overwrite=true", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
+    r = requests.post(f'https://walkiria.cloud/api/v1/web/mcipolla/base/openAPI/add',
                 headers={'Authorization': 'Bearer ' + token},
-                json={'action': f"""url: https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/{package}/{name}\ndescription: {description}\nfunction: {function}""", 'token': token})
+                json={'action': f"""url: https://walkiria.cloud/api/v1/web/mcipolla/{package}/{name}\ndescription: {description}\nfunction: {function}""", 'token': token})
     return {'statusCode': resp.status_code, 'body': resp.json()}
 
 def delete(args):
@@ -63,11 +63,11 @@ def delete(args):
         return {'statusCode': 400}
     if package not in JWT['package'] and JWT['role'] != 'admin':
         return {'statusCode': 404}
-    response = requests.delete(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/{package}/{name}",
+    response = requests.delete(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/{package}/{name}",
                     auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
     # if response.ok:
     #     del_from_openapi = requests.delete(
-    #         'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/openAPI/delete?action=' + f"/gporchia/{package}/{name}",
+    #         'https://walkiria.cloud/api/v1/web/mcipolla/base/openAPI/delete?action=' + f"/gporchia/{package}/{name}",
     #         headers={'Authorization': args['__ow_headers'].get('authorization')}
     #         )
     #     if not del_from_openapi.ok:
@@ -85,13 +85,13 @@ def find(args):
         return {'statusCode': 400}
     if package not in JWT['package'] and JWT['role'] != 'admin':
         return {'statusCode': 404}
-    action = requests.get(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/{package}/{name}",
+    action = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/{package}/{name}",
                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
     return {'statusCode': action.status_code, 'body': action.json()}
 
 def find_all():
-    if JWT['role'] == 'admin':
-        response = requests.get(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/packages", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+    if JWT['role'] == 'admin' or JWT['role'] == 'root':
+        response = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
         if response.status_code == 200:
             packages = []
             for el in response.json():
@@ -100,7 +100,7 @@ def find_all():
         packages = JWT['package']
     ret = []
     for package in packages:
-        response = requests.get(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/packages/{package}", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+        response = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages/{package}", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
         if response.status_code == 200:
             obj = response.json()
             actions = obj['actions']
@@ -124,8 +124,12 @@ def activation(args):
     id = args.get('id', False)
     if not id:
         return {'statusCode': 400}
-    action = requests.get(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/activations/{id}/result", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+    action = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/activations/{id}/result", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
     return {'statusCode': action.status_code, 'body': action.json()}
+
+def activations():
+    actions = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/activations", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+    return {"statusCode": actions.status_code, "body": actions.json()}
 
 def main(args):
     global JWT
@@ -146,6 +150,8 @@ def main(args):
         return find(args)
     elif path == '/find_all' and args['__ow_method'] == 'get':
         return find_all()
+    elif path == '/activations' and args['__ow_method'] == 'get':
+        return activations()
     elif path == '/activation' and args['__ow_method'] == 'get':
         return activation(args)
     return {"statusCode": 404}

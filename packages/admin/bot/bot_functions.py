@@ -11,21 +11,21 @@ MODEL="gpt-3.5-turbo"
 CLIENT = None
 
 def create_user(name, password, role = 'user'):
-    response = requests.post(f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/user/add",
+    response = requests.post(f"https://walkiria.cloud/api/v1/web/mcipolla/base/user/add",
                             json={"name": name, "password": password, "role": role})
-    users = requests.get(f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/user/find_many", json={"filter": {}})
+    users = requests.get(f"https://walkiria.cloud/api/v1/web/mcipolla/base/user/find_many", json={"filter": {}})
     config.html = f"<html><body><h1>In this section you can create, update, and delete an user!</h1><br><h2>Current users:</h2><br><pre><code><xmp>{json.dumps(users.json(), indent=2)}</xmp></code></pre></code></html>"
     return response.text
 
 def update_user(id, role = 'user'):
-    response = requests.post(f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/user/update?id=" + id, json={"role": role})
-    users = requests.get(f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/user/find_many", json={"filter": {}})
+    response = requests.post(f"https://walkiria.cloud/api/v1/web/mcipolla/base/user/update?id=" + id, json={"role": role})
+    users = requests.get(f"https://walkiria.cloud/api/v1/web/mcipolla/base/user/find_many", json={"filter": {}})
     config.html = f"<html><body><h1>In this section you can create, update, and delete an user!</h1><br><h2>Current users:</h2><br><pre><code><xmp>{json.dumps(users.json(), indent=2)}</xmp></code></pre></code></html>"
     return response.text
 
 def delete_user(id):
-    response = requests.post(f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/user/delete?id" + id)
-    users = requests.get(f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/user/find_many", json={"filter": {}})
+    response = requests.post(f"https://walkiria.cloud/api/v1/web/mcipolla/base/user/delete?id" + id)
+    users = requests.get(f"https://walkiria.cloud/api/v1/web/mcipolla/base/user/find_many", json={"filter": {}})
     config.html = f"<html><body><h1>In this section you can create, update, and delete an user!</h1><br><h2>Current users:</h2><br><pre><code><xmp>{json.dumps(users.json(), indent=2)}</xmp></code></pre></code></html>"
     return response.text
 

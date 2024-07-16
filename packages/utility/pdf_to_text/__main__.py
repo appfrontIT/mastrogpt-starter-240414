@@ -3,7 +3,7 @@
 #--annotation description "This action extracts data from an image and return the data"
 #--timeout 300000
 #--param OPENAI_API_KEY $OPENAI_API_KEY
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/utility/carta_circ_to_data
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/utility/carta_circ_to_data
 
 import requests
 import convertapi
@@ -33,7 +33,7 @@ def main(args):
         paths = name.split('/')
         filename = paths[-1]
         extension = filename.split('.')[-1]
-        response = requests.get(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/minio/static/find?name=' + name)
+        response = requests.get(f'https://walkiria.cloud/api/v1/web/mcipolla/db/minio/static/find?name=' + name)
         if response.ok:
             obj = response.json()
             data = obj['data']

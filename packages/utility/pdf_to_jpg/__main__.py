@@ -3,7 +3,7 @@
 #--annotation description "This action convert an image to a pdf"
 #--timeout 300000
 #--param OPENAI_API_KEY $OPENAI_API_KEY
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/utility/pdf_to_jpg
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/utility/pdf_to_jpg
 import requests
 import convertapi
 from os.path import isfile, join
@@ -29,7 +29,7 @@ def main(args):
         paths = name.split('/')
         filename = paths[-1]
         extension = filename.split('.')[-1]
-        response = requests.get(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/minio/static/find?name=' + name)
+        response = requests.get(f'https://walkiria.cloud/api/v1/web/mcipolla/db/minio/static/find?name=' + name)
         if response.ok:
             obj = response.json()
             data = obj['data']

@@ -4,7 +4,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--param JWT_SECRET $JWT_SECRET
 #--param CONNECTION_STRING $CONNECTION_STRING
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/auth
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/base/auth
 
 import jwt
 import requests
@@ -32,7 +32,7 @@ def signup(args, client: MongoClient):
             return {"statusCode": 403, "body": "This username is already taken. Please try a new one"}
         if 'email'in el and el['email'] == email:
             return {'statusCode': 403, "body": "This email is already taken. Please try a new one"}
-    coll = client[{os.environ['__OW_NAMESPACE']}]['signup']
+    coll = client['mcipolla']['signup']
     if coll.find_one({'email': email}):
         return {"statusCode": 403, "body": "There's already a pending request for this email"}
     el = coll.insert_one({
@@ -116,7 +116,7 @@ def main(args):
     if not connection_string:
         return{'statusCode': 500}
     client = MongoClient(connection_string)
-    COLLECTION = client[os.environ['__OW_NAMESPACE']]['users']
+    COLLECTION = client['mcipolla']['users']
     path = args.get('__ow_path', False)
     if path == '/login' and args['__ow_method'] == 'post':
         return login(args)

@@ -25,7 +25,8 @@
 	let pages: Readable<number[]>;
     let rowsPerPage: Writable<number | null>;
 	let options = [5, 10, 20, 50, 100];
-	let actions_list = [];
+
+	let add_package: string;
 	
 	const toastStore = getToastStore();
 	const delete_ok: ToastSettings = {
@@ -61,7 +62,6 @@
 			return null
 		}
 		packages = await response.json();
-		actions_list = await packages['actions'];
 		return packages;
 	}
 	</script>
@@ -75,6 +75,24 @@
 			bind:value
 			on:input={() => handler.search(value)}
 		/>
+		<div class="input-group input-group-divider grid-cols-[1fr_auto] w-80">
+			<input type="search" placeholder="package" bind:value={add_package}/>
+			<button class="variant-filled" on:click={async() => {
+				const response = await fetch('api/my/base/package/add', {
+					method: "POST",
+					headers: {"Authorization": "Bearer " + $user.JWT, "Content-Type": "application/json"},
+					body: JSON.stringify({"name": `${$user.username}_${add_package}`})
+				})
+				const obj = await response.json();
+				if (response.ok) {
+					toastStore.trigger({message: "Package succesfully created"})
+					packages.push(obj)
+					handler_init();
+				} else {
+					toastStore.trigger({message: obj.error});
+				}
+			}}>add</button>
+		</div>
         <aside class="flex place-items-center">
 			Show
 			{#if rowsPerPage}
@@ -167,7 +185,7 @@
 					<td>
 						<!-- svelte-ignore missing-declaration -->
 						<button class="btn btn-sm variant-ringed" on:click={async () => {
-							const conf = confirm('Sei sicuro di voler eliminare questo utente?');
+							const conf = confirm('Delete ' + pack.name + "?");
 								if (conf) {
 									const response = await fetch(`/api/my/base/package/delete?name=${pack.name}`, {
 										method: 'DELETE',

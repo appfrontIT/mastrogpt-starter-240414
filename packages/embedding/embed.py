@@ -2,7 +2,7 @@
 #--kind python:default
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--param CONNECTION_STRING $CONNECTION_STRING
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/embedding/embed
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/embedding/embed
 
 from openai import OpenAI
 import requests
@@ -58,7 +58,7 @@ def main(args):
         return {'statusCode': 401}
     connection_string = args.get('CONNECTION_STRING', False)
     client = MongoClient(connection_string)
-    dbname = client[{os.environ['__OW_NAMESPACE']}]
+    dbname = client['mcipolla']
     collection_list = dbname.list_collection_names()
     if collection not in collection_list:
         return {'statusCode': 400, 'body': 'collection not found'}

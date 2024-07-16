@@ -3,7 +3,7 @@
 #--annotation provide-api-key true
 #--annotation description "This action is used invoke bots asynchronously"
 #--param JWT_SECRET $JWT_SECRET
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/invoke
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/base/invoke
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -21,21 +21,21 @@ def main(args):
         return {'statusCode': 401}
     path = args['__ow_path']
     token = token.split(' ')[1]
-    response = requests.get(f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo/users/find_one?filter=" + urllib.parse.quote(json.dumps({'JWT': token})), headers={'Authorization': f"Bearer {token}"})
+    response = requests.get(f"https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/users/find_one?filter=" + urllib.parse.quote(json.dumps({'JWT': token})), headers={'Authorization': f"Bearer {token}"})
     if response.status_code != 200:
         return {"statusCode": 404}
     user = response.json()
     input = args.get('input', '')
     if path == '/walkiria':
-        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/walkiria/bot",
+        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/walkiria/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": input, 'token': token, 'user': user})
     elif path == '/lookinglass':
-        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/lookinglass/bot",
+        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/lookinglass/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": input, 'token': token, 'user': user})
     elif path == '/general':
-        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/base/bot",
+        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/base/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": input, 'token': token, 'user': user})
     elif path == '/admin':
@@ -43,23 +43,23 @@ def main(args):
         decoded = jwt.decode(token, key=secret, algorithms='HS256')
         if decoded['role'] != 'admin':
             return{"statusCode": 403}
-        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/admin/bot",
+        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/admin/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": input, 'token': token, 'user': user})
     elif path == '/test':
-        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/tester/bot",
+        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/tester/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": input, 'token': token, 'user': user})
     elif path == '/html':
-        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/html_gen/bot",
+        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/html_gen/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": input, 'token': token, 'user': user, 'name': args.get('name', '')})
     elif path == '/chart':
-        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/grapher/bot",
+        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/grapher/bot",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": input, 'token': token, 'user': user})
     elif path == '/chat_lookinglass':
-        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/lookinglass/bot?blocking=true",
+        resp = requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/lookinglass/bot?blocking=true",
                             auth=HTTPBasicAuth(split[0], split[1]),
                             json={"input": [{"role": "user", "content": input}], 'token': token, 'user': user})
         if resp.ok:

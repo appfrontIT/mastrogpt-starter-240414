@@ -2,7 +2,7 @@
 #--kind python:default
 #--annotation description "Use this action to get the context of a single page"
 #--timeout 300000
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/utility/single_page_scrape
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/utility/single_page_scrape
 
 import requests
 from bs4 import BeautifulSoup

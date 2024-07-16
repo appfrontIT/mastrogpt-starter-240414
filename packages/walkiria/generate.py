@@ -5,7 +5,7 @@
 #--annotation description "an action that create and test an action asynchronously"
 #--param JWT_SECRET $JWT_SECRET
 #--timeout 300000
-#--annotation url https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/walkiria/generate
+#--annotation url https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/walkiria/generate
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -40,7 +40,7 @@ Mandatory:
             if not token:
                 return {'statusCode': 401}
 
-    3 - If you have to store data inside a database you MUST use the following action: https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo/{collection}/{operation}.
+    3 - If you have to store data inside a database you MUST use the following action: https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/{collection}/{operation}.
         Never opens Mongo client inside your functions, always use the API.
         How to use the database:
         You need to fill collection and operation.
@@ -64,27 +64,27 @@ Mandatory:
 
                 # create an element using 'data'
                 if path == '/create':
-                    response = request.post("https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo/books/add", headers = {"Authorization": token}, json={"data": {"title": args.get("title"), "author": args.get("author"), "pages": args.get("pages"), "year": args.get("year")}})
+                    response = request.post("https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/books/add", headers = {"Authorization": token}, json={"data": {"title": args.get("title"), "author": args.get("author"), "pages": args.get("pages"), "year": args.get("year")}})
                     return {"statusCode": response.status_code, "body": response.json()}
 
                 # delete an element by id
                 elif path == '/delete':
-                    response = request.delete("https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo/books/delete?id=" + args.get('id'), headers = {"Authorization": token},)
+                    response = request.delete("https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/books/delete?id=" + args.get('id'), headers = {"Authorization": token},)
                     return {"statusCode": response.status_code, "body": response.json()}
 
                 # update an element by id using 'data'
                 elif path == '/update':
-                    response = request.put("https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo/books/update?id=" + args.get('id'), headers = {"Authorization": token}, json={"data": {"title": args.get("title"), "author": args.get("author"), "pages": args.get("pages"), "year": args.get("year")}})
+                    response = request.put("https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/books/update?id=" + args.get('id'), headers = {"Authorization": token}, json={"data": {"title": args.get("title"), "author": args.get("author"), "pages": args.get("pages"), "year": args.get("year")}})
                     return {"statusCode": response.status_code, "body": response.json()}
 
                 # find single element matching the filter
                 elif path == '/find_one':
-                    response = request.get("https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo/books/find_one?title=" + args.get('title') + "&author=" args.get('author'), headers = {"Authorization": token},)
+                    response = request.get("https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/books/find_one?title=" + args.get('title') + "&author=" args.get('author'), headers = {"Authorization": token},)
                     return {"statusCode": response.status_code, "body": response.json()}
 
                 # find all elements matching the filter
                 elif path == '/find_many':
-                    response = request.get("https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo/books/find_many", headers = {"Authorization": token},)
+                    response = request.get("https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/books/find_many", headers = {"Authorization": token},)
                     return {"statusCode": response.status_code, "body": response.json()}
                 return {"statusCode": 400}
         ```
@@ -102,7 +102,7 @@ def deploy_action(name, function, description, language, returns = None):
     global JWT
     global SESSION_USER
     package = SESSION_USER['username']
-    package_up = requests.get(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/packages/{package}", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+    package_up = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages/{package}", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
     if package_up.status_code != 200:
         return {'error: package not found'}
     action_list = package_up.json()['actions']
@@ -120,7 +120,7 @@ def deploy_action(name, function, description, language, returns = None):
             model="gpt-3.5-turbo",
             messages=messages
         ).choices[0].message.content
-    requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message",
+    requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
                 json={'id': SESSION_USER['_id'], 'message': {'output': "Ho creato l'azione, procedo a verificarla"}})
     verify = AI.chat.completions.create(
@@ -136,10 +136,10 @@ def deploy_action(name, function, description, language, returns = None):
     function = verify['function']
     description = verify['description']
     editor = {"function": function, "description": description, "name": name, "namespace": SESSION_USER['namespace'], "package": SESSION_USER['package'][0], "language": language}
-    requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message",
+    requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
                 json={'id': SESSION_USER['_id'], 'message': {'output': "l'azione é stata verifica, adesso procedo con il deploy", 'editor': editor}})
-    deploy = requests.put(f'https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/action/add',
+    deploy = requests.put(f'https://walkiria.cloud/api/v1/web/mcipolla/base/action/add',
                 headers={"Authorization": "Bearer " + SESSION_USER['JWT']},
                 json={
                     "name": name,
@@ -151,16 +151,16 @@ def deploy_action(name, function, description, language, returns = None):
                     "returns": json.dumps(returns)
                 })
     if deploy.ok:
-        requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message",
+        requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
                 json={'id': SESSION_USER['_id'], 'message': {'output': "Deploy avvenuto correttamente"}})
     else:
-        requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message",
+        requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]),
                 json={'id': SESSION_USER['_id'], 'message': {'output': "C'é stato un problema nel deployare la tua azione"}})
         return "C'é stato un problema nel deployare l'azione"
-    # requests.post("https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/code_editor/add", json={'editor': editor}, headers={'cookie': f"appfront-sess-cookie={SESSION_USER['cookie']}"})
-    return f"""url: https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/{package}/{name}\ndescription: {description}\nfunction: {function}"""
+    # requests.post("https://walkiria.cloud/api/v1/web/mcipolla/db/code_editor/add", json={'editor': editor}, headers={'cookie': f"appfront-sess-cookie={SESSION_USER['cookie']}"})
+    return f"""url: https://walkiria.cloud/api/v1/web/mcipolla/{package}/{name}\ndescription: {description}\nfunction: {function}"""
 
 def create_action(args):
     global NAME
@@ -185,7 +185,7 @@ def main(args):
         return {"statusCode": 400}
     secret = args.get('JWT_SECRET')
     JWT = jwt.decode(TOKEN, key=secret, algorithms='HS256')
-    response = requests.get(f"https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/mongo/users/find_one?filter=" + urllib.parse.quote(json.dumps({'JWT': TOKEN})), headers={'Authorization': f"Bearer {TOKEN}"})
+    response = requests.get(f"https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/users/find_one?filter=" + urllib.parse.quote(json.dumps({'JWT': TOKEN})), headers={'Authorization': f"Bearer {TOKEN}"})
     if response.status_code != 200:
         return {"statusCode": 404}
     SESSION_USER = response.json()

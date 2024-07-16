@@ -2,7 +2,7 @@
 #--kind python:default
 #--param CONNECTION_STRING $CONNECTION_STRING
 #--annotation description "This action returns all mongo collections inside the passed database"
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/db/get_coll_list
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/db/get_coll_list
 
 from pymongo import MongoClient
 import json
@@ -15,7 +15,7 @@ def main(args):
     token = token.split(' ')[1]
     connection_string = args.get('CONNECTION_STRING', False)
     client = MongoClient(connection_string)
-    dbname = client[{os.environ['__OW_NAMESPACE']}]
+    dbname = client['mcipolla']
     collection_list = dbname.list_collection_names()
     crawled_pages = []
     for col in collection_list:

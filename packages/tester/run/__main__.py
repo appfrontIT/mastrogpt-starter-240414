@@ -5,7 +5,7 @@
 #--annotation description "a tester throught AI to test your actions"
 #--param JWT_SECRET $JWT_SECRET
 #--timeout 600000
-#--annotation url https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/tester/run
+#--annotation url https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/tester/run
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
@@ -57,7 +57,7 @@ def general_test(test_array = []):
             except requests.exceptions.RequestException as e:
                 r = e
         result = r
-        requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message",
+        requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
                     auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                     json={'id': JWT['id'], 'message': {"output": json.dumps(result)}})
         ret.append(result)
@@ -143,7 +143,7 @@ def main(args):
     JWT = jwt.decode(TOKEN, key=secret, algorithms='HS256')
     action = args.get("action", "")
     output = ask(query=action, AI=AI, model=MODEL)
-    requests.post(f"https://walkiria.cloud/api/v1/namespaces/{os.environ['__OW_NAMESPACE']}/actions/db/load_message",
+    requests.post(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/db/load_message",
                 auth=HTTPBasicAuth(config.OW_API_SPLIT[0], config.OW_API_SPLIT[1]),
                 json={'id': JWT['id'], 'message': {"output": output}})
     return {"body": output}

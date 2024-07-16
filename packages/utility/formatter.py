@@ -3,7 +3,7 @@
 #--param OPENAI_API_KEY $OPENAI_API_KEY
 #--annotation description "This action format the output to display in the chat"
 #--timeout 300000
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/utility/formatter
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/utility/formatter
 
 from openai import OpenAI
 

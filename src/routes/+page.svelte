@@ -63,8 +63,7 @@
 		<Chat />
 		<Editor />
 		{:else if $selector === 3}
-		<Chat />
-		<Admin />
+			<Admin />
 		{:else if $selector === 4}
 		{#if $chat_room[$selector].showEditor}
 		<Chat />

@@ -205,6 +205,8 @@
 						return null;
 					}}>edit</button>
 					<button on:click={async () => {
+						}}>activations</button>
+					<button on:click={async () => {
 						const conf = confirm('Sei sicuro di voler eliminare questa azione?');
 						if (conf) {
 							modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: `deleting ${pack.name}...` }});

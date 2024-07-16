@@ -6,7 +6,7 @@
 #--param JWT_SECRET $JWT_SECRET
 #--param S3_ACCESS_KEY $S3_ACCESS_KEY
 #--timeout 300000
-#--annotation url https://walkiria.cloud/api/v1/web/{os.environ['__OW_NAMESPACE']}/base/openAPI
+#--annotation url https://walkiria.cloud/api/v1/web/mcipolla/base/openAPI
 
 from pymongo import MongoClient, errors
 from bson.objectid import ObjectId
@@ -173,7 +173,7 @@ def main(args):
     if not connection_string:
         return{'statusCode': 500}
     client = MongoClient(connection_string)
-    COLLECTION = client[{os.environ['__OW_NAMESPACE']}]['users']
+    COLLECTION = client['mcipolla']['users']
     secret = args.get('JWT_SECRET')
     JWT = jwt.decode(token, key=secret, algorithms='HS256')
     data = COLLECTION.find_one({'_id': ObjectId(JWT['id'])}, {'openapi': 1, '_id': 0})
