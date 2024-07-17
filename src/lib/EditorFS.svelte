@@ -8,7 +8,7 @@
     import { oneDark } from "@codemirror/theme-one-dark";
     import {EditorView, keymap} from "@codemirror/view"
     import {defaultKeymap} from "@codemirror/commands"
-    import { chat_room, editor, selector } from '../store'
+    import { chat_room, selector } from '../store'
     import { getToastStore, popup } from '@skeletonlabs/skeleton';
     import type { SvelteComponent } from 'svelte';
     

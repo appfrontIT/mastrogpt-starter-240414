@@ -10,11 +10,12 @@
 	import javascript from 'highlight.js/lib/languages/javascript';
 	import typescript from 'highlight.js/lib/languages/typescript';
 	import { initializeStores, Drawer, Modal, Toast, type ModalComponent } from '@skeletonlabs/skeleton';
-	import ModalWaiting from '$lib/ModalWaiting.svelte';
-	import ModalFs from '$lib/ModalFS.svelte';
-	import ModalConfirm from '$lib/ModalConfirm.svelte';
-	import ModalData from "$lib/ModalData.svelte";
-	import ModalActivation from '../lib/ModalActivation.svelte';
+	import ModalWaiting from '$lib/modals/ModalWaiting.svelte';
+	import ModalFs from '$lib/modals/ModalFS.svelte';
+	import ModalConfirm from '$lib/modals/ModalConfirm.svelte';
+	import ModalData from "$lib/modals/ModalData.svelte";
+	import ModalActivation from '$lib/modals/ModalActivation.svelte';
+	import ModalInvoke from '$lib/modals/ModalInvoke.svelte';
 	import Header from '$lib/Header.svelte';
 	import { logged } from '../store';
 
@@ -24,6 +25,7 @@
 		modalConfirm: { ref: ModalConfirm },
 		modalData: { ref: ModalData },
 		modalActivation: { ref: ModalActivation },
+		modalInvoke: { ref: ModalInvoke }
 	};
 
 	initializeStores();

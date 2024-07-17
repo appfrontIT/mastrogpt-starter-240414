@@ -85,7 +85,7 @@ def find(args):
     package = args.get('package', False)
     if not name or not package:
         return {'statusCode': 400}
-    if package not in JWT['package'] and JWT['role'] != 'admin':
+    if package not in JWT['package'] and (JWT['role'] != 'admin' and JWT['role'] != 'root'):
         return {'statusCode': 404}
     action = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/actions/{package}/{name}",
                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))

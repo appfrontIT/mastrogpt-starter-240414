@@ -1,5 +1,5 @@
 <script lang='ts'>
-	import { user, editor, selector, activation_name } from '../../store'
+	import { user, chat_room, selector, activation_name, status } from '../../store'
 	import { onMount, onDestroy } from 'svelte';
 	import { DataHandler } from '@vincjo/datatables';
 	import type { Readable, Writable } from 'svelte/store';
@@ -202,24 +202,25 @@
 				<div data-popup='action_opt_{i}'>
 					<div class="btn-group-vertical variant-filled">
 					<button on:click={async() => {
-						modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: "Preparing the editor..." }});
-						const r = await fetch(`/api/my/base/action/find?name=${pack.name}&package=${pack.annotations[0].value.split('/')[1]}`, {
+						// modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: "Preparing the editor..." }});
+						const r = await fetch(`api/my/base/action/find?name=${pack.name}&package=${pack.annotations[0].value.split('/')[1]}`, {
 							method: "GET",
 							headers: {"Authorization": "Bearer " + $user['JWT']}
 						})
+						console.log(r.status)
 						if (r.ok) {
 							const obj = await r.json();
-							$editor.name = obj.name;
-							$editor.package = obj.namespace.split('/')[1];
-							$editor.function = obj.exec.code;
+							$chat_room[2].editor.name = obj.name;
+							$chat_room[2].editor.package = obj.namespace.split('/')[1];
+							$chat_room[2].editor.function = obj.exec.code;
 							for (let i = 0; i < obj.annotations.length; i++) {
 								if (obj.annotations[i].key === "description") {
-									$editor.description = obj.annotations[i].value;
+									$chat_room[2].editor.description = obj.annotations[i].value;
 									break;
 								}
 							}
-							$editor.language = obj.exec.kind.split(':')[0];
-							if ($editor.language === 'nodejs') $editor.language = 'javascript';
+							$chat_room[2].editor.language = obj.exec.kind.split(':')[0];
+							if ($chat_room[2].editor.language === 'nodejs') $chat_room[2].editor.language = 'javascript';
 							modalStore.close();
 							$selector = 2;
 							return;

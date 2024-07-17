@@ -11,7 +11,7 @@
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
 	import { Avatar, AppBar, Drawer, ProgressBar, ProgressRadial, popup, Toast, } from '@skeletonlabs/skeleton';
 	import type { PopupSettings } from '@skeletonlabs/skeleton';
-	import { chat_room, selector, user, editor, logged } from '../store';
+	import { chat_room, selector, user, logged } from '../store';
 	import Chart from '$lib/Chart.svelte';
 	import AppRail from '$lib/AppRail.svelte';
 	import Chat from '$lib/Chat.svelte';

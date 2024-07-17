@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { SvelteComponent } from 'svelte';
 	import { getModalStore } from '@skeletonlabs/skeleton';
-    import EditorFS from './EditorFS.svelte';
+    import EditorFS from '../EditorFS.svelte';
 
 	export let parent: SvelteComponent;
 

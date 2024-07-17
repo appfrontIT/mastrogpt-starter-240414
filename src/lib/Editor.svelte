@@ -9,7 +9,7 @@
     import { oneDark } from "@codemirror/theme-one-dark";
     import {EditorView, keymap} from "@codemirror/view"
     // import {defaultKeymap} from "@codemirror/commands"
-    import { chat_room, selector, user, editor } from '../store'
+    import { chat_room, selector, user } from '../store'
     import { DataHandler } from '@vincjo/datatables';
 	// import { onMount } from 'svelte';
     import { getModalStore, getToastStore, popup } from '@skeletonlabs/skeleton';

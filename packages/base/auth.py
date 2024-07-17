@@ -5,6 +5,7 @@
 #--param JWT_SECRET $JWT_SECRET
 #--param CONNECTION_STRING $CONNECTION_STRING
 #--annotation url https://walkiria.cloud/api/v1/web/mcipolla/base/auth
+#--annotation description "This action handles user authentication, including signup, login, logout, token generation, and user retrieval."
 
 import jwt
 import requests
@@ -48,6 +49,16 @@ def get_user(cookie):
     user = COLLECTION.find_one({'cookie': split_cookie[1]}, {'password': 0})
     if user:
         user['_id'] = str(user['_id'])
+        if user['role'] == 'admin' or user['role'] == 'root':
+            packages = requests.get("https://walkiria.cloud/api/v1/web/mcipolla/base/package/find_all",
+                            headers={"Authorization": "Bearer " + user['JWT']})        
+            if packages.ok:
+                packages_arr = []
+                obj = packages.json()
+                for pack in obj:
+                    packages_arr.append(pack['name'])
+                user['package'] = packages_arr
+                return {'statusCode': 200, 'body': user}        
         return {'statusCode': 200, 'body': user}
     return {'statusCode': 404, 'body': 'user not found'}
 

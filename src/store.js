@@ -32,14 +32,6 @@ export function getCurrentTimestamp() {
     return date;
 }
 
-export let editor = writable({
-    'package': '',
-    'name': '',
-    'function': '',
-    'description': '',
-    'language': ''
-});
-
 export const chat_room = writable([
     {
         url: 'api/my/base/invoke/general',

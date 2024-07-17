@@ -47,11 +47,11 @@ def add(args):
         CLIENT.put_object(
             bucket_name, target, io.BytesIO(raw_file), length=-1, part_size=10*1024*1024,
         )
-        return {'statuCode': 204}
+        return {'statusCode': 204}
     elif text:
         target = f"/{JWT['username']}/{destination_file}"
         CLIENT.put_object(
-            bucket_name, target, io.BytesIO(str.encode(text)), len(text)
+            bucket_name, target, io.BytesIO(str.encode(text)), length=len(text)
         )
         return {'statuCode': 204}
     return {'statusCode': 400}
@@ -63,18 +63,19 @@ def find(args):
         return {'statusCode': 400}
     try:
         data = CLIENT.get_object(BUCKET, name)
-    except ResponseError as err:
-        print(err)
-    decoded_string = data.read()
-    return {"body": {"data": str(decoded_string, encoding='utf-8')} }
+        decoded_string = data.read()
+        return {"body": {"data": str(decoded_string, encoding='utf-8')} }
+    except S3Error as err:
+        return {'statusCode': 500, 'body': str(err)}
 
 def find_all():
     # List objects information whose names starts with "my/prefix/".
-    objects = CLIENT.list_objects(BUCKET, prefix=JWT['username'] + '/')
-    arr = []
-    for obj in objects:
-        arr.append(str(obj.object_name).replace(JWT['username'] + '/', ''))
-    return {'statusCode': 200, 'body': arr}
+    try:
+        objects = CLIENT.list_objects(BUCKET, prefix=JWT['username'] + '/')
+        arr = [str(obj.object_name).replace(JWT['username'] + '/', '') for obj in objects]
+        return {'statusCode': 200, 'body': arr}
+    except S3Error as err:
+        return {'statusCode': 500, 'body': str(err)}
 
 def presigned_url(args):
     name = args.get('name', None)
@@ -82,13 +83,16 @@ def presigned_url(args):
     secret = args.get('MINIO_SECRET_KEY', None)
     if name == None or access == None or secret == None:
         return {'statusCode': 400}
-    client = Minio('s3.walkiria.cloud',
-        access_key=access,
-        secret_key=secret,
-        secure=True,
-    )
-    url = client.presigned_put_object(BUCKET, name, expires=timedelta(hours=2))
-    return {'statusCode': 200, 'body': url}
+    try:
+        client = Minio('s3.walkiria.cloud',
+            access_key=access,
+            secret_key=secret,
+            secure=True,
+        )
+        url = client.presigned_put_object(BUCKET, name, expires=timedelta(hours=2))
+        return {'statusCode': 200, 'body': url}
+    except S3Error as err:
+        return {'statusCode': 500, 'body': str(err)}
 
 def main(args):
     global CLIENT

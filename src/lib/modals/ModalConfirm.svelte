@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { SvelteComponent } from 'svelte';
 	import { getModalStore } from '@skeletonlabs/skeleton';
-    import { ProgressBar } from '@skeletonlabs/skeleton';
 
 	export let parent: SvelteComponent;
 
