@@ -11,6 +11,8 @@ import jwt
 import requests
 from requests.auth import HTTPBasicAuth
 import os
+import json
+import urllib.parse
 
 OW_KEY = os.getenv('__OW_API_KEY')
 OW_API_SPLIT = OW_KEY.split(':')
@@ -120,15 +122,20 @@ def find_all():
         return {'statusCode': 404}
     return {'statusCode': 200, 'body': ret}
 
-def activation(args):
-    id = args.get('id', False)
+def activation(id = None):
     if not id:
         return {'statusCode': 400}
-    action = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/activations/{id}/result", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
-    return {'statusCode': action.status_code, 'body': action.json()}
+    info = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/activations/{id}", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+    return {'statusCode': 200, 'body': info.json()}
 
-def activations():
-    actions = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/activations", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+def activations(args):
+    name = args.get('name', None)
+    if name:
+        actions = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/activations",
+                            params={"name": name},
+                            auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
+    else:
+        actions = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/activations", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
     return {"statusCode": actions.status_code, "body": actions.json()}
 
 def main(args):
@@ -151,7 +158,7 @@ def main(args):
     elif path == '/find_all' and args['__ow_method'] == 'get':
         return find_all()
     elif path == '/activations' and args['__ow_method'] == 'get':
-        return activations()
+        return activations(args)
     elif path == '/activation' and args['__ow_method'] == 'get':
-        return activation(args)
+        return activation(args.get('id', None))
     return {"statusCode": 404}

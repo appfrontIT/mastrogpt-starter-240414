@@ -162,7 +162,7 @@
 					</div>
 					role
 				</th>
-				<th>
+				<th class="table-cell-fit">
 					opt
 				</th>
 				{/if}

@@ -14,6 +14,7 @@
 	import ModalFs from '$lib/ModalFS.svelte';
 	import ModalConfirm from '$lib/ModalConfirm.svelte';
 	import ModalData from "$lib/ModalData.svelte";
+	import ModalActivation from '../lib/ModalActivation.svelte';
 	import Header from '$lib/Header.svelte';
 	import { logged } from '../store';
 
@@ -21,7 +22,8 @@
 		modalWaiting: { ref: ModalWaiting },
 		modalFs: { ref: ModalFs },
 		modalConfirm: { ref: ModalConfirm },
-		modalData: { ref: ModalData }
+		modalData: { ref: ModalData },
+		modalActivation: { ref: ModalActivation },
 	};
 
 	initializeStores();

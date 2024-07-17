@@ -266,4 +266,7 @@ export const edges = writable([]);
 export const nodes = writable([]);
 export const status = writable([
     200, 201, 204, 400, 401, 403, 404, 500
-])
+]);
+
+export const tabSet = writable(0);
+export const activation_name = writable(null);

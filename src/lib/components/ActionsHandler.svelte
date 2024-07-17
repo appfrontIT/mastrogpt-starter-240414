@@ -1,5 +1,5 @@
 <script lang='ts'>
-	import { user, editor, selector } from '../../store'
+	import { user, editor, selector, tabSet, activation_name } from '../../store'
 	import { onMount, onDestroy } from 'svelte';
 	import { DataHandler } from '@vincjo/datatables';
 	import type { Readable, Writable } from 'svelte/store';
@@ -154,7 +154,7 @@
 					</div>
 					url
 				</th>
-				<th>
+				<th class="table-cell-fit">
 					opt
 				</th>
 				{/if}
@@ -205,6 +205,13 @@
 						return null;
 					}}>edit</button>
 					<button on:click={async () => {
+					const response = await fetch(`api/my/base/action/activations?name=${pack.package}/${pack.name}`, {
+							method: "GET",
+							headers: {"Authorization": "Bearer " + $user['JWT']},
+						})
+						const obj = await response.json();
+						$activation_name = `${pack.package}/${pack.name}`
+						$tabSet = 3;
 						}}>activations</button>
 					<button on:click={async () => {
 						const conf = confirm('Sei sicuro di voler eliminare questa azione?');

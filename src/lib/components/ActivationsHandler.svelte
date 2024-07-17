@@ -1,5 +1,5 @@
 <script lang='ts'>
-	import { user, editor, selector } from '../../store'
+	import { user, editor, selector, activation_name } from '../../store'
 	import { onMount, onDestroy } from 'svelte';
 	import { DataHandler } from '@vincjo/datatables';
 	import type { Readable, Writable } from 'svelte/store';
@@ -56,18 +56,29 @@
 	})
 
 	async function get_activations() {
-		const response = await fetch('api/my/base/action/activations', {
-			method: 'GET',
-			headers: {"Authorization": "Bearer " + $user!['JWT']}
-		})
+		let response: Response;
+		console.log($activation_name)
+		if ($activation_name) {
+			response = await fetch('api/my/base/action/activations?name=' + $activation_name, {
+				method: "GET",
+				headers: {"Authorization": "Bearer " + $user['JWT']},
+			})
+			$activation_name = null;
+		} else {
+			response = await fetch('api/my/base/action/activations', {
+				method: 'GET',
+				headers: {"Authorization": "Bearer " + $user!['JWT']}
+			})
+		}
 		if (response.status != 200) {
 			return null
 		}
 		actions = await response.json();
 		return actions;
 	}
-	</script>
 
+	$: actions = actions;
+</script>
 <div class="overflow-x-auto space-y-2" style="height: 80vh;">
 	<header class="flex justify-between gap-4">
 		<input
@@ -77,6 +88,10 @@
 			bind:value
 			on:input={() => handler.search(value)}
 		/>
+		<button class="btn variant-filled" on:click={async () => {
+			await get_activations();
+			handler_init();
+		}}>refresh</button>
         <aside class="flex place-items-center">
 			Show
 			{#if rowsPerPage}
@@ -154,7 +169,7 @@
 					</div>
 					start
 				</th>
-				<th>
+				<th class="table-cell-fit">
 					opt
 				</th>
 				{/if}
@@ -164,17 +179,31 @@
 			{#if rows}
 			{#each $rows as pack, i}
 				<tr>
-					<td>{pack.activationId}</td>
-					<td>{pack.name}</td>
+					<td><button class="btn sm" on:click={async() => {
+						const response = await fetch('api/my/base/action/activation?id=' + pack.activationId, {
+							method: "GET",
+							headers: {"Authorization": "Bearer " + $user['JWT']},
+						})
+						if (response.ok) {
+							const obj = await response.json();
+							modalStore.trigger({
+								type: 'component',
+								component: 'modalActivation',
+								meta: { info: obj }
+							})
+						}
+					}}>{pack.activationId}</button></td>
+					<td>{pack.annotations[0].value.split('/')[1] + "/" + pack.annotations[0].value.split('/')[2]}</td>
 					<td>{pack.duration}</td>
 					<td>{new Date(pack.start).toLocaleString()}</td>
-					<br>
-				<button class="btn-icon hover:variant-filled" use:popup={{event: 'click', target: 'action_opt_' + i, placement: 'left'}}><h3 class="h3">⋮</h3></button>
+					<td>
+						<button class="btn-icon hover:variant-filled" use:popup={{event: 'click', target: 'action_opt_' + i, placement: 'left'}}><p class="h3">⋮</p></button>
+					</td>
 				<div data-popup='action_opt_{i}'>
 					<div class="btn-group-vertical variant-filled">
 					<button on:click={async() => {
 						modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: "Preparing the editor..." }});
-						const r = await fetch(`/api/my/base/action/find?name=${pack.name}&package=${pack.package}`, {
+						const r = await fetch(`/api/my/base/action/find?name=${pack.name}&package=${pack.annotations[0].value.split('/')[1]}`, {
 							method: "GET",
 							headers: {"Authorization": "Bearer " + $user['JWT']}
 						})
@@ -198,38 +227,6 @@
 						modalStore.close();
 						return null;
 					}}>edit</button>
-					<button on:click={async () => {
-						}}>activations</button>
-					<button on:click={async () => {
-						const conf = confirm('Sei sicuro di voler eliminare questa azione?');
-						if (conf) {
-							modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: `deleting ${pack.name}...` }});
-							const response = await fetch(`api/my/base/action/delete?name=${pack.name}&package=${pack.package}`, {
-								method: 'DELETE',
-								headers: {"Authorization": "Bearer " + $user['JWT']}
-							})
-							if (response.ok) {
-								const index = actions.indexOf(pack);
-								actions.splice(index, 1);
-								handler_init();
-								modalStore.close();
-								modalStore.trigger({type: 'component', component: 'modalWaiting', meta: { msg: `removing action spec from openAPI...` }});
-								const openapi_resp = await fetch(`api/my/base/openAPI/delete?action=/gporchia/${pack.package}/${pack.name}`, {
-									method: 'DELETE',
-									headers: {'Authorization': `Bearer ${$user['JWT']}`}
-								})
-								modalStore.close();
-								if (openapi_resp.ok) {
-									toastStore.trigger(delete_ok);
-								} else {
-									alert('Something went wrong while removing the action from swagger');
-								}
-							} else {
-								modalStore.close();
-								toastStore.trigger(delete_failure);
-							}
-						}
-					}}>delete</button>
 				</div>
 				</div>
 				</tr>

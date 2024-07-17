@@ -122,7 +122,8 @@ def delete(args):
         return {"statusCode": response.status_code, "body": response.text}
     if user.status_code == 200:
         obj = user.json()
-        requests.delete(f"https://walkiria.cloud/api/v1/web/mcipolla/base/package/delete", json={"name": obj['package']},
+        for package in obj['package']:
+            requests.delete(f"https://walkiria.cloud/api/v1/web/mcipolla/base/package/delete", json={"name": package},
                         headers={"Authorization": "Bearer " + token})
         return {"statusCode": 204}
     return {"statusCode": response.status_code}
