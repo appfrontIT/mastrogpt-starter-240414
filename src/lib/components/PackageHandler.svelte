@@ -51,9 +51,20 @@
 		rowsPerPage = handler.getRowsPerPage();
 	}
 
+	async function get_user() {
+		const res = await fetch('api/my/base/auth/user', {
+                method: 'GET',
+                credentials: 'include'
+            })
+
+		if (res.ok) { const obj = await res.json(); $user = obj; return obj; }
+		else { throw new Error('failed to get user') };
+	}
+
 	onMount(async () => {
 		await get_packages();
 		handler_init();
+		await get_user();
 	})
 
 	async function get_packages() {
@@ -72,7 +83,7 @@
 <div class=" overflow-x-auto space-y-2" style="height: 80vh;">
 	<header class="flex justify-between gap-4">
 		<input
-			class="input sm:w-64 w-36"
+			class="input sm:w-58 w-36"
 			type="search"
 			placeholder="Search..."
 			bind:value
@@ -89,14 +100,14 @@
 				const obj = await response.json();
 				if (response.ok) {
 					toastStore.trigger({message: "Package succesfully created"})
-					packages.push(obj)
+					await get_packages();
 					handler_init();
 				} else {
 					toastStore.trigger({message: obj.error});
 				}
 			}}>add</button>
 		</div>
-        <aside class="flex place-items-center">
+        <aside class="flex place-items-center sm:w-58 w-36">
 			Show
 			{#if rowsPerPage}
 			<select class="select ml-2" bind:value={$rowsPerPage}>
@@ -188,16 +199,19 @@
 					<td>
 						<button class="btn-icon hover:variant-filled" use:popup={{event: 'click', target: 'package_opt_' + i, placement: 'left'}}><h3 class="h3">⋮</h3></button>
 						<div data-popup='package_opt_{i}'>
-							<div class="btn-group-vertical variant-filled">
-								{#if $user.package.includes(pack.name)}
-									<button on:click={async() => {
-										modalStore.trigger({
-										type: 'component',
-										component: 'modalSharePkg',
-										meta: { package: pack.name }
-									})
-									}}>share</button>
-								{/if}
+							{#await get_user()}
+								...retrieving user data
+							{:then us}
+								<div class="btn-group-vertical variant-filled">
+									{#if $user.package.includes(pack.name)}
+										<button on:click={async() => {
+											modalStore.trigger({
+											type: 'component',
+											component: 'modalSharePkg',
+											meta: { package: pack.name }
+										})
+										}}>share</button>
+									{/if}
 								<button on:click={async () => {
 									const conf = confirm('Delete ' + pack.name + "?");
 										if (conf) {
@@ -216,6 +230,7 @@
 										}
 								}}>Delete</button>
 							</div>
+							{/await}
 						</div>
 					</td>
 				</tr>

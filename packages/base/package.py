@@ -57,6 +57,18 @@ def add(args):
     resp = requests.put(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages/{name}",
                     auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]),
                     headers={"Content-type": "application/json"}, json=body)
+    if resp.ok:
+        token = args['__ow_headers'].get('authorization')
+        user = requests.get(f"https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/users/find_one?filter=" + urllib.parse.quote(json.dumps({'JWT': token.split(' ')[1]})),
+                        headers={"Authorization": token})
+        if user.ok:
+            obj = user.json()
+            packages: list = obj['package']
+            packages.append(name)
+            update = requests.put(f"https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/users/update?id={str(obj['_id'])}",
+                            json={'data': {'package': packages}},
+                            headers={"Authorization": args['__ow_headers'].get('authorization')})
+            return {'statusCode': update.status_code, 'body': update.json()}
     return {"statusCode": resp.status_code, 'body': resp.json()}
 
 def share(args):

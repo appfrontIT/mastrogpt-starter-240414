@@ -24,14 +24,14 @@ def ask(
     model: str = MODEL,
 ) -> str:
     global AI
-    query = str(input[-1:])
-    query = query.replace("[{'content': '", '')
-    query = query.replace("', 'role': 'user'}]", '')
-    resp = requests.post(f'https://walkiria.cloud/api/v1/web/mcipolla/embedding/retrieve', json={
-        "collection": 'crawl_appfront__cloud',
-        'query': query
-    })
-    messages.extend([{'role': 'user', 'content': resp.text}])
+    # query = str(input[-1:])
+    # query = query.replace("[{'content': '", '')
+    # query = query.replace("', 'role': 'user'}]", '')
+    # resp = requests.post(f'https://walkiria.cloud/api/v1/web/mcipolla/embedding/retrieve', json={
+    #     "collection": 'crawl_appfront__cloud',
+    #     'query': query
+    # })
+    # messages.extend([{'role': 'user', 'content': resp.text}])
     response = AI.chat.completions.create(
         model=model,
         messages=messages,

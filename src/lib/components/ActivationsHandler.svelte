@@ -82,7 +82,7 @@
 <div class="overflow-x-auto space-y-2" style="height: 80vh;">
 	<header class="flex justify-between gap-4">
 		<input
-			class="input sm:w-64 w-36"
+			class="input sm:w-58 w-36"
 			type="search"
 			placeholder="Search..."
 			bind:value
@@ -92,7 +92,7 @@
 			await get_activations();
 			handler_init();
 		}}>refresh</button>
-        <aside class="flex place-items-center">
+        <aside class="flex place-items-center sm:w-58 w-36">
 			Show
 			{#if rowsPerPage}
 			<select class="select ml-2" bind:value={$rowsPerPage}>

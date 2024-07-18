@@ -91,7 +91,7 @@ def find(args):
                 auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
     return {'statusCode': action.status_code, 'body': action.json()}
 
-def find_all():
+def find_all(token):
     if JWT['role'] == 'admin' or JWT['role'] == 'root':
         response = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
         if response.status_code == 200:
@@ -99,7 +99,11 @@ def find_all():
             for el in response.json():
                 packages.append(el['name'])
     else:
-        packages = JWT['package']
+        user = requests.get(f"https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/users/find_one?filter=" + urllib.parse.quote(json.dumps({'JWT': token})),
+                        headers={"Authorization": "Bearer " + token})
+        if user.ok:
+            obj = user.json()
+            packages: list = obj['package'] + obj['shared_package']
     ret = []
     for package in packages:
         response = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages/{package}", auth=HTTPBasicAuth(OW_API_SPLIT[0], OW_API_SPLIT[1]))
@@ -156,7 +160,7 @@ def main(args):
     elif path == '/find' and args['__ow_method'] == 'get':
         return find(args)
     elif path == '/find_all' and args['__ow_method'] == 'get':
-        return find_all()
+        return find_all(token)
     elif path == '/activations' and args['__ow_method'] == 'get':
         return activations(args)
     elif path == '/activation' and args['__ow_method'] == 'get':

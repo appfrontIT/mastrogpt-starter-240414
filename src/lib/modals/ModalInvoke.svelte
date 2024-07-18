@@ -6,7 +6,7 @@
 	export let parent: SvelteComponent;
     let headers = []
     let parameters = []
-    let path: string;
+    let path: string = '';
     let method: string = "GET";
 
 	const modalStore = getModalStore();
@@ -63,21 +63,27 @@
                     set_headers[headers[i].key] = headers[i].value;
                 }
                 set_headers['Authorization'] = "Bearer " + $user.JWT;
-                let set_parameters;
-                console.log(parameters)
-                console.log(parameters.length)
+                let set_parameters = null;
                 for (let i = 0; i < parameters.length; i++) {
                     set_parameters[parameters[i].key] = parameters[i].value;
                 }
-                console.log(set_parameters)
                 if (path.length > 0) { path = "/" + path; }
-                const response = await fetch($modalStore[0].meta.action.url + path, {
-                    method: method.toUpperCase(),
-                    headers: set_headers,
-                    credentials: 'include',
-                    body: JSON.stringify(set_parameters)
-                })
-                console.log(response.status);
+                if (set_parameters) {
+                    const response = await fetch('api/my'+ $modalStore[0].meta.action.url.split('mcipolla')[1] + path, {
+                        method: method.toUpperCase(),
+                        headers: set_headers,
+                        credentials: 'include',
+                        body: JSON.stringify(set_parameters)
+                    })
+                    console.log(response.status);
+                } else {
+                    const response = await fetch('api/my'+ $modalStore[0].meta.action.url.split('mcipolla')[1] + path, {
+                        method: method.toUpperCase(),
+                        headers: set_headers,
+                        credentials: 'include',
+                    })
+                    console.log(response.status);
+                }
             }}>send</button>
         </div>
     </div>
