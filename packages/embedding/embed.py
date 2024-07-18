@@ -5,10 +5,8 @@
 #--annotation url https://walkiria.cloud/api/v1/web/mcipolla/embedding/embed
 
 from openai import OpenAI
-import requests
 import pandas as pd
 import ast
-import tiktoken
 from pymongo import MongoClient
 import json
 from bson.objectid import ObjectId

@@ -16,6 +16,7 @@
 	import ModalData from "$lib/modals/ModalData.svelte";
 	import ModalActivation from '$lib/modals/ModalActivation.svelte';
 	import ModalInvoke from '$lib/modals/ModalInvoke.svelte';
+	import ModalSharePkg from '../lib/modals/ModalSharePkg.svelte';
 	import Header from '$lib/Header.svelte';
 	import { logged } from '../store';
 
@@ -25,7 +26,8 @@
 		modalConfirm: { ref: ModalConfirm },
 		modalData: { ref: ModalData },
 		modalActivation: { ref: ModalActivation },
-		modalInvoke: { ref: ModalInvoke }
+		modalInvoke: { ref: ModalInvoke },
+		modalSharePkg: { ref: ModalSharePkg },
 	};
 
 	initializeStores();

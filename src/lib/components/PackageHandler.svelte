@@ -6,6 +6,9 @@
 	import { getModalStore, getToastStore, popup } from '@skeletonlabs/skeleton';
 	import type { ToastSettings, ToastStore } from '@skeletonlabs/skeleton';
 	
+	const modalStore = getModalStore();
+
+	let users: any[] | null = [];
 	let packages: any[] | null = [];
 	let value: string;
 	let handler: DataHandler<any>;
@@ -52,7 +55,7 @@
 		await get_packages();
 		handler_init();
 	})
-	
+
 	async function get_packages() {
 		const response = await fetch('api/my/base/package/find_all', {
 			method: 'GET',
@@ -163,7 +166,7 @@
 		</thead>
 		<tbody>
 			{#if rows}
-			{#each $rows as pack}
+			{#each $rows as pack, i}
 				<tr>
 					<td>{pack.name}</td>
 					<td>{pack.namespace}</td>
@@ -183,24 +186,37 @@
 						{/await}
 					</td>
 					<td>
-						<!-- svelte-ignore missing-declaration -->
-						<button class="btn btn-sm variant-ringed" on:click={async () => {
-							const conf = confirm('Delete ' + pack.name + "?");
-								if (conf) {
-									const response = await fetch(`/api/my/base/package/delete?name=${pack.name}`, {
-										method: 'DELETE',
-										headers: {"Authorization": "Bearer " + $user['JWT']}
+						<button class="btn-icon hover:variant-filled" use:popup={{event: 'click', target: 'package_opt_' + i, placement: 'left'}}><h3 class="h3">⋮</h3></button>
+						<div data-popup='package_opt_{i}'>
+							<div class="btn-group-vertical variant-filled">
+								{#if $user.package.includes(pack.name)}
+									<button on:click={async() => {
+										modalStore.trigger({
+										type: 'component',
+										component: 'modalSharePkg',
+										meta: { package: pack.name }
 									})
-									if (response.ok) {
-										toastStore.trigger(delete_ok);
-										const index = packages.indexOf(pack);
-										packages.splice(index, 1);
-										handler_init();
-									} else {
-										toastStore.trigger(delete_failure);
-									}
-								}
-						}}>Delete</button>
+									}}>share</button>
+								{/if}
+								<button on:click={async () => {
+									const conf = confirm('Delete ' + pack.name + "?");
+										if (conf) {
+											const response = await fetch(`/api/my/base/package/delete?name=${pack.name}`, {
+												method: 'DELETE',
+												headers: {"Authorization": "Bearer " + $user['JWT']}
+											})
+											if (response.ok) {
+												toastStore.trigger(delete_ok);
+												const index = packages.indexOf(pack);
+												packages.splice(index, 1);
+												handler_init();
+											} else {
+												toastStore.trigger(delete_failure);
+											}
+										}
+								}}>Delete</button>
+							</div>
+						</div>
 					</td>
 				</tr>
 			{/each}

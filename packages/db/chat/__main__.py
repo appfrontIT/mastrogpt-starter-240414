@@ -9,9 +9,6 @@ from pymongo import MongoClient
 import json
 from bson.objectid import ObjectId
 from bson.json_util import dumps
-import time
-import requests
-import os
 
 def main(args):
     connection_string = args.get('CONNECTION_STRING')

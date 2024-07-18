@@ -87,6 +87,7 @@ def create(args):
         "namespace": f"mcipolla/{username}",
         "package": package,
         "shared_package": [],
+        "shared_actions": [],
         "chat": [],
         "openapi": openapi,
         "teams": []

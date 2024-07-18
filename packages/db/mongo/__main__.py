@@ -44,8 +44,6 @@ def aggregate(collection: Collection, pipeline = None):
 def update(collection: Collection, data, id = False):
     if not id or not data:
         return {"statusCode": 400, "body": "error: parameter 'id' missing or 'data' missing"}
-    if not id:
-        return {"statusCode": 400, "body": "error: parameter 'id'"}
     response = collection.update_one({'_id':ObjectId(id)}, {"$set": data})
     if response.modified_count == 0:
         return {"statusCode": 404}
@@ -138,6 +136,8 @@ def main(args):
         return {'statusCode': 401}
     token = token[1]
     connection_string = args.get('CONNECTION_STRING', False)
+    if not connection_string:
+        return {'statusCode': 500, 'body': "Internal server error"}
     path: str = args.get('__ow_path', False)
     path_spl = path[1:].split('/')
     collection = path_spl[0]

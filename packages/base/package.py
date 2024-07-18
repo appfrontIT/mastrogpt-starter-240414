@@ -6,13 +6,29 @@
 import os
 import requests
 from requests.auth import HTTPBasicAuth
+import urllib
+import json
+
 OW_KEY = os.getenv('__OW_API_KEY')
 SPLIT = OW_KEY.split(':')
 
 def find_all(args):
     response = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
     if response.status_code != 404:
-        return {"statusCode": 200, "body": response.json()}
+        token = args['__ow_headers'].get('authorization')
+        user = requests.get(f"https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/users/find_one?filter=" + urllib.parse.quote(json.dumps({'JWT': token.split(' ')[1]})),
+                        headers={"Authorization": token})
+        if user.ok:
+            obj = user.json()
+            if obj['role'] == 'admin' or obj['role'] == 'root':
+                return {"statusCode": 200, "body": response.json()}
+            packages: list = obj['package'] + obj['shared_package']
+            packages_arr = []
+            for pack in response.json():
+                for pack2 in packages:
+                    if pack['name'] == pack2:
+                        packages_arr.append(pack)
+            return {"statusCode": 200, "body": packages_arr}
     return {"statusCode": 404}
 
 def find(args):
@@ -38,26 +54,29 @@ def add(args):
         "name": name,
         "publish": False,
         }
-    resp = requests.put(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]), headers={"Content-type": "application/json"}, json=body)
+    resp = requests.put(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages/{name}",
+                    auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]),
+                    headers={"Content-type": "application/json"}, json=body)
     return {"statusCode": resp.status_code, 'body': resp.json()}
 
 def share(args):
     id = args.get('id', False)
-    packages = args.get('packages', False)
-    if not id or not packages:
+    package = args.get('package', False)
+    if not id or not package:
         return {'statusCode': 400}
-    for name in packages:
-        resp = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages/{name}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
-        if resp.status_code != 200:
-            return {'statusCode': 404, 'body': f'package {name} not found'}
-    user = requests.get(f'https://walkiria.cloud/api/v1/web/mcipolla/base/user/find?id={id}')
+    resp = requests.get(f"https://walkiria.cloud/api/v1/namespaces/mcipolla/packages/{package}", auth=HTTPBasicAuth(SPLIT[0], SPLIT[1]))
+    if resp.status_code != 200:
+        return {'statusCode': 404, 'body': f'package {package} not found'}
+    user = requests.get(f"https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/users/find_one?filter=" + urllib.parse.quote(json.dumps({'_id': id})),
+                        headers={"Authorization": args['__ow_headers'].get('authorization')})
     if user.status_code == 200:
         obj = user.json()
         shared_package: list = obj['shared_package']
-        for name in packages:
-            if name not in shared_package:
-                shared_package.append(name)
-        update = requests.put(f'https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/users/update?id={id}', json={'data': {'shared_packaged': shared_package}})
+        if package not in shared_package:
+            shared_package.append(package)
+        update = requests.put(f'https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/users/update?id={id}',
+                            json={'data': {'shared_package': shared_package}},
+                            headers={"Authorization": args['__ow_headers'].get('authorization')})
         return {'statusCode': update.status_code, 'body': update.json()}
     return {'statusCode': user.status_code}
 

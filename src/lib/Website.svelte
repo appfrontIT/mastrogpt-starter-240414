@@ -80,7 +80,7 @@
         if (primaryColor != -1) {query += `- Primary color: ${primaryColor}\n`;}
         if (secondaryColor != -1) {query += `- Secondary color: ${secondaryColor}\n`;}
         if (tertiaryColor != -1) {query += `- Tertiary color: ${tertiaryColor}\n`;}
-        if (description != '') { query += `- Description: ${description}\n`}
+        if (description != '') { query += `- Description of the user request, use this as a guideline to generate the page: ${description}\n`}
         if (header_check && header_description != '') { query += `- Include the following page header: ${header_description}\n`}
         if (footer_check && footer_description != '') { query += `- Include the following page footer: ${footer_description}\n`}
         if (n_cols >= 1) {

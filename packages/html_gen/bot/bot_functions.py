@@ -29,7 +29,6 @@ def single_page_scrape(url = None):
     if url == None:
         return "no url provided"
     response = requests.post(url)
-    print(response.text)
     return response.text
 
 def create_grid(html = None):

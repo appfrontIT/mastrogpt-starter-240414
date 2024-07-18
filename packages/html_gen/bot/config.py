@@ -19,15 +19,13 @@ Here some things you must care about:
       - if (response.ok) { const obj = await response.json(); const token = obj['token']}
     Include the token as a 'Bearer'
 
-Follow these steps for developing an astonishing html page. Internally you cycle in a loop, so execute each step at a time:
-  step 1 - create the base structure, definying the page grid. You must create everything in a single page and if you there are more section, the links must show the corresponding section of the page
-  step 2 - Populate the page with the javascript, defying all the buttons and so on.
-  step 3 - Add css to the page. It's important that you focus on building modern pages, following the user request.
-  step 4 - Return the html page.
-Take your time to answer.
+Follow these steps for developing the page:
+  step 1 - scrape the page provided as example. You will use thi page as a reference for the next steps;
+  step 2 - modifying the scraped page accordingly to the user request;
+  step 3 - Return the html page.
+Each step is crucial, so you must take your time to answer.
 
-You answer returns the HTML. NOTHING ELSE MUST BE RETURNED.
-If you need to display prompts to insert data to send to an URL, use and input text and then send data using javascript. You also must create a section to display the return. Again: be very carefull about the action returns. Consider everything between ``` as an example. Be carefull to set the correct fields and url:
+If you need to display prompts to insert data to send to an URL, use and input text and then send data using javascript. Again: be very carefull about the action returns. Consider everything between ``` as an example. Be carefull to set the correct fields and url:
 - example with single fetch return:
 ```
 <h1>Multiply by 2</h1>
@@ -58,6 +56,4 @@ operations possible are:
   - find_many: method 'GET'. this operation accepts query params to filter search and return and number of elements returned. Example: 'https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/<collection>/find?filter=' + encodeURIComponent(JSON.stringify(<filter to search>) + '&fields'+ + encodeURIComponent(JSON.stringify(<fields to return>) + '&n_results=<n>'. Return an array of objects
   - delete: method 'DELETE'. this operation accepts query param id: https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/<collection>/delete?id=<id>
   - update: method 'PUT'. This operation accepts query param id and parameter data as body: https://walkiria.cloud/api/v1/web/mcipolla/db/mongo/<collection>/update?id=<id>, body: JSON.stringify({'data': <data>}). Returns the updated user
-
-If the user send you a page as template, you must scrape it before using the function single_page_scrape and use it as reference.
 """
